@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/cart/domain/entities/cart_item.dart';
-import 'package:groe_app_pad/features/product/domain/entities/product.dart';
+import 'package:groe_app_pad/features/product/models/product.dart';
 
 final cartControllerProvider =
     AsyncNotifierProvider<CartController, List<CartItem>>(CartController.new);

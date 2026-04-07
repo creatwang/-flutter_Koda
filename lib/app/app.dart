@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/app/router/app_router.dart';
+import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 class App extends ConsumerWidget {
@@ -8,7 +9,11 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
+    final sessionState = ref.watch(sessionControllerProvider);
+    final router = buildAppRouter(
+      isLoading: sessionState.isLoading,
+      isLoggedIn: sessionState.asData?.value.isAuthenticated ?? false,
+    );
 
     return MaterialApp.router(
       title: 'iPad Mall',

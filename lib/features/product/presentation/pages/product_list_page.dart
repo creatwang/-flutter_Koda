@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/product/presentation/providers/product_providers.dart';
+import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:groe_app_pad/core/config/env.dart';
 
 /// 请求链路追踪拦截器：
 /// - 给每次请求生成唯一 requestId，便于前后端联调定位
@@ -34,7 +35,7 @@ class RequestTraceInterceptor extends Interceptor {
     // 记录请求起始时间，用于计算总耗时。
     options.extra[_startAtKey] = DateTime.now().millisecondsSinceEpoch;
     _log(
-      '[REQ][$requestId] ${options.method} ${options.path}'
+      '[NET][TRACE][$requestId][REQ] ${options.method} ${options.path}'
       ' headers=${_safeHeaders(options.headers)}'
       ' query=${options.queryParameters}',
     );
@@ -49,7 +50,7 @@ class RequestTraceInterceptor extends Interceptor {
     // 与缓存拦截器协作：命中缓存时会在日志标识 (cache)。
     final fromCache = response.requestOptions.extra['fromCache'] == true;
     _log(
-      '[RES][$requestId] ${response.statusCode} ${response.requestOptions.path}'
+      '[NET][TRACE][$requestId][RES] ${response.statusCode} ${response.requestOptions.path}'
       ' (${elapsedMs}ms)'
       '${fromCache ? ' (cache)' : ''}',
     );
@@ -62,7 +63,7 @@ class RequestTraceInterceptor extends Interceptor {
     // 异常也打印同一个 requestId，方便快速定位失败请求。
     final elapsedMs = _elapsedMs(err.requestOptions);
     _log(
-      '[ERR][$requestId] ${err.type} ${err.requestOptions.method} ${err.requestOptions.path}'
+      '[NET][TRACE][$requestId][ERR] ${err.type} ${err.requestOptions.method} ${err.requestOptions.path}'
       ' (${elapsedMs}ms)'
       ' message=${err.message}',
     );
@@ -88,6 +89,6 @@ class RequestTraceInterceptor extends Interceptor {
 
   // 统一日志出口：当前只在 debug 模式输出。
   void _log(String message) {
-    if (kDebugMode) debugPrint(message);
+    if (kDebugMode && Env.netTraceEnabled) debugPrint(message);
   }
 }

@@ -1,5 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:groe_app_pad/core/config/env.dart';
 
+/// 内存缓存拦截器（仅 GET）：
+/// - 请求阶段：命中缓存则直接返回，不再发网络请求
+/// - 响应阶段：成功响应写入缓存
+/// - 通过 ttl 控制过期时间，避免脏数据长期驻留
 class MemoryCacheInterceptor extends Interceptor {
   MemoryCacheInterceptor({this.ttl = const Duration(minutes: 1)});
 
@@ -8,18 +14,30 @@ class MemoryCacheInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final requestId = '${options.extra['requestId'] ?? '-'}';
+    // 只有 GET 且未显式 noCache 时才尝试缓存。
     final useCache = options.method == 'GET' && options.extra['noCache'] != true;
-    if (!useCache) return handler.next(options);
-
-    final key = _cacheKey(options);
-    final cached = _cache[key];
-    if (cached == null) return handler.next(options);
-
-    if (DateTime.now().difference(cached.timestamp) > ttl) {
-      _cache.remove(key);
+    if (!useCache) {
+      _log('[NET][CACHE][$requestId] bypass ${options.method} ${options.path}');
       return handler.next(options);
     }
 
+    final key = _cacheKey(options);
+    final cached = _cache[key];
+    if (cached == null) {
+      _log('[NET][CACHE][$requestId] miss key=$key');
+      return handler.next(options);
+    }
+
+    if (DateTime.now().difference(cached.timestamp) > ttl) {
+      // 过期后删除并继续走真实请求。
+      _cache.remove(key);
+      _log('[NET][CACHE][$requestId] expired key=$key');
+      return handler.next(options);
+    }
+
+    // 命中缓存：直接 short-circuit 返回 Response。
+    _log('[NET][CACHE][$requestId] hit key=$key');
     handler.resolve(
       Response(
         requestOptions: options,
@@ -33,20 +51,31 @@ class MemoryCacheInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final options = response.requestOptions;
+    final requestId = '${options.extra['requestId'] ?? '-'}';
+    // 只缓存成功 GET 响应，避免错误响应污染缓存。
     final canCache = options.method == 'GET' &&
         options.extra['noCache'] != true &&
         (response.statusCode ?? 500) < 400;
     if (canCache) {
-      _cache[_cacheKey(options)] = _CacheEntry(
+      final key = _cacheKey(options);
+      _cache[key] = _CacheEntry(
         timestamp: DateTime.now(),
         data: response.data,
       );
+      _log('[NET][CACHE][$requestId] save key=$key');
+    } else {
+      _log('[NET][CACHE][$requestId] skip save ${options.method} ${options.path}');
     }
     handler.next(response);
   }
 
   String _cacheKey(RequestOptions options) {
     return '${options.path}?${options.queryParameters}';
+  }
+
+  // 统一日志出口：仅在 Debug 且开启 netTrace 时打印。
+  void _log(String message) {
+    if (kDebugMode && Env.netTraceEnabled) debugPrint(message);
   }
 }
 

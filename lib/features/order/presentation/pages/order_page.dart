@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/order/presentation/providers/order_providers.dart';
+import 'package:groe_app_pad/features/order/controllers/order_providers.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';

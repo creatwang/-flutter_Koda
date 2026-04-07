@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
-import 'package:groe_app_pad/features/product/domain/entities/product.dart';
+import 'package:groe_app_pad/features/product/models/product.dart';
 
 class ProductCard extends ConsumerWidget {
   const ProductCard({required this.product, super.key});

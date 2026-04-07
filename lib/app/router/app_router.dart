@@ -2,17 +2,13 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/presentation/pages/login_page.dart';
 import 'package:groe_app_pad/features/auth/presentation/pages/splash_page.dart';
-import 'package:groe_app_pad/features/auth/presentation/providers/session_controller.dart';
 import 'package:groe_app_pad/features/home/presentation/pages/home_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_detail_page.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final appRouterProvider = Provider<GoRouter>((ref) {
-  final sessionState = ref.watch(sessionControllerProvider);
-
-  final bool isLoading = sessionState.isLoading;
-  final bool isLoggedIn = sessionState.asData?.value.isAuthenticated ?? false;
-
+GoRouter buildAppRouter({
+  required bool isLoading,
+  required bool isLoggedIn,
+}) {
   return GoRouter(
     routes: [
       GoRoute(
@@ -52,4 +48,4 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
   );
-});
+}

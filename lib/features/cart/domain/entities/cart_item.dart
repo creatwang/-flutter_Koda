@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/features/product/domain/entities/product.dart';
+import 'package:groe_app_pad/features/product/models/product.dart';
 
 class CartItem {
   const CartItem({

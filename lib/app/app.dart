@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 class App extends ConsumerWidget {
@@ -25,7 +26,20 @@ class App extends ConsumerWidget {
       routerConfig: router,
       builder: (context, child) {
         return ResponsiveBreakpoints.builder(
-          child: child!,
+          child: Builder(
+            builder: (context) {
+              final enableScale = !context.isTabletUp;
+              return MaxWidthBox(
+                maxWidth: 1400,
+                child: ResponsiveScaledBox(
+                  // enableScale == true（小屏）=> 传 1024，开启等比缩放
+                  // enableScale == false（平板及以上）=> 传 null，不做缩放
+                  width: enableScale ? 1024 : null,
+                  child: child!,
+                ),
+              );
+            },
+          ),
           breakpoints: const [
             Breakpoint(start: 0, end: 599, name: MOBILE),
             Breakpoint(start: 600, end: 1023, name: TABLET),

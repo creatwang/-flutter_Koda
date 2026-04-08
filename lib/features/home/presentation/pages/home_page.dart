@@ -7,6 +7,7 @@ import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
@@ -42,6 +43,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final cartCount = ref.watch(
       cartControllerProvider.select(
         (value) => value.asData?.value.fold<int>(0, (sum, e) => sum + e.quantity) ?? 0,
@@ -56,35 +58,35 @@ class _HomePageState extends ConsumerState<HomePage> {
     };
 
     return AdaptiveScaffold(
-      title: 'iPad 商城',
+      title: l10n.appTitle,
       automaticallyImplyLeading: false,
       actions: [
         HeaderMenuButton(
-          label: '产品分类',
+          label: l10n.homeCategory,
           icon: Icons.storefront,
           selected: _section == HomeSection.productCategory,
           onTap: () => setState(() => _section = HomeSection.productCategory),
         ),
         HeaderMenuButton(
-          label: '商品',
+          label: l10n.homeProducts,
           icon: Icons.storefront,
           selected: _section == HomeSection.products,
           onTap: () => setState(() => _section = HomeSection.products),
         ),
         HeaderMenuButton(
-          label: '购物车($cartCount)',
+          label: l10n.homeCartWithCount(cartCount),
           icon: Icons.shopping_cart_outlined,
           selected: _section == HomeSection.cart,
           onTap: () => setState(() => _section = HomeSection.cart),
         ),
         HeaderMenuButton(
-          label: '订单',
+          label: l10n.homeOrders,
           icon: Icons.receipt_long_outlined,
           selected: _section == HomeSection.orders,
           onTap: () => setState(() => _section = HomeSection.orders),
         ),
         IconButton(
-          tooltip: '退出登录',
+          tooltip: l10n.commonLogout,
           onPressed: () async {
             await ref.read(sessionControllerProvider.notifier).signOut();
             if (context.mounted) context.go(AppRoutes.login);

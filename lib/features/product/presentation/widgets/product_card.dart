@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class ProductCard extends ConsumerWidget {
   const ProductCard({required this.product, super.key});
@@ -12,6 +13,7 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -51,11 +53,11 @@ class ProductCard extends ConsumerWidget {
                   onPressed: () {
                     ref.read(cartControllerProvider.notifier).addProduct(product);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('已: ${product.title}')),
+                      SnackBar(content: Text(l10n.productAddedToCart(product.title))),
                     );
                   },
                   icon: const Icon(Icons.add_shopping_cart),
-                  label: const Text('加入购物车'),
+                  label: Text(l10n.addToCart),
                 ),
               ),
             ],

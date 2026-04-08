@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:groe_app_pad/gen/assets.gen.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class ProductCategoryPage extends StatefulWidget {
@@ -58,7 +59,7 @@ class _ProductCategoryPageState extends State<ProductCategoryPage> {
           onMessageReceived: (JavaScriptMessage message) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('来自 Web 的消息: ${message.message}')),
+              SnackBar(content: Text(context.l10n.webMessageFromHtml(message.message))),
             );
           },
         )
@@ -89,7 +90,7 @@ class _ProductCategoryPageState extends State<ProductCategoryPage> {
     final controller = _controller;
     if (controller == null) return;
 
-    final message = 'Flutter 消息 #$_sendCounter';
+    final message = context.l10n.flutterMessageCounter(_sendCounter);
     final safeMessage = message
         .replaceAll(r'\', r'\\')
         .replaceAll("'", r"\'")
@@ -107,16 +108,17 @@ class _ProductCategoryPageState extends State<ProductCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (kIsWeb) {
-      return const Center(
-        child: Text('Web 端暂不支持内嵌 WebView，请使用移动端或桌面端查看'),
+      return Center(
+        child: Text(l10n.webNotSupported),
       );
     }
 
     if (_controller == null) {
       // 降级视图：平台不支持或初始化失败时展示提示信息。
-      return const Center(
-        child: Text('当前平台不支持 WebView（或测试环境未注入平台实现）'),
+      return Center(
+        child: Text(l10n.webViewNotSupported),
       );
     }
     return Column(
@@ -153,7 +155,7 @@ class _ProductCategoryPageState extends State<ProductCategoryPage> {
               child: ElevatedButton.icon(
                 onPressed: _sendMessageToHtml,
                 icon: const Icon(Icons.send),
-                label: const Text('Flutter -> HTML 发送消息'),
+                label: Text(l10n.sendMessageToHtml),
               ),
             ),
           ),

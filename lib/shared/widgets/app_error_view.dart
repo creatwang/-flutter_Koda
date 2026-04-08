@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class AppErrorView extends StatelessWidget {
   const AppErrorView({required this.message, super.key, this.onRetry});
@@ -15,7 +16,7 @@ class AppErrorView extends StatelessWidget {
           Text(message, textAlign: TextAlign.center),
           if (onRetry != null) ...[
             const SizedBox(height: 12),
-            OutlinedButton(onPressed: onRetry, child: const Text('重试')),
+            OutlinedButton(onPressed: onRetry, child: Text(context.l10n.commonRetry)),
           ],
         ],
       ),

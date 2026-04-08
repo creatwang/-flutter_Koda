@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -24,6 +25,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final sessionState = ref.watch(sessionControllerProvider);
     final isLoading = sessionState.isLoading;
 
@@ -39,19 +41,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'iPad 商城登录',
+                    l10n.loginTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 20),
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(labelText: '用户名'),
+                    decoration: InputDecoration(labelText: l10n.loginUsername),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: '密码'),
+                    decoration: InputDecoration(labelText: l10n.loginPassword),
                     obscureText: true,
                   ),
                   const SizedBox(height: 16),
@@ -70,7 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               context.go(AppRoutes.home);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('登录失败，请检查账号密码')),
+                                SnackBar(content: Text(l10n.loginFailed)),
                               );
                             }
                           },
@@ -79,7 +81,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             dimension: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('登录'),
+                        : Text(l10n.loginAction),
                   ),
                 ],
               ),

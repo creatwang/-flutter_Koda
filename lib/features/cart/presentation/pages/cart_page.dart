@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/order/models/order_create_item.dart';
 import 'package:groe_app_pad/features/order/controllers/order_providers.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
@@ -12,12 +13,13 @@ class CartPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final cartState = ref.watch(cartControllerProvider);
     return cartState.when(
       loading: () => const AppLoadingView(),
-      error: (error, _) => AppErrorView(message: '购物车加载失败: $error'),
+      error: (error, _) => AppErrorView(message: l10n.cartLoadFailed(error.toString())),
       data: (items) {
-        if (items.isEmpty) return const AppEmptyView(message: '购物车为空');
+        if (items.isEmpty) return AppEmptyView(message: l10n.cartEmpty);
         final totalPrice = items.fold<double>(
           0,
           (sum, e) => sum + (e.product.price * e.quantity),
@@ -72,7 +74,7 @@ class CartPage extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        '合计: ¥ ${totalPrice.toStringAsFixed(2)}',
+                        l10n.cartTotal(totalPrice.toStringAsFixed(2)),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -92,15 +94,15 @@ class CartPage extends ConsumerWidget {
                         if (ok) {
                           ref.read(cartControllerProvider.notifier).clear();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('下单成功，已加入订单列表')),
+                            SnackBar(content: Text(l10n.orderCreateSuccess)),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('下单失败，请稍后重试')),
+                            SnackBar(content: Text(l10n.orderCreateFailed)),
                           );
                         }
                       },
-                      child: const Text('去结算'),
+                      child: Text(l10n.checkout),
                     ),
                   ],
                 ),

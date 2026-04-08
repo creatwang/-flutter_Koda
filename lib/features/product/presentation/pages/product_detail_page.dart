@@ -5,6 +5,7 @@ import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
@@ -17,6 +18,7 @@ class ProductDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final productState = ref.watch(productByIdProvider(productId));
     final cartCount = ref.watch(
       cartControllerProvider.select(
@@ -25,28 +27,28 @@ class ProductDetailPage extends ConsumerWidget {
     );
 
     return AdaptiveScaffold(
-      title: 'iPad 商城',
+      title: l10n.appTitle,
       actions: [
         HeaderMenuButton(
-          label: '商品',
+          label: l10n.homeProducts,
           icon: Icons.storefront,
           selected: true,
           onTap: () => context.go(AppRoutes.homeWithTab('products')),
         ),
         HeaderMenuButton(
-          label: '购物车($cartCount)',
+          label: l10n.homeCartWithCount(cartCount),
           icon: Icons.shopping_cart_outlined,
           selected: false,
           onTap: () => context.go(AppRoutes.homeWithTab('cart')),
         ),
         HeaderMenuButton(
-          label: '订单',
+          label: l10n.homeOrders,
           icon: Icons.receipt_long_outlined,
           selected: false,
           onTap: () => context.go(AppRoutes.homeWithTab('orders')),
         ),
         IconButton(
-          tooltip: '退出登录',
+          tooltip: l10n.commonLogout,
           onPressed: () async {
             await ref.read(sessionControllerProvider.notifier).signOut();
             if (context.mounted) context.go(AppRoutes.login);
@@ -56,7 +58,7 @@ class ProductDetailPage extends ConsumerWidget {
       ],
       body: productState.when(
         loading: () => const AppLoadingView(),
-        error: (error, _) => AppErrorView(message: '详情加载失败: $error'),
+        error: (error, _) => AppErrorView(message: l10n.productDetailLoadFailed(error.toString())),
         data: (product) {
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -87,11 +89,11 @@ class ProductDetailPage extends ConsumerWidget {
                 onPressed: () {
                   ref.read(cartControllerProvider.notifier).addProduct(product);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('已加入购物车: ${product.title}')),
+                    SnackBar(content: Text(l10n.productAddedToCart(product.title))),
                   );
                 },
                 icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('加入购物车'),
+                label: Text(l10n.addToCart),
               ),
             ],
           );

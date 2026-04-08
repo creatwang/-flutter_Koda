@@ -27,8 +27,8 @@ class HeaderMenuButton extends StatelessWidget {
               ? const [
                   BoxShadow(
                     color: Color(0x33000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
                   ),
                 ]
               : const [],

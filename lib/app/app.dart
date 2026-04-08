@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/app/providers/locale_provider.dart';
 import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -12,6 +13,7 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final localeMode = ref.watch(appLocaleModeProvider);
     final sessionState = ref.watch(sessionControllerProvider);
     final router = buildAppRouter(
       isLoading: sessionState.isLoading,
@@ -25,12 +27,17 @@ class App extends ConsumerWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
+      locale: localeMode.localeOrNull,
+      // 国际化资源加载器：
+      // 1) AppLocalizations.delegate 负责加载 ARB 生成的业务文案
+      // 2) Global*Localizations 负责 Flutter 组件内置文案与地区化能力
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // 应用支持的语言列表（系统语言会在这里做匹配与回退）。
       supportedLocales: const [
         Locale('en'),
         Locale('zh'),

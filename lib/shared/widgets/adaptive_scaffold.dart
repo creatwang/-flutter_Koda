@@ -22,12 +22,16 @@ class AdaptiveScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mergedActions = <Widget>[
+      ...?actions,
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         leading: leading,
         automaticallyImplyLeading: automaticallyImplyLeading,
-        actions: actions,
+        actions: mergedActions,
         bottom: bottom,
       ),
       floatingActionButton: floatingActionButton,

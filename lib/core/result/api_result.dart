@@ -8,6 +8,10 @@ sealed class ApiResult<T> {
     required R Function(AppException exception) failure,
   }) {
     final self = this;
+    /**
+     * @Description self is ApiSuccess<T> : 这是一个类型检查。它在判断当前的 ApiResult 实例（即 self ）是不是 ApiSuccess 类型。
+     * @date 2026/04/08 18:04:12
+     */
     if (self is ApiSuccess<T>) return success(self.data);
     return failure((self as ApiFailure<T>).exception);
   }

@@ -27,6 +27,10 @@ class SessionController extends AsyncNotifier<Session> {
     return result.when(
       success: (pair) {
         final session = _toSession(pair);
+        /**
+         * @Description 当你把 state 设置为 AsyncData 时，UI 监听者（ConsumerWidget）会自动监听到这个变化，并根据新的数据重新构建页面。
+         * @date 2026/04/08 18:06:39
+         */
         state = AsyncData(session);
         return true;
       },

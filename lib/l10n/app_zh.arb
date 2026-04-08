@@ -1,0 +1,109 @@
+{
+  "@@locale": "zh",
+  "appTitle": "iPad 商城",
+  "commonLoading": "加载中...",
+  "commonNoData": "暂无数据",
+  "commonRetry": "重试",
+  "commonLogout": "退出登录",
+  "languageLabel": "语言",
+  "languageSystem": "跟随系统",
+  "languageChinese": "中文",
+  "languageEnglish": "英文",
+  "homeCategory": "产品分类",
+  "homeProducts": "商品",
+  "homeCart": "购物车",
+  "homeOrders": "订单",
+  "homeCartWithCount": "购物车({count})",
+  "@homeCartWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "loginTitle": "iPad 商城登录",
+  "loginUsername": "用户名",
+  "loginPassword": "密码",
+  "loginAction": "登录",
+  "loginFailed": "登录失败，请检查账号密码",
+  "productLoadFailed": "商品加载失败: {error}",
+  "@productLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "productEmpty": "暂无商品",
+  "productDetailLoadFailed": "详情加载失败: {error}",
+  "@productDetailLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addToCart": "加入购物车",
+  "productAddedToCart": "已加入购物车: {title}",
+  "@productAddedToCart": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "cartLoadFailed": "购物车加载失败: {error}",
+  "@cartLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "cartEmpty": "购物车为空",
+  "cartTotal": "合计: ¥ {amount}",
+  "@cartTotal": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "checkout": "去结算",
+  "orderCreateSuccess": "下单成功，已加入订单列表",
+  "orderCreateFailed": "下单失败，请稍后重试",
+  "orderLoadFailed": "订单加载失败: {error}",
+  "@orderLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "orderEmpty": "暂无订单",
+  "orderTitleWithId": "订单 #{id}",
+  "@orderTitleWithId": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "orderSubtitle": "用户 {userId} · 商品数量 {totalQuantity} · {dateText}",
+  "@orderSubtitle": {
+    "placeholders": {
+      "userId": {
+        "type": "int"
+      },
+      "totalQuantity": {
+        "type": "int"
+      },
+      "dateText": {}
+    }
+  },
+  "webMessageFromHtml": "来自 Web 的消息: {message}",
+  "@webMessageFromHtml": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "webNotSupported": "Web 端暂不支持内嵌 WebView，请使用移动端或桌面端查看",
+  "webViewNotSupported": "当前平台不支持 WebView（或测试环境未注入平台实现）",
+  "sendMessageToHtml": "Flutter -> HTML 发送消息",
+  "flutterMessageCounter": "Flutter 消息 #{count}",
+  "@flutterMessageCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

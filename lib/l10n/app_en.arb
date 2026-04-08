@@ -1,0 +1,109 @@
+{
+  "@@locale": "en",
+  "appTitle": "iPad Mall",
+  "commonLoading": "Loading...",
+  "commonNoData": "No data",
+  "commonRetry": "Retry",
+  "commonLogout": "Sign out",
+  "languageLabel": "Language",
+  "languageSystem": "System",
+  "languageChinese": "Chinese",
+  "languageEnglish": "English",
+  "homeCategory": "Categories",
+  "homeProducts": "Products",
+  "homeCart": "Cart",
+  "homeOrders": "Orders",
+  "homeCartWithCount": "Cart({count})",
+  "@homeCartWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "loginTitle": "iPad Mall Sign In",
+  "loginUsername": "Username",
+  "loginPassword": "Password",
+  "loginAction": "Sign in",
+  "loginFailed": "Sign in failed. Please check your credentials.",
+  "productLoadFailed": "Failed to load products: {error}",
+  "@productLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "productEmpty": "No products",
+  "productDetailLoadFailed": "Failed to load details: {error}",
+  "@productDetailLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addToCart": "Add to cart",
+  "productAddedToCart": "Added to cart: {title}",
+  "@productAddedToCart": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "cartLoadFailed": "Failed to load cart: {error}",
+  "@cartLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "cartEmpty": "Your cart is empty",
+  "cartTotal": "Total: ¥ {amount}",
+  "@cartTotal": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "checkout": "Checkout",
+  "orderCreateSuccess": "Order placed successfully and added to list",
+  "orderCreateFailed": "Order placement failed, please try again later",
+  "orderLoadFailed": "Failed to load orders: {error}",
+  "@orderLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "orderEmpty": "No orders yet",
+  "orderTitleWithId": "Order #{id}",
+  "@orderTitleWithId": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "orderSubtitle": "User {userId} · Qty {totalQuantity} · {dateText}",
+  "@orderSubtitle": {
+    "placeholders": {
+      "userId": {
+        "type": "int"
+      },
+      "totalQuantity": {
+        "type": "int"
+      },
+      "dateText": {}
+    }
+  },
+  "webMessageFromHtml": "Message from Web: {message}",
+  "@webMessageFromHtml": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "webNotSupported": "Web does not support embedded WebView yet. Please use mobile or desktop.",
+  "webViewNotSupported": "Current platform does not support WebView (or test environment has no platform implementation).",
+  "sendMessageToHtml": "Send Flutter -> HTML message",
+  "flutterMessageCounter": "Flutter message #{count}",
+  "@flutterMessageCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

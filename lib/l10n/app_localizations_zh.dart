@@ -1,0 +1,149 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Chinese (`zh`).
+class AppLocalizationsZh extends AppLocalizations {
+  AppLocalizationsZh([String locale = 'zh']) : super(locale);
+
+  @override
+  String get appTitle => 'iPad 商城';
+
+  @override
+  String get commonLoading => '加载中...';
+
+  @override
+  String get commonNoData => '暂无数据';
+
+  @override
+  String get commonRetry => '重试';
+
+  @override
+  String get commonLogout => '退出登录';
+
+  @override
+  String get languageLabel => '语言';
+
+  @override
+  String get languageSystem => '跟随系统';
+
+  @override
+  String get languageChinese => '中文';
+
+  @override
+  String get languageEnglish => '英文';
+
+  @override
+  String get homeCategory => '产品分类';
+
+  @override
+  String get homeProducts => '商品';
+
+  @override
+  String get homeCart => '购物车';
+
+  @override
+  String get homeOrders => '订单';
+
+  @override
+  String homeCartWithCount(int count) {
+    return '购物车($count)';
+  }
+
+  @override
+  String get loginTitle => 'iPad 商城登录';
+
+  @override
+  String get loginUsername => '用户名';
+
+  @override
+  String get loginPassword => '密码';
+
+  @override
+  String get loginAction => '登录';
+
+  @override
+  String get loginFailed => '登录失败，请检查账号密码';
+
+  @override
+  String productLoadFailed(Object error) {
+    return '商品加载失败: $error';
+  }
+
+  @override
+  String get productEmpty => '暂无商品';
+
+  @override
+  String productDetailLoadFailed(Object error) {
+    return '详情加载失败: $error';
+  }
+
+  @override
+  String get addToCart => '加入购物车';
+
+  @override
+  String productAddedToCart(Object title) {
+    return '已加入购物车: $title';
+  }
+
+  @override
+  String cartLoadFailed(Object error) {
+    return '购物车加载失败: $error';
+  }
+
+  @override
+  String get cartEmpty => '购物车为空';
+
+  @override
+  String cartTotal(Object amount) {
+    return '合计: ¥ $amount';
+  }
+
+  @override
+  String get checkout => '去结算';
+
+  @override
+  String get orderCreateSuccess => '下单成功，已加入订单列表';
+
+  @override
+  String get orderCreateFailed => '下单失败，请稍后重试';
+
+  @override
+  String orderLoadFailed(Object error) {
+    return '订单加载失败: $error';
+  }
+
+  @override
+  String get orderEmpty => '暂无订单';
+
+  @override
+  String orderTitleWithId(int id) {
+    return '订单 #$id';
+  }
+
+  @override
+  String orderSubtitle(int userId, int totalQuantity, Object dateText) {
+    return '用户 $userId · 商品数量 $totalQuantity · $dateText';
+  }
+
+  @override
+  String webMessageFromHtml(Object message) {
+    return '来自 Web 的消息: $message';
+  }
+
+  @override
+  String get webNotSupported => 'Web 端暂不支持内嵌 WebView，请使用移动端或桌面端查看';
+
+  @override
+  String get webViewNotSupported => '当前平台不支持 WebView（或测试环境未注入平台实现）';
+
+  @override
+  String get sendMessageToHtml => 'Flutter -> HTML 发送消息';
+
+  @override
+  String flutterMessageCounter(int count) {
+    return 'Flutter 消息 #$count';
+  }
+}

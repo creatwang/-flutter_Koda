@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Generated code (flutter_gen / build_runner)
+lib/gen/
+
 # Symbolication related
 app.*.symbols
 

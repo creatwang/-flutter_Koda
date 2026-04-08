@@ -4,9 +4,4 @@ import 'package:groe_app_pad/app/app.dart';
 
 void main() {
   runApp(const ProviderScope(child: App()));
-  /*runApp(const MaterialApp(
-    home: Scaffold(
-      body: CustomMenu(),
-    ),
-  ));*/
 }

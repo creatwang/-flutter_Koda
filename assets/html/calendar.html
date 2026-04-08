@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .event-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #6200ee; color: white; border: none; padding: 10px; border-radius: 4px; width: 100%; }
+    </style>
+</head>
+<body>
+<h3>我的日程 (Web 视图)</h3>
+<div id="flutter-message" class="event-card">来自 Flutter 的消息：暂无</div>
+<div id="calendar-container">
+    <div class="event-card" onclick="reportToFlutter('跑步')">今日安排：跑步 (点击反馈)</div>
+</div>
+
+<script>
+    // 1) 供 Flutter 调用：添加新日程
+    function addEventFromAgent(eventText) {
+        const container = document.getElementById('calendar-container');
+        const newDiv = document.createElement('div');
+        newDiv.className = 'event-card';
+        newDiv.innerText = "AI 添加：" + eventText;
+        container.appendChild(newDiv);
+        return "Web 已收到日程";
+    }
+
+    // 2) 供 Flutter 调用：展示最新消息
+    function onFlutterMessage(payload) {
+        const messageDiv = document.getElementById('flutter-message');
+        messageDiv.innerText = '来自 Flutter 的消息：' + payload;
+        return 'Web 已收到消息';
+    }
+
+    // 3) 调用 Flutter：点击日程通知 App
+    function reportToFlutter(name) {
+        if (window.Toaster) {
+            // 'Toaster' 是我们在 Flutter 中注册的通道名
+            window.Toaster.postMessage('用户点击了日程: ' + name);
+        }
+    }
+</script>
+</body>
+</html>

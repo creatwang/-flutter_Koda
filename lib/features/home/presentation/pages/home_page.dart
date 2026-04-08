@@ -10,7 +10,9 @@ import 'package:groe_app_pad/features/product/presentation/pages/product_list_pa
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
-enum HomeSection { products, cart, orders }
+import '../../../product/presentation/pages/product_category_page.dart';
+
+enum HomeSection { products, cart, orders, productCategory }
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, this.initialTab});
@@ -50,12 +52,19 @@ class _HomePageState extends ConsumerState<HomePage> {
       HomeSection.products => const ProductListPage(),
       HomeSection.cart => const CartPage(),
       HomeSection.orders => const OrderPage(),
+      HomeSection.productCategory => const ProductCategoryPage(),
     };
 
     return AdaptiveScaffold(
       title: 'iPad 商城',
       automaticallyImplyLeading: false,
       actions: [
+        HeaderMenuButton(
+          label: '产品分类',
+          icon: Icons.storefront,
+          selected: _section == HomeSection.productCategory,
+          onTap: () => setState(() => _section = HomeSection.productCategory),
+        ),
         HeaderMenuButton(
           label: '商品',
           icon: Icons.storefront,

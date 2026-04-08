@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/features/auth/services/auth_services.dart';
+
+import '../../../core/services/core_services.dart';
 
 class ProductRequests {
   static const String productsPath = '/products';

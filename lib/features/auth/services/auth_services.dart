@@ -17,22 +17,10 @@ typedef AuthLoginService = Future<ApiResult<TokenPair>> Function({
   required String username,
   required String password,
 });
-typedef AuthRefreshService = Future<ApiResult<TokenPair>> Function(String refreshToken);
-typedef AuthReadTokenService = Future<TokenPair?> Function();
-typedef AuthClearTokenService = Future<void> Function();
 
 final authLoginServiceProvider = Provider<AuthLoginService>((ref) => authLoginService);
-final authRefreshServiceProvider =
-    Provider<AuthRefreshService>((ref) => authRefreshService);
-final authReadTokenServiceProvider =
-    Provider<AuthReadTokenService>((ref) => authReadTokenService);
-final authClearTokenServiceProvider =
-    Provider<AuthClearTokenService>((ref) => authClearTokenService);
 
-Future<ApiResult<TokenPair>> authLoginService({
-  required String username,
-  required String password,
-}) async {
+Future<ApiResult<TokenPair>> authLoginService({ required String username, required String password, }) async {
   try {
     final response = await requestAuthLogin(
       username: username,
@@ -64,50 +52,5 @@ Future<ApiResult<TokenPair>> authLoginService({
   }
 }
 
-Future<ApiResult<TokenPair>> authRefreshService(String refreshToken) async {
-  try {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    final pair = TokenPair(
-      accessToken: 'refreshed-access-$refreshToken',
-      refreshToken: refreshToken,
-    );
-    await secureStorageService.saveTokenPair(pair);
-    return ApiSuccess(pair);
-  } catch (e) {
-    return ApiFailure(AppException('Refresh token failed: $e'));
-  }
-}
 
-Future<TokenPair?> authReadTokenService() => secureStorageService.readTokenPair();
-Future<void> authClearTokenService() => secureStorageService.clear();
-
-final Dio protectedDio = _buildProtectedDio();
-final DioClient protectedDioClient = DioClient(protectedDio);
-
-Dio _buildProtectedDio() {
-  final dio = Dio(buildBaseOptions());
-
-  dio.interceptors.addAll([
-    RequestTraceInterceptor(),
-    AuthInterceptor(secureStorageService),
-    MemoryCacheInterceptor(ttl: const Duration(minutes: 2)),
-    RetryInterceptor(dio),
-    RefreshTokenInterceptor(
-      dio: dio,
-      storageService: secureStorageService,
-      onRefreshToken: (refreshToken) async {
-        final result = await authRefreshService(refreshToken);
-        return result.when(
-          success: (pair) => pair,
-          failure: (_) => null,
-        );
-      },
-      onLogout: () async {
-        await authClearTokenService();
-      },
-    ),
-  ]);
-
-  return dio;
-}
 

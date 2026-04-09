@@ -13,8 +13,9 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _usernameController = TextEditingController(text: 'mor_2314');
-  final _passwordController = TextEditingController(text: '83r5^_');
+  // DummyJSON 演示账号，便于本地直接验证登录流程。
+  final _usernameController = TextEditingController(text: 'emilys');
+  final _passwordController = TextEditingController(text: 'emilyspass');
 
   @override
   void dispose() {

@@ -4,3 +4,6 @@
 
 `flutter pub get`
 `flutter pub run build_runner -w`
+
+修改国际化之后
+flutter gen-l10n

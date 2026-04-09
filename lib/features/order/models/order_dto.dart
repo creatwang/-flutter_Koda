@@ -11,8 +11,8 @@ class OrderItemDto {
 
   factory OrderItemDto.fromJson(Map<String, dynamic> json) {
     return OrderItemDto(
-      productId: json['productId'] as int,
-      quantity: json['quantity'] as int,
+      productId: (json['productId'] as num?)?.toInt() ?? (json['id'] as num?)?.toInt() ?? 0,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -36,8 +36,8 @@ class OrderDto {
         .map(OrderItemDto.fromJson)
         .toList(growable: false);
     return OrderDto(
-      id: json['id'] as int,
-      userId: json['userId'] as int,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      userId: (json['userId'] as num?)?.toInt() ?? 0,
       date: DateTime.tryParse(json['date']?.toString() ?? '') ?? DateTime.now(),
       products: products,
     );

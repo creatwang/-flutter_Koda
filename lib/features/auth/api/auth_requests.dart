@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/services/core_services.dart';
+import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 class AuthRequests {
   static const String loginPath = '/auth/login';

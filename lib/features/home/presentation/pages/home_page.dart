@@ -11,7 +11,6 @@ import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
-import '../../../../shared/widgets/locale_dropdown.dart';
 import '../../../product/presentation/pages/product_category_page.dart';
 
 enum HomeSection { products, cart, orders, productCategory }
@@ -86,7 +85,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           selected: _section == HomeSection.orders,
           onTap: () => setState(() => _section = HomeSection.orders),
         ),
-        const LocaleDropdown(),
         IconButton(
           tooltip: l10n.commonLogout,
           onPressed: () async {

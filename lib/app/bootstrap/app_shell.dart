@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/app/providers/locale_provider.dart';
 import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
-class App extends ConsumerWidget {
-  const App({super.key});
+class AppShell extends ConsumerWidget {
+  const AppShell({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -1,17 +1,23 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/network/interceptors/auth_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/memory_cache_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/refresh_token_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/request_trace_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/retry_interceptor.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/core/services/core_services.dart';
+import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
 import 'package:groe_app_pad/features/auth/models/auth_token_dto.dart';
+
+export 'package:groe_app_pad/core/platform_services/network_clients.dart'
+    show
+        AuthRefreshService,
+        AuthReadTokenService,
+        AuthClearTokenService,
+        authRefreshServiceProvider,
+        authReadTokenServiceProvider,
+        authClearTokenServiceProvider,
+        authRefreshService,
+        authReadTokenService,
+        authClearTokenService;
 
 typedef AuthLoginService = Future<ApiResult<TokenPair>> Function({
   required String username,
@@ -33,10 +39,7 @@ Future<ApiResult<TokenPair>> authLoginService({ required String username, requir
         error: 'Invalid login response format',
       );
     }
-    final dto = AuthTokenDto(
-      accessToken: data['token']?.toString() ?? 'demo-access-token',
-      refreshToken: data['refreshToken']?.toString() ?? 'demo-refresh-token',
-    );
+    final dto = AuthTokenDto.fromJson(data);
     final pair = dto.toPair();
     await secureStorageService.saveTokenPair(pair);
     return ApiSuccess(pair);

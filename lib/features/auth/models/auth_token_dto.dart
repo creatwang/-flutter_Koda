@@ -11,8 +11,10 @@ class AuthTokenDto {
 
   factory AuthTokenDto.fromJson(Map<String, dynamic> json) {
     return AuthTokenDto(
-      accessToken: json['accessToken']?.toString() ?? '',
-      refreshToken: json['refreshToken']?.toString() ?? '',
+      accessToken: json['accessToken']?.toString() ??
+          json['token']?.toString() ??
+          'demo-access-token',
+      refreshToken: json['refreshToken']?.toString() ?? 'demo-refresh-token',
     );
   }
 }

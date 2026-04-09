@@ -5,8 +5,6 @@ import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
 
-import '../../../core/services/core_services.dart';
-
 final sessionControllerProvider = AsyncNotifierProvider<SessionController, Session>(SessionController.new);
 
 class SessionController extends AsyncNotifier<Session> {

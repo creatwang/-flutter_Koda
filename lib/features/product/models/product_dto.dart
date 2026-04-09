@@ -18,12 +18,19 @@ class ProductDto {
   final double price;
 
   factory ProductDto.fromJson(Map<String, dynamic> json) {
+    final images = (json['images'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+
     return ProductDto(
       id: json['id'] as int,
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
-      image: json['image']?.toString() ?? '',
+      image: json['thumbnail']?.toString() ??
+          json['image']?.toString() ??
+          (images.isNotEmpty ? images.first : ''),
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
     );
   }

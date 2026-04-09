@@ -12,13 +12,20 @@ Future<ApiResult<List<OrderSummary>>> fetchOrdersService({
   try {
     final response = await requestOrders(limit: limit);
     final data = response.data;
-    if (data is! List) {
+    if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
         error: 'Invalid order response format',
       );
     }
-    final orders = data
+    final list = data['carts'];
+    if (list is! List) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid carts list format',
+      );
+    }
+    final orders = list
         .whereType<Map<String, dynamic>>()
         .map(OrderDto.fromJson)
         .map((e) => e.toModel())

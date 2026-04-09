@@ -12,13 +12,20 @@ Future<ApiResult<List<Product>>> fetchProductsPageService({
   try {
     final response = await requestProductsPage(page: page, pageSize: pageSize);
     final data = response.data;
-    if (data is! List) {
+    if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
         error: 'Invalid product response format',
       );
     }
-    final dtos = data
+    final list = data['products'];
+    if (list is! List) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid products list format',
+      );
+    }
+    final dtos = list
         .whereType<Map<String, dynamic>>()
         .map(ProductDto.fromJson)
         .toList(growable: false);

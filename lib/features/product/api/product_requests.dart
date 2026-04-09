@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
 
-import '../../../core/services/core_services.dart';
+import '../../../core/platform_services/network_clients.dart';
 
 class ProductRequests {
   static const String productsPath = '/products';
@@ -14,7 +14,10 @@ Future<Response<dynamic>> requestProductsPage({
 }) {
   return (client ?? protectedDioClient).get(
     ProductRequests.productsPath,
-    queryParameters: {'limit': page * pageSize},
+    queryParameters: {
+      'limit': pageSize,
+      'skip': (page - 1) * pageSize,
+    },
   );
 }
 

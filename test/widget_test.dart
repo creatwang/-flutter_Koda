@@ -7,11 +7,11 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:groe_app_pad/app/app.dart';
+import 'package:groe_app_pad/app/bootstrap/app_shell.dart';
 
 void main() {
   testWidgets('app bootstraps with ProviderScope', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    expect(find.byType(App), findsOneWidget);
+    await tester.pumpWidget(const ProviderScope(child: AppShell()));
+    expect(find.byType(AppShell), findsOneWidget);
   });
 }

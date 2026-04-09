@@ -13,7 +13,7 @@ extension AppLocaleModeX on AppLocaleMode {
 
 class AppLocaleModeNotifier extends Notifier<AppLocaleMode> {
   @override
-  AppLocaleMode build() => AppLocaleMode.zh;
+  AppLocaleMode build() => AppLocaleMode.en;
 
   void setMode(AppLocaleMode mode) {
     state = mode;

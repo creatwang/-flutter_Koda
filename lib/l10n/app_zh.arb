@@ -22,10 +22,23 @@
     }
   },
   "loginTitle": "iPad 商城登录",
+  "authLoginHeading": "登录",
+  "authRegisterHeading": "创建账户",
+  "authNewHereHint": "新用户？创建一个账户",
+  "authHaveAccountHint": "已有账号？去登录",
+  "authLoginTab": "登录",
+  "authRegisterTab": "注册",
   "loginUsername": "用户名",
   "loginPassword": "密码",
+  "authConfirmPasswordLabel": "确认密码",
+  "authForgotPassword": "忘记密码？",
+  "authRememberMe": "30 天内保持登录",
   "loginAction": "登录",
+  "authLoginAction": "去登录",
+  "authRegisterAction": "创建账户",
   "loginFailed": "登录失败，请检查账号密码",
+  "authPasswordMismatch": "两次密码不一致",
+  "authRegisterSuccessDemo": "注册流程演示成功，请使用登录继续",
   "productLoadFailed": "商品加载失败: {error}",
   "@productLoadFailed": {
     "placeholders": {

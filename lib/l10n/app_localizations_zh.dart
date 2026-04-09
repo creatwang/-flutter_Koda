@@ -56,16 +56,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginTitle => 'iPad 商城登录';
 
   @override
+  String get authLoginHeading => '登录';
+
+  @override
+  String get authRegisterHeading => '创建账户';
+
+  @override
+  String get authNewHereHint => '新用户？创建一个账户';
+
+  @override
+  String get authHaveAccountHint => '已有账号？去登录';
+
+  @override
+  String get authLoginTab => '登录';
+
+  @override
+  String get authRegisterTab => '注册';
+
+  @override
   String get loginUsername => '用户名';
 
   @override
   String get loginPassword => '密码';
 
   @override
+  String get authConfirmPasswordLabel => '确认密码';
+
+  @override
+  String get authForgotPassword => '忘记密码？';
+
+  @override
+  String get authRememberMe => '30 天内保持登录';
+
+  @override
   String get loginAction => '登录';
 
   @override
+  String get authLoginAction => '去登录';
+
+  @override
+  String get authRegisterAction => '创建账户';
+
+  @override
   String get loginFailed => '登录失败，请检查账号密码';
+
+  @override
+  String get authPasswordMismatch => '两次密码不一致';
+
+  @override
+  String get authRegisterSuccessDemo => '注册流程演示成功，请使用登录继续';
 
   @override
   String productLoadFailed(Object error) {

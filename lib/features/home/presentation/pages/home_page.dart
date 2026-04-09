@@ -9,6 +9,7 @@ import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
+import 'package:groe_app_pad/shared/widgets/frosted_bottom_menu.dart';
 import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
 import '../../../product/presentation/pages/product_category_page.dart';
@@ -95,6 +96,34 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ],
       body: body,
+      bottomNavigationBar: FrostedBottomMenu(
+        items: [
+          FrostedBottomMenuItem(
+            icon: Icons.home_outlined,
+            label: l10n.homeCategory,
+            selected: _section == HomeSection.productCategory,
+            onTap: () => setState(() => _section = HomeSection.productCategory),
+          ),
+          FrostedBottomMenuItem(
+            icon: Icons.inventory_2_outlined,
+            label: l10n.homeProducts,
+            selected: _section == HomeSection.products,
+            onTap: () => setState(() => _section = HomeSection.products),
+          ),
+          FrostedBottomMenuItem(
+            icon: Icons.shopping_bag_outlined,
+            label: l10n.homeCart,
+            selected: _section == HomeSection.cart,
+            onTap: () => setState(() => _section = HomeSection.cart),
+          ),
+          FrostedBottomMenuItem(
+            icon: Icons.receipt_long_outlined,
+            label: l10n.homeOrders,
+            selected: _section == HomeSection.orders,
+            onTap: () => setState(() => _section = HomeSection.orders),
+          ),
+        ],
+      ),
     );
   }
 }

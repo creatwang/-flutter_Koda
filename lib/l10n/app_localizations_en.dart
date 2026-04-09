@@ -56,16 +56,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTitle => 'iPad Mall Sign In';
 
   @override
+  String get authLoginHeading => 'Login';
+
+  @override
+  String get authRegisterHeading => 'Create an account';
+
+  @override
+  String get authNewHereHint => 'New here? Create an account';
+
+  @override
+  String get authHaveAccountHint => 'Already have an account? Sign in';
+
+  @override
+  String get authLoginTab => 'Login';
+
+  @override
+  String get authRegisterTab => 'Register';
+
+  @override
   String get loginUsername => 'Username';
 
   @override
   String get loginPassword => 'Password';
 
   @override
+  String get authConfirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get authForgotPassword => 'Forgot?';
+
+  @override
+  String get authRememberMe => 'Keep me signed in for 30 days';
+
+  @override
   String get loginAction => 'Sign in';
 
   @override
+  String get authLoginAction => 'Sign in';
+
+  @override
+  String get authRegisterAction => 'Create account';
+
+  @override
   String get loginFailed => 'Sign in failed. Please check your credentials.';
+
+  @override
+  String get authPasswordMismatch => 'Passwords do not match.';
+
+  @override
+  String get authRegisterSuccessDemo =>
+      'Register demo completed. Please sign in to continue.';
 
   @override
   String productLoadFailed(Object error) {

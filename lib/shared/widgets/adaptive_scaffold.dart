@@ -10,6 +10,7 @@ class AdaptiveScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.leading,
     this.automaticallyImplyLeading = true,
+    this.bottomNavigationBar,
   });
 
   final String title;
@@ -19,6 +20,7 @@ class AdaptiveScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final Widget? leading;
   final bool automaticallyImplyLeading;
+  final Widget? bottomNavigationBar;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +35,11 @@ class AdaptiveScaffold extends StatelessWidget {
         automaticallyImplyLeading: automaticallyImplyLeading,
         actions: mergedActions,
         bottom: bottom,
+        shadowColor: Colors.grey,
       ),
       floatingActionButton: floatingActionButton,
       body: body,
+      bottomNavigationBar: bottomNavigationBar,
     );
   }
 }

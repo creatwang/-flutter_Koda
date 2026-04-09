@@ -7,3 +7,10 @@
 
 修改国际化之后
 flutter gen-l10n
+
+打包
+flutter clean
+删 android/.gradle 和 项目根 .dart_tool（可选）
+重新拉依赖并打包
+flutter pub get
+flutter build apk --release

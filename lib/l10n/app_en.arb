@@ -22,10 +22,23 @@
     }
   },
   "loginTitle": "iPad Mall Sign In",
+  "authLoginHeading": "Login",
+  "authRegisterHeading": "Create an account",
+  "authNewHereHint": "New here? Create an account",
+  "authHaveAccountHint": "Already have an account? Sign in",
+  "authLoginTab": "Login",
+  "authRegisterTab": "Register",
   "loginUsername": "Username",
   "loginPassword": "Password",
+  "authConfirmPasswordLabel": "Confirm password",
+  "authForgotPassword": "Forgot?",
+  "authRememberMe": "Keep me signed in for 30 days",
   "loginAction": "Sign in",
+  "authLoginAction": "Sign in",
+  "authRegisterAction": "Create account",
   "loginFailed": "Sign in failed. Please check your credentials.",
+  "authPasswordMismatch": "Passwords do not match.",
+  "authRegisterSuccessDemo": "Register demo completed. Please sign in to continue.",
   "productLoadFailed": "Failed to load products: {error}",
   "@productLoadFailed": {
     "placeholders": {

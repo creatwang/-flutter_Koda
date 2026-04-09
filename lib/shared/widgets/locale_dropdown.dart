@@ -5,6 +5,7 @@ import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class LocaleDropdown extends ConsumerWidget {
   const LocaleDropdown({super.key});
+  static const double _radius = 10;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,10 +23,11 @@ class LocaleDropdown extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(999)
+          borderRadius: BorderRadius.circular(_radius),
         ),
         child: PopupMenuButton<AppLocaleMode>(
           tooltip: l10n.languageLabel,
+          borderRadius: BorderRadius.circular(_radius),
           onSelected: (value) => ref.read(appLocaleModeProvider.notifier).setMode(value),
           itemBuilder: (_) => [
             PopupMenuItem(

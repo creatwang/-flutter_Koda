@@ -188,6 +188,42 @@ abstract class AppLocalizations {
   /// **'iPad Mall Sign In'**
   String get loginTitle;
 
+  /// No description provided for @authLoginHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get authLoginHeading;
+
+  /// No description provided for @authRegisterHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account'**
+  String get authRegisterHeading;
+
+  /// No description provided for @authNewHereHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New here? Create an account'**
+  String get authNewHereHint;
+
+  /// No description provided for @authHaveAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get authHaveAccountHint;
+
+  /// No description provided for @authLoginTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get authLoginTab;
+
+  /// No description provided for @authRegisterTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get authRegisterTab;
+
   /// No description provided for @loginUsername.
   ///
   /// In en, this message translates to:
@@ -200,17 +236,59 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get loginPassword;
 
+  /// No description provided for @authConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get authConfirmPasswordLabel;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authRememberMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep me signed in for 30 days'**
+  String get authRememberMe;
+
   /// No description provided for @loginAction.
   ///
   /// In en, this message translates to:
   /// **'Sign in'**
   String get loginAction;
 
+  /// No description provided for @authLoginAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authLoginAction;
+
+  /// No description provided for @authRegisterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get authRegisterAction;
+
   /// No description provided for @loginFailed.
   ///
   /// In en, this message translates to:
   /// **'Sign in failed. Please check your credentials.'**
   String get loginFailed;
+
+  /// No description provided for @authPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get authPasswordMismatch;
+
+  /// No description provided for @authRegisterSuccessDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Register demo completed. Please sign in to continue.'**
+  String get authRegisterSuccessDemo;
 
   /// No description provided for @productLoadFailed.
   ///

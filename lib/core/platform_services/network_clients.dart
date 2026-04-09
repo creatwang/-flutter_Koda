@@ -34,8 +34,7 @@ BaseOptions buildBaseOptions() {
   );
 }
 
-final FlutterSecureStorage appSecureStorage = const FlutterSecureStorage();
-final SecureStorageService secureStorageService = SecureStorageService(appSecureStorage);
+final SecureStorageService secureStorageService = SecureStorageService(const FlutterSecureStorage());
 
 /// 开放客户端实例（无需登录的请求可复用）
 final DioClient publicDioClient = DioClient(_buildPublicDio());

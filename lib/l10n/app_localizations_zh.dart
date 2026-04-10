@@ -62,10 +62,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authRegisterHeading => '创建账户';
 
   @override
-  String get authNewHereHint => '新用户？创建一个账户';
+  String get authNewHereHint => '新用户？';
 
   @override
-  String get authHaveAccountHint => '已有账号？去登录';
+  String get authHaveAccountHint => '已有账号？';
 
   @override
   String get authLoginTab => '登录';

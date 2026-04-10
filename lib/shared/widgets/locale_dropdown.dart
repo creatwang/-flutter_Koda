@@ -11,7 +11,9 @@ class LocaleDropdown extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(appLocaleModeProvider);
     final l10n = context.l10n;
-    final colorScheme = Theme.of(context).colorScheme;
+    final iconTextColor =
+        Theme.of(context).appBarTheme.foregroundColor ??
+        (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87);
     final label = switch (mode) {
       AppLocaleMode.system => l10n.languageSystem,
       AppLocaleMode.zh => l10n.languageChinese,
@@ -51,13 +53,13 @@ class LocaleDropdown extends ConsumerWidget {
                 Icon(
                   Icons.language,
                   size: 18,
-                  color:  colorScheme.onSurface,
+                  color: iconTextColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: TextStyle(
-                    color:  colorScheme.onSurface,
+                    color: iconTextColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

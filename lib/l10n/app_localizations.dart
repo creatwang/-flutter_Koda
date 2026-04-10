@@ -203,13 +203,13 @@ abstract class AppLocalizations {
   /// No description provided for @authNewHereHint.
   ///
   /// In en, this message translates to:
-  /// **'New here? Create an account'**
+  /// **'New here?'**
   String get authNewHereHint;
 
   /// No description provided for @authHaveAccountHint.
   ///
   /// In en, this message translates to:
-  /// **'Already have an account? Sign in'**
+  /// **'Already have an account?'**
   String get authHaveAccountHint;
 
   /// No description provided for @authLoginTab.

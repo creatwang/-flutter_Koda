@@ -41,49 +41,53 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final isLoading = sessionState.isLoading;
     final isCompact = MediaQuery.of(context).size.width < 860;
 
-    return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const NetworkImage(_heroImageUrl),
-            fit: BoxFit.cover,
-            onError: (_, __) {},
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: const NetworkImage(_heroImageUrl),
+              fit: BoxFit.cover,
+              onError: (_, __) {},
+            ),
           ),
-        ),
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.28),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 760),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: isCompact
-                      ? _buildRightPanel(context, l10n, isLoading, compact: true)
-                      : Row(
-                          children: [
-                            Expanded(
-                              flex: 11,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: const NetworkImage(_heroImageUrl),
-                                    fit: BoxFit.cover,
-                                    onError: (_, __) {},
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 760),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: isCompact
+                        ? _buildRightPanel(context, l10n, isLoading, compact: true)
+                        : Row(
+                            children: [
+                              Expanded(
+                                flex: 11,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: const NetworkImage(_heroImageUrl),
+                                      fit: BoxFit.cover,
+                                      onError: (_, __) {},
+                                    ),
+                                  ),
+                                  child: Container(
+                                    color: Colors.black.withValues(alpha: 0.18),
                                   ),
                                 ),
-                                child: Container(
-                                  color: Colors.black.withValues(alpha: 0.18),
-                                ),
                               ),
-                            ),
-                            Expanded(
-                              flex: 9,
-                              child: _buildRightPanel(context, l10n, isLoading),
-                            ),
-                          ],
-                        ),
+                              Expanded(
+                                flex: 9,
+                                child: _buildRightPanel(context, l10n, isLoading),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -119,159 +123,185 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ],
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 38, vertical: 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 6),
-              Text(
-                _isRegister ? l10n.authRegisterHeading : l10n.authLoginHeading,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 36 * 0.62,
-                  fontWeight: FontWeight.w700,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  38,
+                  34,
+                  38,
+                  34 + MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    _isRegister ? l10n.authHaveAccountHint : l10n.authNewHereHint,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.86),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  InkWell(
-                    onTap: () => setState(() => _isRegister = !_isRegister),
-                    child: Text(
-                      _isRegister ? l10n.authLoginAction : l10n.authRegisterAction,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.white,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 68),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 6),
+                      Text(
+                        _isRegister ? l10n.authRegisterHeading : l10n.authLoginHeading,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 36 * 0.62,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const SizedBox(height: 28),
-              _fieldLabel('EMAIL ADDRESS'),
-              const SizedBox(height: 8),
-              _glassField(
-                controller: _usernameController,
-                hint: 'name@firm.com',
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _fieldLabel('PASSWORD'),
-                  const Spacer(),
-                  Text(
-                    l10n.authForgotPassword,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.70),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _glassField(
-                controller: _passwordController,
-                obscureText: true,
-                hint: '********',
-              ),
-              if (_isRegister) ...[
-                const SizedBox(height: 16),
-                _fieldLabel(l10n.authConfirmPasswordLabel.toUpperCase()),
-                const SizedBox(height: 8),
-                _glassField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  hint: '********',
-                ),
-              ],
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Transform.scale(
-                    scale: 0.85,
-                    child: Checkbox(
-                      value: _rememberMe,
-                      fillColor: WidgetStateProperty.resolveWith(
-                        (_) => Colors.white.withValues(alpha: 0.95),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            _isRegister ? l10n.authHaveAccountHint : l10n.authNewHereHint,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.86),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => setState(() => _isRegister = !_isRegister),
+                            child: Text(
+                              _isRegister ? l10n.authLoginAction : l10n.authRegisterAction,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.98),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white.withValues(alpha: 0.98),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      checkColor: Colors.black,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
-                      onChanged: (value) {
-                        setState(() => _rememberMe = value ?? false);
-                      },
-                    ),
+                      const SizedBox(height: 12),
+                      const SizedBox(height: 28),
+                      _fieldLabel('EMAIL ADDRESS'),
+                      const SizedBox(height: 8),
+                      _glassField(
+                        controller: _usernameController,
+                        hint: 'name@firm.com',
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          _fieldLabel('PASSWORD'),
+                          const Spacer(),
+                          Text(
+                            l10n.authForgotPassword,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.70),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _glassField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        hint: '********',
+                        keyboardType: TextInputType.visiblePassword,
+                        textInputAction:
+                            _isRegister ? TextInputAction.next : TextInputAction.done,
+                      ),
+                      if (_isRegister) ...[
+                        const SizedBox(height: 16),
+                        _fieldLabel(l10n.authConfirmPasswordLabel.toUpperCase()),
+                        const SizedBox(height: 8),
+                        _glassField(
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          hint: '********',
+                          keyboardType: TextInputType.visiblePassword,
+                          textInputAction: TextInputAction.done,
+                        ),
+                      ],
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Transform.scale(
+                            scale: 0.85,
+                            child: Checkbox(
+                              value: _rememberMe,
+                              fillColor: WidgetStateProperty.resolveWith(
+                                (_) => Colors.white.withValues(alpha: 0.95),
+                              ),
+                              checkColor: Colors.black,
+                              side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                              onChanged: (value) {
+                                setState(() => _rememberMe = value ?? false);
+                              },
+                            ),
+                          ),
+                          Text(
+                            l10n.authRememberMe,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.82),
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 44,
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(alpha: 0.88),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () => _handleSubmit(context, l10n),
+                          child: isLoading
+                              ? const SizedBox.square(
+                                  dimension: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(_isRegister ? l10n.authRegisterAction : l10n.loginAction),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.22),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          'By signing in, you agree to our Terms of Service and Privacy Policy.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Center(
+                        child: Text(
+                          '© 2024 The Digital Curator. All rights reserved.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.68),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    l10n.authRememberMe,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.82),
-                      fontSize: 11.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.black.withValues(alpha: 0.88),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                  ),
-                  onPressed: isLoading
-                      ? null
-                      : () => _handleSubmit(context, l10n),
-                  child: isLoading
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isRegister ? l10n.authRegisterAction : l10n.loginAction),
                 ),
-              ),
-              const Spacer(),
-              Container(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.22),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'By signing in, you agree to our Terms of Service and Privacy Policy.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 7),
-              Center(
-                child: Text(
-                  '© 2024 The Digital Curator. All rights reserved.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.68),
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ],
@@ -323,10 +353,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     required TextEditingController controller,
     required String hint,
     bool obscureText = false,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
   }) {
     return TextField(
       controller: controller,
       obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         isDense: true,

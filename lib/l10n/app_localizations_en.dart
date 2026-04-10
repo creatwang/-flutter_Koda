@@ -62,10 +62,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRegisterHeading => 'Create an account';
 
   @override
-  String get authNewHereHint => 'New here? Create an account';
+  String get authNewHereHint => 'New here?';
 
   @override
-  String get authHaveAccountHint => 'Already have an account? Sign in';
+  String get authHaveAccountHint => 'Already have an account?';
 
   @override
   String get authLoginTab => 'Login';

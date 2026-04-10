@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:groe_app_pad/app/providers/theme_provider.dart';
 import 'package:groe_app_pad/theme/app_colors.dart';
 
-ThemeData buildAppTheme() {
+ThemeData buildAppTheme(AppThemeMode mode) {
+  final isDark = mode == AppThemeMode.dark;
   const radius = 10.0;
   final base = ThemeData(useMaterial3: true);
   final scheme = ColorScheme.fromSeed(
     seedColor: AppColors.brandPrimary,
-    brightness: Brightness.light,
+    brightness: isDark ? Brightness.dark : Brightness.light,
   );
 
   return base.copyWith(
@@ -19,11 +21,16 @@ ThemeData buildAppTheme() {
     appBarTheme: const AppBarTheme(
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      backgroundColor: AppColors.appBarBackground,
-      foregroundColor: AppColors.textOnDark,
-      actionsIconTheme: IconThemeData(color: AppColors.brandOnPrimary),
+    ).copyWith(
+      backgroundColor: isDark
+          ? AppColors.appBarBackground
+          : Colors.white.withValues(alpha: 0.45),
+      foregroundColor: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+      actionsIconTheme: IconThemeData(
+        color: isDark ? AppColors.brandOnPrimary : AppColors.textPrimary,
+      ),
       titleTextStyle: TextStyle(
-        color: AppColors.textOnDark,
+        color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
         fontSize: 20,
         fontWeight: FontWeight.w600,
       ),

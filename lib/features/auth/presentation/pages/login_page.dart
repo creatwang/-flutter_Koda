@@ -17,9 +17,9 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   // DummyJSON 演示账号，便于本地直接验证登录流程。
-  final _usernameController = TextEditingController(text: 'emilys');
-  final _passwordController = TextEditingController(text: 'emilyspass');
-  final _confirmPasswordController = TextEditingController(text: 'emilyspass');
+  final _usernameController = TextEditingController(text: '17614764201');
+  final _passwordController = TextEditingController(text: '123456');
+  final _confirmPasswordController = TextEditingController(text: '123456');
   bool _rememberMe = true;
   bool _isRegister = false;
 

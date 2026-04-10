@@ -14,3 +14,6 @@ flutter clean
 重新拉依赖并打包
 flutter pub get
 flutter build apk --release
+
+
+只有产品和首页装修会区分站点company_id

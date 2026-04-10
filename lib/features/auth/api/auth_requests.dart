@@ -3,7 +3,7 @@ import 'package:groe_app_pad/core/network/dio_client.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 class AuthRequests {
-  static const String loginPath = '/auth/login';
+  static const String loginPath = '/store/user/login';
 }
 
 Future<Response<dynamic>> requestAuthLogin({
@@ -16,6 +16,7 @@ Future<Response<dynamic>> requestAuthLogin({
     data: {
       'username': username,
       'password': password,
+      'terminal': 3
     },
   );
 }

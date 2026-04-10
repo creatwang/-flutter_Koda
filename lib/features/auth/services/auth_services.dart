@@ -5,7 +5,8 @@ import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
-import 'package:groe_app_pad/features/auth/models/auth_token_dto.dart';
+
+import '../models/user_info_bean.dart';
 
 export 'package:groe_app_pad/core/platform_services/network_clients.dart'
     show
@@ -39,10 +40,11 @@ Future<ApiResult<TokenPair>> authLoginService({ required String username, requir
         error: 'Invalid login response format',
       );
     }
-    final dto = AuthTokenDto.fromJson(data);
-    final pair = dto.toPair();
-    await secureStorageService.saveTokenPair(pair);
-    return ApiSuccess(pair);
+    final userInfoBase = UserInfoBase.fromJson(data);
+    await secureStorageService.saveUserInfoBase(userInfoBase);
+    await secureStorageService.saveCompanyId(userInfoBase.companyId.toString());
+    await secureStorageService.saveTokenMap(userInfoBase.companyId.toString(), userInfoBase.token.toString());
+    return ApiSuccess(TokenPair(token: userInfoBase.token.toString(), companyId: userInfoBase.companyId.toString()));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(

@@ -9,6 +9,7 @@ import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/services/app_message_service.dart';
 import 'package:groe_app_pad/theme/app_theme.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
@@ -34,6 +35,7 @@ class AppShell extends ConsumerWidget {
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: appScaffoldMessengerKey,
       theme: buildAppTheme(appThemeMode),
       locale: localeMode.localeOrNull,
       // 国际化资源加载器：

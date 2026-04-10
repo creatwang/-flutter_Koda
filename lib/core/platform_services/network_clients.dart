@@ -5,6 +5,7 @@ import 'package:groe_app_pad/core/config/env.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
 import 'package:groe_app_pad/core/network/interceptors/memory_cache_interceptor.dart';
 import 'package:groe_app_pad/core/network/interceptors/request_trace_interceptor.dart';
+import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
 import 'package:groe_app_pad/core/network/interceptors/retry_interceptor.dart';
 import 'package:groe_app_pad/core/storage/secure_storage_service.dart';
 
@@ -15,13 +16,14 @@ import '../result/app_exception.dart';
 import '../storage/token_pair.dart';
 
 typedef AuthRefreshService = Future<ApiResult<TokenPair>> Function(String refreshToken);
-typedef AuthReadTokenService = Future<TokenPair?> Function();
+typedef AuthReadTokenService = Future<String?> Function();
 typedef AuthClearTokenService = Future<void> Function();
 final authRefreshServiceProvider = Provider<AuthRefreshService>((ref) => authRefreshService);
-final authReadTokenServiceProvider = Provider<AuthReadTokenService>((ref) => authReadTokenService);
+final authReadTokenServiceProvider = Provider<AuthReadTokenService>(
+  (ref) => secureStorageService.getCompanyId,
+);
 final authClearTokenServiceProvider = Provider<AuthClearTokenService>((ref) => authClearTokenService);
 
-Future<TokenPair?> authReadTokenService() => secureStorageService.readTokenPair();
 
 /// 基础网络配置
 BaseOptions buildBaseOptions() {
@@ -39,10 +41,11 @@ final SecureStorageService secureStorageService = SecureStorageService(const Flu
 /// 开放客户端实例（无需登录的请求可复用）
 final DioClient publicDioClient = DioClient(_buildPublicDio());
 
-Dio _buildPublicDio() {
+Dio _buildPublicDio({ResponseDataMode responseDataMode = ResponseDataMode.origin}) {
   final dio = Dio(buildBaseOptions());
   dio.interceptors.addAll([
     RequestTraceInterceptor(),
+    ResponseDataModeInterceptor(responseDataMode),
     MemoryCacheInterceptor(ttl: const Duration(minutes: 2)),
     RetryInterceptor(dio),
   ]);
@@ -66,10 +69,14 @@ Future<ApiResult<TokenPair>> authRefreshService(String refreshToken) async {
 
 /// 认证客户端实例
 final DioClient protectedDioClient = DioClient(_buildProtectedDio());
-Dio _buildProtectedDio() {
+
+Dio _buildProtectedDio({
+  ResponseDataMode responseDataMode = ResponseDataMode.origin,
+}) {
   final dio = Dio(buildBaseOptions());
   dio.interceptors.addAll([
     RequestTraceInterceptor(),
+    ResponseDataModeInterceptor(responseDataMode),
     AuthInterceptor(secureStorageService),
     MemoryCacheInterceptor(ttl: const Duration(minutes: 2)),
     RetryInterceptor(dio),

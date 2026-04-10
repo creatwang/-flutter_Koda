@@ -19,15 +19,21 @@ class AuthInterceptor extends Interceptor {
   ) async {
     final requestId = '${options.extra['requestId'] ?? '-'}';
     // 请求前从安全存储读取 access token。
-    final token = await _storageService.readAccessToken();
-    if (token != null && token.isNotEmpty) {
-      // 将 token 注入到标准 Authorization 头中。
-      options.headers['Authorization'] = 'Bearer $token';
-      _log('[NET][AUTH][$requestId] attach bearer token ${options.method} ${options.path}');
+
+    final companyId = await _storageService.getCompanyId();
+    if (companyId == null || companyId.isEmpty) {
+      _log('[NET][AUTH][$requestId] 没有CompanyId ${options.method} ${options.path}');
     } else {
-      // 没有 token 不是异常场景（比如未登录），只记录日志。
-      _log('[NET][AUTH][$requestId] no token found ${options.method} ${options.path}');
+      final token = await _storageService.getTokenByCompanyId(companyId);
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = '$token';
+        _log('[NET][AUTH][$requestId] attach Authorization 注入 token ${options.method} ${options.path}');
+      } else {
+        // 没有 token 不是异常场景（比如未登录），只记录日志。
+        _log('[NET][AUTH][$requestId] no token found ${options.method} ${options.path}');
+      }
     }
+
     handler.next(options);
   }
 

@@ -2,16 +2,18 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
-import 'package:groe_app_pad/features/auth/services/auth_services.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
+import 'package:groe_app_pad/features/auth/services/auth_services.dart';
+
+import '../../../core/platform_services/network_clients.dart';
 
 final sessionControllerProvider = AsyncNotifierProvider<SessionController, Session>(SessionController.new);
 
 class SessionController extends AsyncNotifier<Session> {
   @override
   FutureOr<Session> build() async {
-    final tokenPair = await ref.watch(authReadTokenServiceProvider)();
-    return _toSession(tokenPair);
+    final companyId = await ref.watch(authReadTokenServiceProvider)();
+    return _toSession(companyId);
   }
 
   Future<bool> signIn({
@@ -25,13 +27,14 @@ class SessionController extends AsyncNotifier<Session> {
     );
 
     return result.when(
-      success: (pair) {
-        final session = _toSession(pair);
-        /**
-         * @Description 当你把 state 设置为 AsyncData 时，UI 监听者（ConsumerWidget）会自动监听到这个变化，并根据新的数据重新构建页面。
-         * @date 2026/04/08 18:06:39
-         */
-        state = AsyncData(session);
+      success: (TokenPair pair) {
+        state = AsyncData(
+          Session(
+            isAuthenticated: true,
+            token: pair.token,
+            companyId: pair.companyId,
+          ),
+        );
         return true;
       },
       failure: (exception) {
@@ -44,8 +47,9 @@ class SessionController extends AsyncNotifier<Session> {
   Future<TokenPair?> refreshToken(String refreshToken) async {
     final result = await ref.read(authRefreshServiceProvider)(refreshToken);
     return result.when(
-      success: (pair) {
-        state = AsyncData(_toSession(pair));
+      success: (pair) async {
+        Session session = await _toSession(pair.companyId);
+        state = AsyncData(session);
         return pair;
       },
       failure: (_) => null,
@@ -57,12 +61,15 @@ class SessionController extends AsyncNotifier<Session> {
     state = const AsyncData(Session(isAuthenticated: false));
   }
 
-  Session _toSession(TokenPair? pair) {
-    if (pair == null) return const Session(isAuthenticated: false);
+  FutureOr<Session> _toSession(String? companyId) async {
+    if (companyId == null || companyId.isEmpty) {
+      return const Session(isAuthenticated: false);
+    }
+    final token = await secureStorageService.getTokenByCompanyId(companyId);
     return Session(
       isAuthenticated: true,
-      accessToken: pair.accessToken,
-      refreshToken: pair.refreshToken,
+      companyId: companyId,
+      token: token
     );
   }
 }

@@ -58,35 +58,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 760),
-                child: Padding(
+                child: Container(
                   padding: const EdgeInsets.all(20),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: isCompact
                         ? _buildRightPanel(context, l10n, isLoading, compact: true)
                         : Row(
-                            children: [
-                              Expanded(
-                                flex: 11,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: const NetworkImage(_heroImageUrl),
-                                      fit: BoxFit.cover,
-                                      onError: (_, __) {},
-                                    ),
-                                  ),
-                                  child: Container(
-                                    color: Colors.black.withValues(alpha: 0.18),
-                                  ),
-                                ),
+                      children: [
+                        Expanded(
+                          flex: 11,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: const NetworkImage(_heroImageUrl),
+                                fit: BoxFit.cover,
+                                onError: (_, __) {},
                               ),
-                              Expanded(
-                                flex: 9,
-                                child: _buildRightPanel(context, l10n, isLoading),
-                              ),
-                            ],
+                            ),
+                            child: Container(
+                              color: Colors.black.withValues(alpha: 0.18),
+                            ),
                           ),
+                        ),
+                        Expanded(
+                          flex: 9,
+                          child: _buildRightPanel(context, l10n, isLoading),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

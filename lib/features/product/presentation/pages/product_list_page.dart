@@ -89,7 +89,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     final l10n = context.l10n;
     final productsState = ref.watch(productsProvider);
     final isTabletUp = context.isTabletUp;
-    final columns = isTabletUp ? (_isFilterCollapsed ? 5 : 4) : 2;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final columns = isTabletUp
+        ? (isLandscape
+            ? (_isFilterCollapsed ? 5 : 4)
+            : (_isFilterCollapsed ? 4 : 3))
+        : 2;
 
     return productsState.when(
       loading: () => const AppLoadingView(),
@@ -102,7 +107,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         _ensureScrollableAndLoadMoreIfNeeded();
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -110,7 +115,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
                   curve: Curves.easeInOutCubic,
-                  width: _isFilterCollapsed ? 0 : 282,
+                  width: _isFilterCollapsed ? 0 : 225,
                   child: ClipRect(
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 180),
@@ -528,7 +533,6 @@ class _FilterPanel extends StatelessWidget {
                 expanded: false,
                 selected: selectedSubCategory == 'Seating',
                 onTap: () => onSubCategoryTap('Seating'),
-                dense: true,
               ),
               const SizedBox(height: 4),
               _TreeNodeRow(
@@ -536,7 +540,6 @@ class _FilterPanel extends StatelessWidget {
                 expanded: false,
                 selected: selectedSubCategory == 'Tables',
                 onTap: () => onSubCategoryTap('Tables'),
-                dense: true,
               ),
             ],
           ),
@@ -555,6 +558,7 @@ class _FilterPanel extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
+                      fontSize: 16
                     ),
               ),
             ),
@@ -597,6 +601,7 @@ class _FilterPanel extends StatelessWidget {
           'Price Range',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
+                fontSize: 12,
                 color: Colors.white,
               ),
         ),
@@ -605,10 +610,14 @@ class _FilterPanel extends StatelessWidget {
             activeTrackColor: const Color(0xFFE3AE2B),
             inactiveTrackColor: const Color(0xFFDCE4F1).withValues(alpha: 0.92),
             overlayColor: const Color(0x30E3AE2B),
-            trackHeight: 4,
+            trackHeight: 3,
+            overlayShape: SliderComponentShape.noOverlay,
+            rangeTrackShape: const _FullWidthRangeSliderTrackShape(),
             rangeThumbShape: const _RingRangeSliderThumbShape(
               ringColor: Color(0xFF003F7F),
               fillColor: Color(0xFFECECEC),
+              outerRadius: 8,
+              innerRadius: 6,
             ),
           ),
           child: RangeSlider(
@@ -637,6 +646,7 @@ class _FilterPanel extends StatelessWidget {
           'Brand Curation',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
+                fontSize: 12,
                 color: Colors.white,
               ),
         ),
@@ -765,7 +775,7 @@ class _FilterChipButton extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -813,7 +823,7 @@ class _TinyTag extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.90),
-                  fontSize: 10.5,
+                  fontSize: 10,
                 ),
           ),
         ),
@@ -828,14 +838,12 @@ class _TreeNodeRow extends StatelessWidget {
     required this.selected,
     required this.expanded,
     required this.onTap,
-    this.dense = false,
   });
 
   final String title;
   final bool selected;
   final bool expanded;
   final VoidCallback? onTap;
-  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -852,7 +860,7 @@ class _TreeNodeRow extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: selected ? 1 : 0.92),
-                  fontSize: dense ? 12.5 : 13.5,
+                  fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -863,7 +871,7 @@ class _TreeNodeRow extends StatelessWidget {
               turns: expanded ? 0.5 : 0,
               child: Icon(
                 Icons.expand_more,
-                size: dense ? 13 : 15,
+                size: 15,
                 color: Colors.white.withValues(alpha: 0.74),
               ),
             ),
@@ -951,7 +959,7 @@ class _ExpandableFilterTile extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1000,13 +1008,17 @@ class _RingRangeSliderThumbShape extends RangeSliderThumbShape {
   const _RingRangeSliderThumbShape({
     required this.ringColor,
     required this.fillColor,
+    required this.outerRadius,
+    required this.innerRadius,
   });
 
   final Color ringColor;
   final Color fillColor;
+  final double outerRadius;
+  final double innerRadius;
 
   @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) => const Size.square(22);
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) => Size.square(outerRadius * 2);
 
   @override
   void paint(
@@ -1025,7 +1037,29 @@ class _RingRangeSliderThumbShape extends RangeSliderThumbShape {
     final canvas = context.canvas;
     final ringPaint = Paint()..color = ringColor;
     final fillPaint = Paint()..color = fillColor;
-    canvas.drawCircle(center, 11, ringPaint);
-    canvas.drawCircle(center, 9, fillPaint);
+    canvas.drawCircle(center, outerRadius, ringPaint);
+    canvas.drawCircle(center, innerRadius, fillPaint);
+  }
+}
+
+class _FullWidthRangeSliderTrackShape extends RoundedRectRangeSliderTrackShape {
+  const _FullWidthRangeSliderTrackShape();
+
+  @override
+  Rect getPreferredRect({
+    required RenderBox parentBox,
+    Offset offset = Offset.zero,
+    required SliderThemeData sliderTheme,
+    bool isEnabled = false,
+    bool isDiscrete = false,
+  }) {
+    final trackHeight = sliderTheme.trackHeight ?? 3;
+    final trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
+    return Rect.fromLTWH(
+      offset.dx,
+      trackTop,
+      parentBox.size.width,
+      trackHeight,
+    );
   }
 }

@@ -369,6 +369,7 @@ class _SortHeader extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: Colors.white.withValues(alpha: 0.92),
+                        fontSize: 24
                       ),
                 ),
               ),
@@ -390,47 +391,55 @@ class _SortHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(9),
             border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: selectedSort,
-              borderRadius: BorderRadius.circular(10),
-              icon: const SizedBox.shrink(),
-              selectedItemBuilder: (context) => _sortOptions
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.sort, size: 16, color: Colors.white70),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Sort by: $e',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                            ),
+          child: ButtonTheme(
+            alignedDropdown: true,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: SizedBox(
+              height: 40,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isDense: true,
+                  value: selectedSort,
+                  borderRadius: BorderRadius.circular(10),
+                  icon: const SizedBox.shrink(),
+                  selectedItemBuilder: (context) => _sortOptions
+                      .map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.sort, size: 16, color: Colors.white70),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Sort by: $e',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  )
-                  .toList(growable: false),
-              items: _sortOptions
-                  .map(
-                    (e) => DropdownMenuItem<String>(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: (value) {
-                if (value != null) onSortChanged(value);
-              },
+                        ),
+                      )
+                      .toList(growable: false),
+                  items: _sortOptions
+                      .map(
+                        (e) => DropdownMenuItem<String>(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (value) {
+                    if (value != null) onSortChanged(value);
+                  },
+                ),
+              ),
             ),
           ),
         ),
@@ -601,10 +610,11 @@ class _FilterPanel extends StatelessWidget {
           'Price Range',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                fontSize: 12,
+                fontSize: 16,
                 color: Colors.white,
               ),
         ),
+        const SizedBox(height: 12),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: const Color(0xFFE3AE2B),
@@ -631,13 +641,14 @@ class _FilterPanel extends StatelessWidget {
             onChanged: onPriceChanged,
           ),
         ),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('¥0', style: TextStyle(color: Colors.white.withValues(alpha: 0.86))),
+            Text('¥0', style: TextStyle(color: Colors.white.withValues(alpha: 0.86), fontSize: 10)),
             Text(
               '¥${_formatYuan(priceRange.end)}+',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.86)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.86), fontSize: 10),
             ),
           ],
         ),
@@ -650,7 +661,7 @@ class _FilterPanel extends StatelessWidget {
                 color: Colors.white,
               ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 12),
         _BrandOptionTile(
           label: 'Hermes Maison',
           selected: selectedBrands.contains('Hermes Maison'),
@@ -852,7 +863,7 @@ class _TreeNodeRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(
         width: double.infinity,
-        height: 24,
+        height: 28,
         child: Row(
           children: [
             Expanded(
@@ -901,8 +912,8 @@ class _BrandOptionTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             decoration: BoxDecoration(
               color: selected ? const Color(0xFFA7B2E8) : Colors.transparent,
               borderRadius: BorderRadius.circular(4),
@@ -918,7 +929,7 @@ class _BrandOptionTile extends StatelessWidget {
               label,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1055,10 +1066,11 @@ class _FullWidthRangeSliderTrackShape extends RoundedRectRangeSliderTrackShape {
   }) {
     final trackHeight = sliderTheme.trackHeight ?? 3;
     final trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
+    const horizontalInset = 10.0;
     return Rect.fromLTWH(
-      offset.dx,
+      offset.dx + horizontalInset,
       trackTop,
-      parentBox.size.width,
+      parentBox.size.width - (horizontalInset * 2),
       trackHeight,
     );
   }

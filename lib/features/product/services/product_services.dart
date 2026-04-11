@@ -2,15 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/product/api/product_requests.dart';
-import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/models/product_dto.dart';
 
-Future<ApiResult<List<Product>>> fetchProductsPageService({
+import '../../../core/platform_services/network_clients.dart';
+
+Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
 }) async {
+  final companyId = await secureStorageService.getCompanyId();
   try {
-    final response = await requestProductsPage(page: page, pageSize: pageSize);
+    final response = await requestProductsPage(page: page, pageSize: pageSize, companyId: companyId);
     final data = response.data;
     if (data is! Map<String, dynamic>) {
       throw DioException(
@@ -18,17 +21,14 @@ Future<ApiResult<List<Product>>> fetchProductsPageService({
         error: 'Invalid product response format',
       );
     }
-    final list = data['products'];
+    final list = data['items'];
     if (list is! List) {
       throw DioException(
         requestOptions: response.requestOptions,
         error: 'Invalid products list format',
       );
     }
-    final dtos = list
-        .whereType<Map<String, dynamic>>()
-        .map(ProductDto.fromJson)
-        .toList(growable: false);
+    final dtos = list .whereType<Map<String, dynamic>>() .map(ProductDto.fromJson) .toList(growable: false);
     return ApiSuccess(dtos.map((e) => e.toModel()).toList(growable: false));
   } on DioException catch (e) {
     return ApiFailure(
@@ -42,7 +42,7 @@ Future<ApiResult<List<Product>>> fetchProductsPageService({
   }
 }
 
-Future<ApiResult<Product>> fetchProductByIdService(int id) async {
+Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   try {
     final response = await requestProductById(id);
     final data = response.data;

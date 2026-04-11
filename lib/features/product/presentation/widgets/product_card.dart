@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
-import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class ProductCard extends ConsumerWidget {
-  const ProductCard({required this.product, super.key});
+  const ProductCard({required this.productItem, super.key});
 
-  final Product product;
+  final ProductItem productItem;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,7 +17,7 @@ class ProductCard extends ConsumerWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push(AppRoutes.productDetail(product.id)),
+        onTap: () => context.push(AppRoutes.productDetail(productItem.id)),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -26,7 +26,7 @@ class ProductCard extends ConsumerWidget {
               Expanded(
                 child: Center(
                   child: Image.network(
-                    product.image,
+                    productItem.mainImage,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
                   ),
@@ -34,14 +34,14 @@ class ProductCard extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                product.title,
+                productItem.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 6),
               Text(
-                '¥ ${product.price.toStringAsFixed(2)}',
+                '¥ ${productItem.price.toStringAsFixed(2)}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -51,9 +51,9 @@ class ProductCard extends ConsumerWidget {
                 width: double.infinity,
                 child: FilledButton.tonalIcon(
                   onPressed: () {
-                    ref.read(cartControllerProvider.notifier).addProduct(product);
+                    ref.read(cartControllerProvider.notifier).addProduct(productItem);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.productAddedToCart(product.title))),
+                      SnackBar(content: Text(l10n.productAddedToCart(productItem.name))),
                     );
                   },
                   icon: const Icon(Icons.add_shopping_cart),

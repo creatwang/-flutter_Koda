@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/cart/domain/entities/cart_item.dart';
-import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 
 final cartControllerProvider =
     AsyncNotifierProvider<CartController, List<CartItem>>(CartController.new);
@@ -11,11 +11,11 @@ class CartController extends AsyncNotifier<List<CartItem>> {
   @override
   FutureOr<List<CartItem>> build() => [];
 
-  void addProduct(Product product) {
+  void addProduct(ProductItem productItem) {
     final current = state.asData?.value ?? [];
-    final idx = current.indexWhere((e) => e.product.id == product.id);
+    final idx = current.indexWhere((e) => e.productItem.id == productItem.id);
     if (idx == -1) {
-      state = AsyncData([...current, CartItem(product: product, quantity: 1)]);
+      state = AsyncData([...current, CartItem(productItem: productItem, quantity: 1)]);
       return;
     }
 
@@ -26,12 +26,12 @@ class CartController extends AsyncNotifier<List<CartItem>> {
 
   void removeProduct(int productId) {
     final current = state.asData?.value ?? [];
-    state = AsyncData(current.where((e) => e.product.id != productId).toList());
+    state = AsyncData(current.where((e) => e.productItem.id != productId).toList());
   }
 
   void decrementProduct(int productId) {
     final current = state.asData?.value ?? [];
-    final idx = current.indexWhere((e) => e.product.id == productId);
+    final idx = current.indexWhere((e) => e.productItem.id == productId);
     if (idx == -1) return;
     final item = current[idx];
     if (item.quantity <= 1) {

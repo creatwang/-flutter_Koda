@@ -18,6 +18,5 @@ Future<Response<dynamic>> requestAuthLogin({
       'password': password,
       'terminal': 3,
     },
-    simpleResponse: true,
   );
 }

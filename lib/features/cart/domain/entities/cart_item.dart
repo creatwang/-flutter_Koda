@@ -1,20 +1,20 @@
-import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 
 class CartItem {
   const CartItem({
-    required this.product,
+    required this.productItem,
     required this.quantity,
   });
 
-  final Product product;
+  final ProductItem productItem;
   final int quantity;
 
   CartItem copyWith({
-    Product? product,
+    ProductItem? productItem,
     int? quantity,
   }) {
     return CartItem(
-      product: product ?? this.product,
+      productItem: productItem ?? this.productItem,
       quantity: quantity ?? this.quantity,
     );
   }

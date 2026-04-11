@@ -89,7 +89,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
               if (index >= items.items.length) {
                 return const Center(child: CircularProgressIndicator());
               }
-              return ProductCard(product: items.items[index]);
+              return ProductCard(productItem: items.items[index]);
             },
           ),
         );

@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/features/product/models/product.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 
 class PaginatedProductsState {
   const PaginatedProductsState({
@@ -8,13 +8,13 @@ class PaginatedProductsState {
     this.isLoadingMore = false,
   });
 
-  final List<Product> items;
+  final List<ProductItem> items;
   final int page;
   final bool hasMore;
   final bool isLoadingMore;
 
   PaginatedProductsState copyWith({
-    List<Product>? items,
+    List<ProductItem>? items,
     int? page,
     bool? hasMore,
     bool? isLoadingMore,

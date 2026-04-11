@@ -44,17 +44,6 @@ class SessionController extends AsyncNotifier<Session> {
     );
   }
 
-  Future<TokenPair?> refreshToken(String refreshToken) async {
-    final result = await ref.read(authRefreshServiceProvider)(refreshToken);
-    return result.when(
-      success: (pair) async {
-        Session session = await _toSession(pair.companyId);
-        state = AsyncData(session);
-        return pair;
-      },
-      failure: (_) => null,
-    );
-  }
 
   Future<void> signOut() async {
     await ref.read(authClearTokenServiceProvider)();

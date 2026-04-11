@@ -66,13 +66,13 @@ class ProductDetailPage extends ConsumerWidget {
               SizedBox(
                 height: 280,
                 child: Image.network(
-                  product.image,
+                  product.mainImage,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
                 ),
               ),
               const SizedBox(height: 16),
-              Text(product.title, style: Theme.of(context).textTheme.headlineSmall),
+              Text(product.name, style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
               Text(
                 '¥ ${product.price.toStringAsFixed(2)}',
@@ -81,15 +81,15 @@ class ProductDetailPage extends ConsumerWidget {
                     ),
               ),
               const SizedBox(height: 12),
-              Text(product.category, style: Theme.of(context).textTheme.labelLarge),
+              Text(product.categoryName, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 16),
-              Text(product.description),
+              Text(product.id.toString()),
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: () {
                   ref.read(cartControllerProvider.notifier).addProduct(product);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.productAddedToCart(product.title))),
+                    SnackBar(content: Text(l10n.productAddedToCart(product.name))),
                   );
                 },
                 icon: const Icon(Icons.add_shopping_cart),

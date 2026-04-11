@@ -9,11 +9,16 @@ class DioClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    bool simpleResponse = true,
   }) {
+    final resolvedOptions = _resolveResponseModeOptions(
+      options: options,
+      simpleResponse: simpleResponse,
+    );
     return _dio.get<dynamic>(
       path,
       queryParameters: queryParameters,
-      options: options,
+      options: resolvedOptions,
     );
   }
 
@@ -22,7 +27,7 @@ class DioClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
-    bool simpleResponse = false,
+    bool simpleResponse = true,
   }) {
     final resolvedOptions = _resolveResponseModeOptions(
       options: options,

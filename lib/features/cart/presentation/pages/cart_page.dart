@@ -22,7 +22,7 @@ class CartPage extends ConsumerWidget {
         if (items.isEmpty) return AppEmptyView(message: l10n.cartEmpty);
         final totalPrice = items.fold<double>(
           0,
-          (sum, e) => sum + (e.product.price * e.quantity),
+          (sum, e) => sum + (e.productItem.price * e.quantity),
         );
 
         return Column(
@@ -37,27 +37,27 @@ class CartPage extends ConsumerWidget {
                   return ListTile(
                     tileColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    title: Text(item.product.title),
-                    subtitle: Text('¥ ${item.product.price.toStringAsFixed(2)}'),
+                    title: Text(item.productItem.name),
+                    subtitle: Text('¥ ${item.productItem.price.toStringAsFixed(2)}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           onPressed: () => ref
                               .read(cartControllerProvider.notifier)
-                              .decrementProduct(item.product.id),
+                              .decrementProduct(item.productItem.id),
                           icon: const Icon(Icons.remove_circle_outline),
                         ),
                         Text('${item.quantity}'),
                         IconButton(
                           onPressed: () =>
-                              ref.read(cartControllerProvider.notifier).addProduct(item.product),
+                              ref.read(cartControllerProvider.notifier).addProduct(item.productItem),
                           icon: const Icon(Icons.add_circle_outline),
                         ),
                         IconButton(
                           onPressed: () => ref
                               .read(cartControllerProvider.notifier)
-                              .removeProduct(item.product.id),
+                              .removeProduct(item.productItem.id),
                           icon: const Icon(Icons.delete_outline),
                         ),
                       ],
@@ -82,7 +82,7 @@ class CartPage extends ConsumerWidget {
                       onPressed: () async {
                         final orderItems = items
                             .map((e) => OrderCreateItem(
-                                  productId: e.product.id,
+                                  productId: e.productItem.id,
                                   quantity: e.quantity,
                                 ))
                             .toList(growable: false);

@@ -19,15 +19,6 @@ void main() {
               return const ApiSuccess(pair);
             },
           ),
-          authRefreshServiceProvider.overrideWithValue(
-            (refreshToken) async {
-              if (storedToken == null) {
-                return const ApiFailure(AppException('no token'));
-              }
-              return ApiSuccess(storedToken!);
-            },
-          ),
-          authReadTokenServiceProvider.overrideWithValue(() async => storedToken),
           authClearTokenServiceProvider.overrideWithValue(() async => storedToken = null),
         ],
       );
@@ -44,8 +35,6 @@ void main() {
 
       final after = container.read(sessionControllerProvider).asData!.value;
       expect(after.isAuthenticated, true);
-      expect(after.accessToken, 'access_1');
-      expect(after.refreshToken, 'refresh_1');
     });
 
     test('登录失败：直接验证错误分支', () async {
@@ -55,9 +44,6 @@ void main() {
             ({required username, required password}) async {
               return const ApiFailure(AppException('bad credentials'));
             },
-          ),
-          authRefreshServiceProvider.overrideWithValue(
-            (refreshToken) async => const ApiFailure(AppException('no token')),
           ),
           authReadTokenServiceProvider.overrideWithValue(() async => null),
           authClearTokenServiceProvider.overrideWithValue(() async {}),

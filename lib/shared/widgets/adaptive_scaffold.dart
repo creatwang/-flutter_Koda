@@ -29,14 +29,14 @@ class AdaptiveScaffold extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+     /* appBar: AppBar(
         title: Text(title),
         leading: leading,
         automaticallyImplyLeading: automaticallyImplyLeading,
         actions: mergedActions,
         bottom: bottom,
         shadowColor: Colors.grey,
-      ),
+      ),*/
       floatingActionButton: floatingActionButton,
       body: body,
       bottomNavigationBar: bottomNavigationBar,

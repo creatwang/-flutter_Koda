@@ -123,13 +123,16 @@ class ProductImgs {
 extension ProductDtoX on ProductDto {
   ProductItem toModel() {
     return ProductItem(
-     id: id!,
-     categoryId: categoryId!,
-     price: price ?? 0,
-     maxPrice: maxPrice ?? 0,
-     categoryName: categoryName!,
-     name: name!,
-     unit: unit!, isHot: isHot!.toString(), mainImage: mainImage!, isCollect: isCollect ?? false,
+      id: _toInt(id),
+      categoryId: categoryId ?? 0,
+      price: price ?? 0,
+      maxPrice: maxPrice ?? 0,
+      categoryName: categoryName ?? '',
+      name: name ?? '',
+      unit: unit ?? '',
+      isHot: isHot?.toString() ?? '0',
+      mainImage: mainImage ?? '',
+      isCollect: isCollect ?? false,
     );
   }
 }
@@ -151,4 +154,11 @@ bool? _toBool(dynamic value) {
     if (normalized == 'false' || normalized == '0') return false;
   }
   return null;
+}
+
+int _toInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
 }

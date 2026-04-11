@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -45,6 +46,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   bool _furnitureExpanded = true;
   bool _sofasExpanded = true;
   bool _isFilterCollapsed = false;
+  final Map<int, bool> _collectOverrides = <int, bool>{};
 
   @override
   void initState() {
@@ -178,7 +180,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             crossAxisCount: columns,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
-                            childAspectRatio: 0.73,
+                            childAspectRatio: 0.76,
                           ),
                           itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
                           itemBuilder: (_, index) {
@@ -188,6 +190,37 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             return ProductCard(productItem: items.items[index]);
                           },
                         ),
+                       /* child: Stack(
+                          children: [
+                            MasonryGridView.builder(
+                              controller: _scrollController,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 24),
+                              gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                              ),
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              itemCount: items.items.length,
+                              itemBuilder: (_, index) {
+                                final product = items.items[index];
+                                return ProductCard(
+                                  productItem: product,
+                                  isCollected: _collectOverrides[product.id] ?? product.isCollect,
+                                  onCollectChanged: (isCollected) =>
+                                      _onCollectChanged(product.id, isCollected),
+                                );
+                              },
+                            ),
+                            if (items.isLoadingMore)
+                              const Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 6,
+                                child: Center(child: CircularProgressIndicator()),
+                              ),
+                          ],
+                        ),*/
                       ),
                     ),
                   ],
@@ -226,6 +259,13 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         _selectedBrands.remove(brand);
       }
     });
+  }
+
+  void _onCollectChanged(int productId, bool isCollected) {
+    setState(() => _collectOverrides[productId] = isCollected);
+    debugPrint(
+      '[product_list] trigger=collect_changed, productId=$productId, isCollect=$isCollected',
+    );
   }
 
   void _onFurnitureTap() {
@@ -391,53 +431,54 @@ class _SortHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(9),
             border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          child: ButtonTheme(
-            alignedDropdown: true,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            child: SizedBox(
-              height: 40,
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isDense: true,
-                  value: selectedSort,
-                  borderRadius: BorderRadius.circular(10),
-                  icon: const SizedBox.shrink(),
-                  selectedItemBuilder: (context) => _sortOptions
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.sort, size: 16, color: Colors.white70),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Sort by: $e',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+          child: SizedBox(
+            height: 40,
+            child: PopupMenuButton<String>(
+              tooltip: '',
+              padding: EdgeInsets.zero,
+              initialValue: selectedSort,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              color: const Color(0xFF2B2F34),
+              constraints: const BoxConstraints(minWidth: 220),
+              onSelected: onSortChanged,
+              itemBuilder: (context) => _sortOptions
+                  .map(
+                    (e) => PopupMenuItem<String>(
+                      value: e,
+                      height: 36,
+                      child: Text(
+                        e,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                      )
-                      .toList(growable: false),
-                  items: _sortOptions
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e,
-                          child: Text(
-                            e,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.sort, size: 16, color: Colors.white70),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Sort by: $selectedSort',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (value) {
-                    if (value != null) onSortChanged(value);
-                  },
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.expand_more, size: 16, color: Colors.white70),
+                  ],
                 ),
               ),
             ),

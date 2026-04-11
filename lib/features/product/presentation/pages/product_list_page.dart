@@ -247,20 +247,22 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       } else {
         _selectedSubCategory = value;
         _sofasExpanded = false;
-        _selectedLeafCategory = 'All Sofas';
+        _selectedLeafCategory = '';
       }
     });
   }
 
   void _onLeafCategoryTap(String value) {
-    setState(() => _selectedLeafCategory = value);
+    setState(() {
+      _selectedLeafCategory = _selectedLeafCategory == value ? '' : value;
+    });
   }
 
   void _logSearchParams({required String trigger}) {
     debugPrint(
       '[product_list] trigger=$trigger, sort=$_selectedSort, '
       'category=$_selectedCategory, subCategory=$_selectedSubCategory, '
-      'leafCategory=$_selectedLeafCategory, '
+      'leafCategory=${_selectedLeafCategory.isEmpty ? 'none' : _selectedLeafCategory}, '
       'priceStart=${_priceRange.start.toStringAsFixed(0)}, '
       'priceEnd=${_priceRange.end.toStringAsFixed(0)}, '
       'brands=${_selectedBrands.join('|')}',

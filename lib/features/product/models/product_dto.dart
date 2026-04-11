@@ -45,16 +45,16 @@ class ProductDto {
     id = json['id'];
     categoryId = json['category_id'];
     mainImage = json['main_image'];
-    subImages = json['sub_images'].cast<String>();
+    subImages = (json['sub_images'] as List?)?.whereType<String>().toList(growable: false);
     name = json['name'];
     unit = json['unit'];
     viewed = json['viewed'];
     sales = json['sales'];
-    price = json['price'];
+    price = _toDouble(json['price']);
     cnyPrice = json['cny_price'];
     categoryName = json['category_name'];
-    isCollect = json['is_collect'];
-    maxPrice = json['max_price'];
+    isCollect = _toBool(json['is_collect']);
+    maxPrice = _toDouble(json['max_price']);
     isHot = json['is_hot'];
     sortOrder = json['sort_order'];
     uniqid = json['uniqid'];
@@ -125,11 +125,30 @@ extension ProductDtoX on ProductDto {
     return ProductItem(
      id: id!,
      categoryId: categoryId!,
-     price: price!,
-     maxPrice: maxPrice!,
+     price: price ?? 0,
+     maxPrice: maxPrice ?? 0,
      categoryName: categoryName!,
      name: name!,
-     unit: unit!, isHot: isHot!.toString(), mainImage: mainImage!, isCollect: isCollect!,
+     unit: unit!, isHot: isHot!.toString(), mainImage: mainImage!, isCollect: isCollect ?? false,
     );
   }
+}
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+bool? _toBool(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+  }
+  return null;
 }

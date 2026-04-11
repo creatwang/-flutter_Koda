@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
+import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
@@ -47,6 +48,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   bool _sofasExpanded = true;
   bool _isFilterCollapsed = false;
   final Map<int, bool> _collectOverrides = <int, bool>{};
+  final Set<int> _collectSubmitting = <int>{};
 
   @override
   void initState() {
@@ -187,10 +189,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             if (index >= items.items.length) {
                               return const Center(child: CircularProgressIndicator());
                             }
+                            final product = items.items[index];
                             return ProductCard(
-                                productItem: items.items[index],
-                                isCollected: items.items[index].isCollect,
-                                onCollectChanged: (isCollected) => _onCollectChanged(items.items[index].id, isCollected)
+                              productItem: product,
+                              isCollected: _collectOverrides[product.id] ?? product.isCollect,
+                              onCollectChanged: (isCollected) =>
+                                  _onCollectChanged(product.id, isCollected),
                             );
                           },
                         ),
@@ -269,12 +273,44 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
    * @Description 点击收藏
    * @date 2026/04/11 18:21:50
    */
-  void _onCollectChanged(int productId, bool isCollected) {
-    setState(() => _collectOverrides[productId] = isCollected);
-    
-    debugPrint(
-      '[product_list] trigger=collect_changed, productId=$productId, isCollect=$isCollected',
+  Future<void> _onCollectChanged(int productId, bool isCollected) async {
+    if (_collectSubmitting.contains(productId)) return;
+    final previous = _collectOverrides[productId];
+
+    setState(() {
+      _collectSubmitting.add(productId);
+      _collectOverrides[productId] = isCollected;
+    });
+
+    final result = isCollected
+        ? await createFavorService(productId: productId)
+        : await deleteFavorService(productId: productId);
+
+    if (!mounted) return;
+
+    result.when(
+      success: (_) {
+        debugPrint(
+          '[product_list] trigger=collect_changed, productId=$productId, isCollect=$isCollected',
+        );
+      },
+      failure: (exception) {
+        setState(() {
+          if (previous == null) {
+            _collectOverrides.remove(productId);
+          } else {
+            _collectOverrides[productId] = previous;
+          }
+        });
+        debugPrint(
+          '[product_list] trigger=collect_changed_failed, productId=$productId, '
+          'isCollect=$isCollected, error=${exception.message}',
+        );
+      },
     );
+
+    if (!mounted) return;
+    setState(() => _collectSubmitting.remove(productId));
   }
 
   void _onFurnitureTap() {

@@ -47,6 +47,8 @@ class RetryInterceptor extends Interceptor {
 
   bool _isRetryable(DioException err) {
     final statusCode = err.response?.statusCode ?? 0;
+    final noRetry = err.requestOptions.extra['noRetry'] == true;
+    if (noRetry) return false;
     // 可重试的网络层错误。
     final networkError = err.type == DioExceptionType.connectionError ||
         err.type == DioExceptionType.connectionTimeout ||

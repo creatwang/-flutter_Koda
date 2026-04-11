@@ -42,8 +42,14 @@ Future<Response<dynamic>> createFavorRequest({
   required String companyId,
   DioClient? client,
 }) {
-  return (client ?? protectedDioClient).get(
+  return (client ?? protectedDioClient).post(
     ProductRequests.createFavorPath,
+    options: Options(
+      extra: {
+        'noCache': true,
+        'noRetry': true,
+      },
+    ),
     queryParameters: {
       'product_id': productId,
       'company_id': companyId,
@@ -56,8 +62,14 @@ Future<Response<dynamic>> deleteFavorRequest({
   required String companyId,
   DioClient? client,
 }) {
-  return (client ?? protectedDioClient).get(
+  return (client ?? protectedDioClient).post(
     ProductRequests.deleteFavorPath,
+    options: Options(
+      extra: {
+        'noCache': true,
+        'noRetry': true,
+      },
+    ),
     queryParameters: {
       'product_id': productId,
       'company_id': companyId,

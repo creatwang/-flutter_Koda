@@ -67,3 +67,57 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
     return ApiFailure(AppException(e.toString()));
   }
 }
+
+Future<ApiResult<void>> createFavorService({
+  required int productId,
+}) async {
+  final companyId = await secureStorageService.getCompanyId();
+  if (companyId == null || companyId.isEmpty) {
+    return ApiFailure(
+      const AppException('Missing company id'),
+    );
+  }
+  try {
+    var result = await createFavorRequest(
+      productId: productId.toString(),
+      companyId: companyId,
+    );
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Create favorite failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+Future<ApiResult<void>> deleteFavorService({
+  required int productId,
+}) async {
+  final companyId = await secureStorageService.getCompanyId();
+  if (companyId == null || companyId.isEmpty) {
+    return ApiFailure(
+      const AppException('Missing company id'),
+    );
+  }
+  try {
+    await deleteFavorRequest(
+      productId: productId.toString(),
+      companyId: companyId,
+    );
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Delete favorite failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}

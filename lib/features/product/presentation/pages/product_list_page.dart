@@ -187,7 +187,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             if (index >= items.items.length) {
                               return const Center(child: CircularProgressIndicator());
                             }
-                            return ProductCard(productItem: items.items[index]);
+                            return ProductCard(
+                                productItem: items.items[index],
+                                isCollected: items.items[index].isCollect,
+                                onCollectChanged: (isCollected) => _onCollectChanged(items.items[index].id, isCollected)
+                            );
                           },
                         ),
                        /* child: Stack(
@@ -260,9 +264,14 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       }
     });
   }
-
+  
+  /**
+   * @Description 点击收藏
+   * @date 2026/04/11 18:21:50
+   */
   void _onCollectChanged(int productId, bool isCollected) {
     setState(() => _collectOverrides[productId] = isCollected);
+    
     debugPrint(
       '[product_list] trigger=collect_changed, productId=$productId, isCollect=$isCollected',
     );

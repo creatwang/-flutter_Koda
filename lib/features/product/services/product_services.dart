@@ -28,7 +28,10 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
         error: 'Invalid products list format',
       );
     }
-    final dtos = list .whereType<Map<String, dynamic>>() .map(ProductDto.fromJson) .toList(growable: false);
+    final dtos = list
+        .whereType<Map>()
+        .map((e) => ProductDto.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
     return ApiSuccess(dtos.map((e) => e.toModel()).toList(growable: false));
   } on DioException catch (e) {
     return ApiFailure(

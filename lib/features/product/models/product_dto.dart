@@ -1,23 +1,23 @@
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 class ProductDto {
   int? id;
-  int? categoryId;
+  num? categoryId;
   String? mainImage;
   List<String>? subImages;
   String? name;
   String? unit;
-  int? viewed;
-  int? sales;
-  int? price;
-  int? cnyPrice;
+  num? viewed;
+  num? sales;
+  double? price;
+  num? cnyPrice;
   String? categoryName;
   bool? isCollect;
-  int? maxPrice;
-  int? isHot;
-  int? sortOrder;
+  double? maxPrice;
+  num? isHot;
+  num? sortOrder;
   String? uniqid;
   String? formulaType;
-  int? shopCategoryId;
+  num? shopCategoryId;
   List<ProductImgs>? productImgs;
 
   ProductDto(
@@ -97,8 +97,8 @@ class ProductDto {
 
 class ProductImgs {
   String? url;
-  int? id;
-  int? priovity;
+  num? id;
+  num? priovity;
   String? waterUrl;
 
   ProductImgs({this.url, this.id, this.priovity, this.waterUrl});
@@ -124,9 +124,9 @@ extension ProductDtoX on ProductDto {
   ProductItem toModel() {
     return ProductItem(
      id: id!,
-     categoryId: categoryId!.toString(),
-     price: price!.toDouble(),
-     maxPrice: maxPrice!.toString(),
+     categoryId: categoryId!,
+     price: price!,
+     maxPrice: maxPrice!,
      categoryName: categoryName!,
      name: name!,
      unit: unit!, isHot: isHot!.toString(), mainImage: mainImage!, isCollect: isCollect!,

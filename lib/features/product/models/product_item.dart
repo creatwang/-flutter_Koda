@@ -14,12 +14,12 @@ class ProductItem {
 
   final int id;
   final String categoryName;
-  final String categoryId;
+  final num categoryId;
   final String name;
   final String unit;
   final String mainImage;
   final String isHot;
   final bool isCollect;
-  final String maxPrice;
+  final double maxPrice;
   final double price;
 }

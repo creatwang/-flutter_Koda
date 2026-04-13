@@ -85,8 +85,11 @@ class SecureStorageService {
    * @Description 获取站点Id
    * @date 2026/04/10 19:03:16
    */
-  Future<String?> getCompanyId() async {
+  Future<String> getCompanyId() async {
     String? companyId = await _storage.read(key: _companyId);
+    if (companyId == null || companyId.isEmpty) {
+      return '0';
+    }
     return companyId;
   }
 

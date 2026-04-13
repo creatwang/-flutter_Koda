@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/product/api/product_requests.dart';
+import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/models/product_dto.dart';
 
@@ -10,10 +11,20 @@ import '../../../core/platform_services/network_clients.dart';
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
+  int shopCateGoryId = 0,
+  String? sort,
+  int orderBy = 0,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
   try {
-    final response = await requestProductsPage(page: page, pageSize: pageSize, companyId: companyId);
+    final response = await requestProductsPage(
+      page: page,
+      pageSize: pageSize,
+      companyId: companyId,
+      shopCateGoryId: shopCateGoryId,
+      sort: sort,
+      orderBy: orderBy,
+    );
     final data = response.data;
     if (data is! Map<String, dynamic>) {
       throw DioException(
@@ -37,6 +48,46 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
     return ApiFailure(
       AppException(
         e.message ?? 'Fetch products failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+Future<ApiResult<List<ProductCategoryTreeDto>>> fetchCategoryTreeService() async {
+  final companyId = await secureStorageService.getCompanyId();
+  try {
+    final response = await requestCategoryTree(companyId: companyId);
+    final data = response.data;
+
+    List<dynamic>? rawList;
+    if (data is List) {
+      rawList = data;
+    } else if (data is Map<String, dynamic>) {
+      final items = data['items'];
+      if (items is List) {
+        rawList = items;
+      }
+    }
+
+    if (rawList == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid category tree response format',
+      );
+    }
+
+    final categories = rawList
+        .whereType<Map>()
+        .map((e) => ProductCategoryTreeDto.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+    return ApiSuccess(categories);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Fetch category tree failed',
         code: e.response?.statusCode?.toString(),
       ),
     );

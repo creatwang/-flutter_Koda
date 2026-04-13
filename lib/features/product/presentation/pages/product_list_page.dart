@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
@@ -34,20 +35,56 @@ class ProductListPage extends ConsumerStatefulWidget {
   ConsumerState<ProductListPage> createState() => _ProductListPageState();
 }
 
+class _SortOption {
+  const _SortOption({
+    required this.text,
+    required this.value,
+  });
+
+  final String text;
+  final int value;
+}
+
+class _SortQuery {
+  const _SortQuery({
+    required this.sort,
+    required this.orderBy,
+  });
+
+  final String? sort;
+  final int orderBy;
+}
+
+const List<_SortOption> _sortByOpts = <_SortOption>[
+  _SortOption(text: 'Default', value: 0),
+  _SortOption(text: 'Price(Low > High)', value: 1),
+  _SortOption(text: 'Price(Low < High)', value: 2),
+  _SortOption(text: 'Rating(Highest)', value: 3),
+  _SortOption(text: 'Rating(Lowest)', value: 4),
+  _SortOption(text: 'Model(A - Z)', value: 5),
+  _SortOption(text: 'Model(Z - A)', value: 6),
+];
+
+const Map<int, _SortQuery> _mapSortBy = <int, _SortQuery>{
+  0: _SortQuery(sort: null, orderBy: 0),
+  1: _SortQuery(sort: 'asc', orderBy: 1),
+  2: _SortQuery(sort: 'desc', orderBy: 1),
+  3: _SortQuery(sort: 'desc', orderBy: 2),
+  4: _SortQuery(sort: 'asc', orderBy: 2),
+  5: _SortQuery(sort: 'asc', orderBy: 3),
+  6: _SortQuery(sort: 'desc', orderBy: 3),
+};
+
 class _ProductListPageState extends ConsumerState<ProductListPage> {
   final ScrollController _scrollController = ScrollController();
   bool _ensureLoadScheduled = false;
   RangeValues _priceRange = const RangeValues(0, 50000);
   final Set<String> _selectedBrands = <String>{'B&B Italia'};
-  String _selectedCategory = 'Furniture';
-  String _selectedSubCategory = 'Sofas';
-  String _selectedLeafCategory = 'All Sofas';
-  String _selectedTreeNode = 'All Sofas';
-  String _selectedSort = 'Curation Popularity';
+  int? _selectedCategoryId;
+  String _selectedCategoryLabel = '';
+  int _selectedSortValue = 0;
   bool _lightingExpanded = false;
   bool _artExpanded = false;
-  bool _furnitureExpanded = true;
-  bool _sofasExpanded = true;
   bool _isFilterCollapsed = false;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
@@ -94,6 +131,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final productsState = ref.watch(productsProvider);
+    final categoryTreeState = ref.watch(categoryTreeProvider);
     final isTabletUp = context.isTabletUp;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final columns = isTabletUp
@@ -102,82 +140,77 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             : (_isFilterCollapsed ? 4 : 3))
         : 2;
 
-    return productsState.when(
-      loading: () => const AppLoadingView(),
-      error: (error, _) => AppErrorView(
-        message: l10n.productLoadFailed(error.toString()),
-        onRetry: () => ref.read(productsProvider.notifier).refresh(),
-      ),
-      data: (items) {
-        if (items.items.isEmpty) return AppEmptyView(message: l10n.productEmpty);
-        _ensureScrollableAndLoadMoreIfNeeded();
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (isTabletUp)
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeInOutCubic,
-                  width: _isFilterCollapsed ? 0 : 225,
-                  child: ClipRect(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 180),
-                      opacity: _isFilterCollapsed ? 0 : 1,
-                      child: IgnorePointer(
-                        ignoring: _isFilterCollapsed,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _FilterPanel(
-                                selectedCategory: _selectedCategory,
-                                selectedSubCategory: _selectedSubCategory,
-                                selectedTreeNode: _selectedTreeNode,
-                                selectedBrands: _selectedBrands,
-                                priceRange: _priceRange,
-                                lightingExpanded: _lightingExpanded,
-                                artExpanded: _artExpanded,
-                                furnitureExpanded: _furnitureExpanded,
-                                sofasExpanded: _sofasExpanded,
-                                selectedLeafCategory: _selectedLeafCategory,
-                                onFurnitureTap: _onFurnitureTap,
-                                onFurnitureExpandTap: _onFurnitureExpandTap,
-                                onSubCategoryTap: _onSubCategoryTap,
-                                onSofasExpandTap: _onSofasExpandTap,
-                                onLeafCategoryTap: _onLeafCategoryTap,
-                                onPriceChanged: _onPriceChanged,
-                                onBrandToggle: _onBrandToggle,
-                                onApplyTap: _onApplyTap,
-                                onCollapseTap: () => setState(() => _isFilterCollapsed = true),
-                                onLightingExpandedChanged: (v) => setState(() => _lightingExpanded = v),
-                                onArtExpandedChanged: (v) => setState(() => _artExpanded = v),
-                                pinApplyButtonToBottom: true,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                          ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isTabletUp)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOutCubic,
+              width: _isFilterCollapsed ? 0 : 225,
+              child: ClipRect(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: _isFilterCollapsed ? 0 : 1,
+                  child: IgnorePointer(
+                    ignoring: _isFilterCollapsed,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _FilterPanel(
+                            categories:
+                                categoryTreeState.asData?.value ?? const <ProductCategoryTreeDto>[],
+                            selectedCategoryId: _selectedCategoryId,
+                            selectedBrands: _selectedBrands,
+                            priceRange: _priceRange,
+                            lightingExpanded: _lightingExpanded,
+                            artExpanded: _artExpanded,
+                            onCategoryTap: _onCategoryTap,
+                            onPriceChanged: _onPriceChanged,
+                            onBrandToggle: _onBrandToggle,
+                            onApplyTap: _onApplyTap,
+                            onCollapseTap: () => setState(() => _isFilterCollapsed = true),
+                            onLightingExpandedChanged: (v) => setState(() => _lightingExpanded = v),
+                            onArtExpandedChanged: (v) => setState(() => _artExpanded = v),
+                            pinApplyButtonToBottom: true,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 14),
+                      ],
                     ),
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  children: [
-                    _SortHeader(
-                      selectedSort: _selectedSort,
-                      onSortChanged: _onSortChanged,
-                      isSidebarCollapsed: _isFilterCollapsed,
-                      onToggleSidebar: isTabletUp
-                          ? () => setState(() => _isFilterCollapsed = !_isFilterCollapsed)
-                          : null,
-                      onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
+              ),
+            ),
+          Expanded(
+            child: Column(
+              children: [
+                _SortHeader(
+                  selectedSortValue: _selectedSortValue,
+                  selectedSortLabel: _currentSortOption.text,
+                  onSortChanged: _onSortChanged,
+                  isSidebarCollapsed: _isFilterCollapsed,
+                  onToggleSidebar: isTabletUp
+                      ? () => setState(() => _isFilterCollapsed = !_isFilterCollapsed)
+                      : null,
+                  onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: productsState.when(
+                    loading: () => const AppLoadingView(),
+                    error: (error, _) => AppErrorView(
+                      message: l10n.productLoadFailed(error.toString()),
+                      onRetry: () => ref.read(productsProvider.notifier).refresh(),
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: RefreshIndicator(
+                    data: (items) {
+                      if (items.items.isEmpty) {
+                        return AppEmptyView(message: l10n.productEmpty);
+                      }
+                      _ensureScrollableAndLoadMoreIfNeeded();
+                      return RefreshIndicator(
                         onRefresh: () => ref.read(productsProvider.notifier).refresh(),
                         child: GridView.builder(
                           controller: _scrollController,
@@ -204,7 +237,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             );
                           },
                         ),
-                       /* child: Stack(
+                        /* child: Stack(
                           children: [
                             MasonryGridView.builder(
                               controller: _scrollController,
@@ -235,27 +268,52 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                               ),
                           ],
                         ),*/
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  void _onSortChanged(String value) {
-    setState(() => _selectedSort = value);
+  _SortOption get _currentSortOption {
+    return _sortByOpts.firstWhere(
+      (e) => e.value == _selectedSortValue,
+      orElse: () => _sortByOpts.first,
+    );
+  }
+
+  _SortQuery get _currentSortQuery => _mapSortBy[_selectedSortValue] ?? const _SortQuery(sort: null, orderBy: 0);
+
+  void _onSortChanged(int value) {
+    final option = _sortByOpts.firstWhere(
+      (e) => e.value == value,
+      orElse: () => _sortByOpts.first,
+    );
+    setState(() => _selectedSortValue = option.value);
+    widget.onSortChanged?.call(option.text);
+    final query = _mapSortBy[option.value] ?? const _SortQuery(sort: null, orderBy: 0);
+    ref.read(productsProvider.notifier).applyFilters(
+          categoryId: _selectedCategoryId,
+          sort: query.sort,
+          orderBy: query.orderBy,
+        );
   }
 
   void _onApplyTap() {
     _logSearchParams(trigger: 'apply_filters');
-    widget.onSortChanged?.call(_selectedSort);
-    widget.onCategoryChanged?.call(_selectedCategory);
-    widget.onSubCategoryChanged?.call(_selectedSubCategory);
+    ref.read(productsProvider.notifier).applyFilters(
+          categoryId: _selectedCategoryId,
+          sort: _currentSortQuery.sort,
+          orderBy: _currentSortQuery.orderBy,
+        );
+    widget.onSortChanged?.call(_currentSortOption.text);
+    widget.onCategoryChanged?.call(_selectedCategoryLabel);
+    widget.onSubCategoryChanged?.call('');
     widget.onPriceRangeChanged?.call(_priceRange);
     widget.onBrandSelectionChanged?.call(_selectedBrands);
     widget.onApplyFilters?.call();
@@ -323,63 +381,21 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     setState(() => _collectSubmitting.remove(productId));
   }
 
-  void _onFurnitureTap() {
+  void _onCategoryTap(ProductCategoryTreeDto category) {
+    final id = category.id;
+    if (id == null) return;
     setState(() {
-      _selectedCategory = 'Furniture';
-      _selectedSubCategory = '';
-      _selectedLeafCategory = '';
-      _selectedTreeNode = 'Furniture';
-      _furnitureExpanded = true;
-    });
-  }
-
-  void _onFurnitureExpandTap() {
-    setState(() {
-      _furnitureExpanded = !_furnitureExpanded;
-      if (!_furnitureExpanded) _sofasExpanded = false;
-    });
-  }
-
-  void _onSubCategoryTap(String value) {
-    setState(() {
-      _selectedCategory = 'Furniture';
-      if (value == 'Sofas') {
-        _selectedSubCategory = 'Sofas';
-        _selectedLeafCategory = '';
-        _selectedTreeNode = 'Sofas';
-        _furnitureExpanded = true;
-      } else {
-        _selectedSubCategory = value;
-        _selectedLeafCategory = '';
-        _selectedTreeNode = value;
-        _furnitureExpanded = true;
-      }
-    });
-  }
-
-  void _onSofasExpandTap() {
-    setState(() {
-      _sofasExpanded = !_sofasExpanded;
-      _furnitureExpanded = true;
-    });
-  }
-
-  void _onLeafCategoryTap(String value) {
-    setState(() {
-      _selectedCategory = 'Furniture';
-      _selectedLeafCategory = value;
-      _selectedSubCategory = '';
-      _selectedTreeNode = value;
-      _furnitureExpanded = true;
-      _sofasExpanded = true;
+      _selectedCategoryId = id;
+      _selectedCategoryLabel = category.name ?? '';
     });
   }
 
   void _logSearchParams({required String trigger}) {
     debugPrint(
-      '[product_list] trigger=$trigger, sort=$_selectedSort, '
-      'category=$_selectedCategory, subCategory=$_selectedSubCategory, '
-      'leafCategory=${_selectedLeafCategory.isEmpty ? 'none' : _selectedLeafCategory}, '
+      '[product_list] trigger=$trigger, sortValue=$_selectedSortValue, '
+      'sort=${_currentSortQuery.sort ?? 'null'}, order_by=${_currentSortQuery.orderBy}, '
+      'shopCateGoryId=${_selectedCategoryId ?? 0}, '
+      'categoryLabel=${_selectedCategoryLabel.isEmpty ? 'none' : _selectedCategoryLabel}, '
       'priceStart=${_priceRange.start.toStringAsFixed(0)}, '
       'priceEnd=${_priceRange.end.toStringAsFixed(0)}, '
       'brands=${_selectedBrands.join('|')}',
@@ -387,6 +403,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   Future<void> _openMobileFilterSheet() async {
+    final categories = ref.read(categoryTreeProvider).asData?.value ?? const <ProductCategoryTreeDto>[];
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -394,21 +411,13 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(12),
           child: _FilterPanel(
-            selectedCategory: _selectedCategory,
-            selectedSubCategory: _selectedSubCategory,
-            selectedTreeNode: _selectedTreeNode,
+            categories: categories,
+            selectedCategoryId: _selectedCategoryId,
             selectedBrands: _selectedBrands,
             priceRange: _priceRange,
             lightingExpanded: _lightingExpanded,
             artExpanded: _artExpanded,
-            furnitureExpanded: _furnitureExpanded,
-            sofasExpanded: _sofasExpanded,
-            selectedLeafCategory: _selectedLeafCategory,
-            onFurnitureTap: _onFurnitureTap,
-            onFurnitureExpandTap: _onFurnitureExpandTap,
-            onSubCategoryTap: _onSubCategoryTap,
-            onSofasExpandTap: _onSofasExpandTap,
-            onLeafCategoryTap: _onLeafCategoryTap,
+            onCategoryTap: _onCategoryTap,
             onPriceChanged: _onPriceChanged,
             onBrandToggle: _onBrandToggle,
             onApplyTap: _onApplyTap,
@@ -425,25 +434,20 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
 class _SortHeader extends StatelessWidget {
   const _SortHeader({
-    required this.selectedSort,
+    required this.selectedSortValue,
+    required this.selectedSortLabel,
     required this.onSortChanged,
     required this.isSidebarCollapsed,
     this.onToggleSidebar,
     this.onOpenFilters,
   });
 
-  final String selectedSort;
-  final ValueChanged<String> onSortChanged;
+  final int selectedSortValue;
+  final String selectedSortLabel;
+  final ValueChanged<int> onSortChanged;
   final bool isSidebarCollapsed;
   final VoidCallback? onToggleSidebar;
   final VoidCallback? onOpenFilters;
-
-  static const List<String> _sortOptions = <String>[
-    'Curation Popularity',
-    'Price: Low to High',
-    'Price: High to Low',
-    'Newest',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -508,21 +512,21 @@ class _SortHeader extends StatelessWidget {
           ),
           child: SizedBox(
             height: 40,
-            child: PopupMenuButton<String>(
+            child: PopupMenuButton<int>(
               tooltip: '',
               padding: EdgeInsets.zero,
-              initialValue: selectedSort,
+              initialValue: selectedSortValue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               color: const Color(0xFF2B2F34),
               constraints: const BoxConstraints(minWidth: 220),
               onSelected: onSortChanged,
-              itemBuilder: (context) => _sortOptions
+              itemBuilder: (context) => _sortByOpts
                   .map(
-                    (e) => PopupMenuItem<String>(
-                      value: e,
+                    (e) => PopupMenuItem<int>(
+                      value: e.value,
                       height: 36,
                       child: Text(
-                        e,
+                        e.text,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -541,7 +545,7 @@ class _SortHeader extends StatelessWidget {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        'Sort by: $selectedSort',
+                        'Sort by: $selectedSortLabel',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -566,21 +570,13 @@ class _SortHeader extends StatelessWidget {
 
 class _FilterPanel extends StatelessWidget {
   const _FilterPanel({
-    required this.selectedCategory,
-    required this.selectedSubCategory,
-    required this.selectedTreeNode,
-    required this.selectedLeafCategory,
+    required this.categories,
+    required this.selectedCategoryId,
     required this.selectedBrands,
     required this.priceRange,
     required this.lightingExpanded,
     required this.artExpanded,
-    required this.furnitureExpanded,
-    required this.sofasExpanded,
-    required this.onFurnitureTap,
-    required this.onFurnitureExpandTap,
-    required this.onSubCategoryTap,
-    required this.onSofasExpandTap,
-    required this.onLeafCategoryTap,
+    required this.onCategoryTap,
     required this.onPriceChanged,
     required this.onBrandToggle,
     required this.onApplyTap,
@@ -590,21 +586,13 @@ class _FilterPanel extends StatelessWidget {
     required this.pinApplyButtonToBottom,
   });
 
-  final String selectedCategory;
-  final String selectedSubCategory;
-  final String selectedTreeNode;
-  final String selectedLeafCategory;
+  final List<ProductCategoryTreeDto> categories;
+  final int? selectedCategoryId;
   final Set<String> selectedBrands;
   final RangeValues priceRange;
   final bool lightingExpanded;
   final bool artExpanded;
-  final bool furnitureExpanded;
-  final bool sofasExpanded;
-  final VoidCallback onFurnitureTap;
-  final VoidCallback onFurnitureExpandTap;
-  final ValueChanged<String> onSubCategoryTap;
-  final VoidCallback onSofasExpandTap;
-  final ValueChanged<String> onLeafCategoryTap;
+  final ValueChanged<ProductCategoryTreeDto> onCategoryTap;
   final ValueChanged<RangeValues> onPriceChanged;
   final void Function(String brand, bool selected) onBrandToggle;
   final VoidCallback onApplyTap;
@@ -617,72 +605,28 @@ class _FilterPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final treeContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _FilterChipButton(
-          label: 'Furniture',
-          selected: selectedCategory == 'Furniture',
-          expanded: furnitureExpanded,
-          onLabelTap: onFurnitureTap,
-          onArrowTap: onFurnitureExpandTap,
-        ),
-        _AnimatedExpand(
-          expanded: furnitureExpanded,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              _TreeNodeRow(
-                title: 'Sofas',
-                expanded: sofasExpanded,
-                selected: selectedTreeNode == 'Sofas',
-                onLabelTap: () => onSubCategoryTap('Sofas'),
-                onArrowTap: onSofasExpandTap,
-                showArrow: true,
-              ),
-              _AnimatedExpand(
-                expanded: sofasExpanded,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: <String>['All Sofas', 'Single Seat', 'Modular', 'Leather', 'Fabric']
-                          .map(
-                            (e) => _TinyTag(
-                              label: e,
-                              selected: selectedTreeNode == e,
-                              onTap: () => onLeafCategoryTap(e),
-                            ),
-                          )
-                          .toList(growable: false),
-                    ),
-                  ],
+      children: categories.isEmpty
+          ? [
+              Text(
+                'No categories',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
                 ),
               ),
-              const SizedBox(height: 8),
-              _TreeNodeRow(
-                title: 'Seating',
-                expanded: false,
-                selected: selectedTreeNode == 'Seating',
-                onLabelTap: () => onSubCategoryTap('Seating'),
-                onArrowTap: null,
-                showArrow: false,
-              ),
-              const SizedBox(height: 4),
-              _TreeNodeRow(
-                title: 'Tables',
-                expanded: false,
-                selected: selectedTreeNode == 'Tables',
-                onLabelTap: () => onSubCategoryTap('Tables'),
-                onArrowTap: null,
-                showArrow: false,
-              ),
-            ],
-          ),
-        ),
-      ],
+            ]
+          : categories
+              .map(
+                (category) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _CategoryTreeNode(
+                    category: category,
+                    selectedCategoryId: selectedCategoryId,
+                    onCategoryTap: onCategoryTap,
+                  ),
+                ),
+              )
+              .toList(growable: false),
     );
 
     final filterBody = Column(
@@ -722,7 +666,7 @@ class _FilterPanel extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         treeContent,
-        const SizedBox(height: 14),
+/*        const SizedBox(height: 14),
         Text(
           'Price Range',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -792,7 +736,7 @@ class _FilterPanel extends StatelessWidget {
           label: 'B&B Italia',
           selected: selectedBrands.contains('B&B Italia'),
           onTap: () => onBrandToggle('B&B Italia', !selectedBrands.contains('B&B Italia')),
-        ),
+        ),*/
       ],
     );
 
@@ -868,6 +812,107 @@ class _FilterPanel extends StatelessWidget {
       }
     }
     return buffer.toString();
+  }
+}
+
+class _CategoryTreeNode extends StatefulWidget {
+  const _CategoryTreeNode({
+    required this.category,
+    required this.selectedCategoryId,
+    required this.onCategoryTap,
+  });
+
+  final ProductCategoryTreeDto category;
+  final int? selectedCategoryId;
+  final ValueChanged<ProductCategoryTreeDto> onCategoryTap;
+
+  @override
+  State<_CategoryTreeNode> createState() => _CategoryTreeNodeState();
+}
+
+class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryId = widget.category.id;
+    final categoryName = widget.category.name ?? '';
+    final children = widget.category.children;
+    final hasChildren = children.isNotEmpty;
+    final selected = categoryId != null && widget.selectedCategoryId == categoryId;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: selected
+                ? Colors.white.withValues(alpha: 0.26)
+                : Colors.white.withValues(alpha: 0.1),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: categoryId == null ? null : () => widget.onCategoryTap(widget.category),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      categoryName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (hasChildren)
+                InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    turns: _expanded ? 0.5 : 0,
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (hasChildren && _expanded) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children
+                  .map(
+                    (child) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: _CategoryTreeNode(
+                        category: child,
+                        selectedCategoryId: widget.selectedCategoryId,
+                        onCategoryTap: widget.onCategoryTap,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 

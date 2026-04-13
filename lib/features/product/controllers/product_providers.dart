@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
+import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 
@@ -12,12 +13,18 @@ final productsProvider =
 
 class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 8;
+  int _selectedShopCategoryId = 0;
+  String? _sort;
+  int _orderBy = 0;
 
   @override
   FutureOr<PaginatedProductsState> build() async {
     final result = await fetchProductsPageService(
       page: 1,
       pageSize: _pageSize,
+      shopCateGoryId: _selectedShopCategoryId,
+      sort: _sort,
+      orderBy: _orderBy,
     );
     return result.when(
       success: (data) => PaginatedProductsState(
@@ -35,6 +42,9 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
       final result = await fetchProductsPageService(
         page: 1,
         pageSize: _pageSize,
+        shopCateGoryId: _selectedShopCategoryId,
+        sort: _sort,
+        orderBy: _orderBy,
       );
       return result.when(
         success: (data) => PaginatedProductsState(
@@ -56,6 +66,9 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     final result = await fetchProductsPageService(
       page: nextPage,
       pageSize: _pageSize,
+      shopCateGoryId: _selectedShopCategoryId,
+      sort: _sort,
+      orderBy: _orderBy,
     );
 
     state = result.when(
@@ -75,10 +88,34 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
       failure: (exception) => AsyncError(exception, StackTrace.current),
     );
   }
+
+  Future<void> applyCategoryFilter(int? categoryId) async {
+    _selectedShopCategoryId = categoryId ?? 0;
+    await refresh();
+  }
+
+  Future<void> applyFilters({
+    int? categoryId,
+    String? sort,
+    int orderBy = 0,
+  }) async {
+    _selectedShopCategoryId = categoryId ?? 0;
+    _sort = sort;
+    _orderBy = orderBy;
+    await refresh();
+  }
 }
 
 final productByIdProvider = FutureProvider.family<ProductItem, int>((ref, id) async {
   final result = await fetchProductByIdService(id);
+  return result.when(
+    success: (data) => data,
+    failure: (exception) => throw exception,
+  );
+});
+
+final categoryTreeProvider = FutureProvider<List<ProductCategoryTreeDto>>((ref) async {
+  final result = await fetchCategoryTreeService();
   return result.when(
     success: (data) => data,
     failure: (exception) => throw exception,

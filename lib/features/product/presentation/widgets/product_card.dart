@@ -3,45 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 
-class ProductCard extends StatefulWidget {
+class ProductCard extends StatelessWidget {
   const ProductCard({
     required this.productItem,
-    this.isCollected,
-    this.onCollectChanged,
+    required this.isCollected,
+    this.isCollectSubmitting = false,
+    this.onCollectTap,
     super.key,
   });
 
   final ProductItem productItem;
-  final bool? isCollected;
-  final ValueChanged<bool>? onCollectChanged;
-
-  @override
-  State<ProductCard> createState() => _ProductCardState();
-}
-
-class _ProductCardState extends State<ProductCard> {
-  late bool _isCollected;
-
-  @override
-  void initState() {
-    super.initState();
-    _isCollected = widget.isCollected ?? widget.productItem.isCollect;
-  }
-
-  @override
-  void didUpdateWidget(covariant ProductCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final oldValue = oldWidget.isCollected ?? oldWidget.productItem.isCollect;
-    final newValue = widget.isCollected ?? widget.productItem.isCollect;
-    if (oldValue != newValue) {
-      _isCollected = newValue;
-    }
-  }
-
-  void _toggleCollected() {
-    setState(() => _isCollected = !_isCollected);
-    widget.onCollectChanged?.call(_isCollected);
-  }
+  final bool isCollected;
+  final bool isCollectSubmitting;
+  final VoidCallback? onCollectTap;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +26,7 @@ class _ProductCardState extends State<ProductCard> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => context.push(AppRoutes.productDetail(widget.productItem.id)),
+        onTap: () => context.push(AppRoutes.productDetail(productItem.id)),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -73,7 +47,7 @@ class _ProductCardState extends State<ProductCard> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
-                          widget.productItem.mainImage,
+                          productItem.mainImage,
                           width: double.infinity,
                           height: double.infinity,
                           fit: BoxFit.contain,
@@ -112,7 +86,7 @@ class _ProductCardState extends State<ProductCard> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.productItem.name,
+                      productItem.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -125,17 +99,17 @@ class _ProductCardState extends State<ProductCard> {
                   const SizedBox(width: 2),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    onPressed: _toggleCollected,
+                    onPressed: isCollectSubmitting ? null : onCollectTap,
                     icon: Icon(
-                      _isCollected ? Icons.favorite : Icons.favorite_border,
-                      color: _isCollected ? const Color(0xFFE74C3C) : Colors.white70,
+                      isCollected ? Icons.favorite : Icons.favorite_border,
+                      color: isCollected ? const Color(0xFFE74C3C) : Colors.white70,
                       size: 20,
                     ),
                   ),
                 ],
               ),
               Text(
-                '¥${widget.productItem.price.toStringAsFixed(0)}',
+                '¥${productItem.price.toStringAsFixed(0)}',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontSize: 16,

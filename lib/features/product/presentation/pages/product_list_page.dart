@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -41,6 +42,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   String _selectedCategory = 'Furniture';
   String _selectedSubCategory = 'Sofas';
   String _selectedLeafCategory = 'All Sofas';
+  String _selectedTreeNode = 'All Sofas';
   String _selectedSort = 'Curation Popularity';
   bool _lightingExpanded = false;
   bool _artExpanded = false;
@@ -132,6 +134,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                               child: _FilterPanel(
                                 selectedCategory: _selectedCategory,
                                 selectedSubCategory: _selectedSubCategory,
+                                selectedTreeNode: _selectedTreeNode,
                                 selectedBrands: _selectedBrands,
                                 priceRange: _priceRange,
                                 lightingExpanded: _lightingExpanded,
@@ -140,7 +143,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                                 sofasExpanded: _sofasExpanded,
                                 selectedLeafCategory: _selectedLeafCategory,
                                 onFurnitureTap: _onFurnitureTap,
+                                onFurnitureExpandTap: _onFurnitureExpandTap,
                                 onSubCategoryTap: _onSubCategoryTap,
+                                onSofasExpandTap: _onSofasExpandTap,
                                 onLeafCategoryTap: _onLeafCategoryTap,
                                 onPriceChanged: _onPriceChanged,
                                 onBrandToggle: _onBrandToggle,
@@ -190,11 +195,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                               return const Center(child: CircularProgressIndicator());
                             }
                             final product = items.items[index];
+                            final isCollected = _collectOverrides[product.id] ?? product.isCollect;
                             return ProductCard(
                               productItem: product,
-                              isCollected: _collectOverrides[product.id] ?? product.isCollect,
-                              onCollectChanged: (isCollected) =>
-                                  _onCollectChanged(product.id, isCollected),
+                              isCollected: isCollected,
+                              isCollectSubmitting: _collectSubmitting.contains(product.id),
+                              onCollectTap: () => _onCollectTapped(product),
                             );
                           },
                         ),
@@ -273,16 +279,20 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
    * @Description 点击收藏
    * @date 2026/04/11 18:21:50
    */
-  Future<void> _onCollectChanged(int productId, bool isCollected) async {
+  Future<void> _onCollectTapped(ProductItem product) async {
+    final productId = product.id;
     if (_collectSubmitting.contains(productId)) return;
+    final hasOverride = _collectOverrides.containsKey(productId);
     final previous = _collectOverrides[productId];
+    final current = _collectOverrides[productId] ?? product.isCollect;
+    final target = !current;
 
     setState(() {
       _collectSubmitting.add(productId);
-      _collectOverrides[productId] = isCollected;
+      _collectOverrides[productId] = target;
     });
 
-    final result = isCollected
+    final result = target
         ? await createFavorService(productId: productId)
         : await deleteFavorService(productId: productId);
 
@@ -291,20 +301,20 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     result.when(
       success: (_) {
         debugPrint(
-          '[product_list] trigger=collect_changed, productId=$productId, isCollect=$isCollected',
+          '[product_list] trigger=collect_changed, productId=$productId, isCollect=$target',
         );
       },
       failure: (exception) {
         setState(() {
-          if (previous == null) {
-            _collectOverrides.remove(productId);
-          } else {
+          if (hasOverride && previous != null) {
             _collectOverrides[productId] = previous;
+          } else {
+            _collectOverrides.remove(productId);
           }
         });
         debugPrint(
           '[product_list] trigger=collect_changed_failed, productId=$productId, '
-          'isCollect=$isCollected, error=${exception.message}',
+          'isCollect=$target, error=${exception.message}',
         );
       },
     );
@@ -315,36 +325,53 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   void _onFurnitureTap() {
     setState(() {
-      if (_selectedCategory != 'Furniture') {
-        _selectedCategory = 'Furniture';
-        _furnitureExpanded = true;
-      } else {
-        _furnitureExpanded = !_furnitureExpanded;
-      }
+      _selectedCategory = 'Furniture';
+      _selectedSubCategory = '';
+      _selectedLeafCategory = '';
+      _selectedTreeNode = 'Furniture';
+      _furnitureExpanded = true;
+    });
+  }
+
+  void _onFurnitureExpandTap() {
+    setState(() {
+      _furnitureExpanded = !_furnitureExpanded;
       if (!_furnitureExpanded) _sofasExpanded = false;
     });
   }
 
   void _onSubCategoryTap(String value) {
     setState(() {
+      _selectedCategory = 'Furniture';
       if (value == 'Sofas') {
-        if (_selectedSubCategory != 'Sofas') {
-          _selectedSubCategory = 'Sofas';
-          _sofasExpanded = true;
-        } else {
-          _sofasExpanded = !_sofasExpanded;
-        }
+        _selectedSubCategory = 'Sofas';
+        _selectedLeafCategory = '';
+        _selectedTreeNode = 'Sofas';
+        _furnitureExpanded = true;
       } else {
         _selectedSubCategory = value;
-        _sofasExpanded = false;
         _selectedLeafCategory = '';
+        _selectedTreeNode = value;
+        _furnitureExpanded = true;
       }
+    });
+  }
+
+  void _onSofasExpandTap() {
+    setState(() {
+      _sofasExpanded = !_sofasExpanded;
+      _furnitureExpanded = true;
     });
   }
 
   void _onLeafCategoryTap(String value) {
     setState(() {
-      _selectedLeafCategory = _selectedLeafCategory == value ? '' : value;
+      _selectedCategory = 'Furniture';
+      _selectedLeafCategory = value;
+      _selectedSubCategory = '';
+      _selectedTreeNode = value;
+      _furnitureExpanded = true;
+      _sofasExpanded = true;
     });
   }
 
@@ -369,6 +396,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
           child: _FilterPanel(
             selectedCategory: _selectedCategory,
             selectedSubCategory: _selectedSubCategory,
+            selectedTreeNode: _selectedTreeNode,
             selectedBrands: _selectedBrands,
             priceRange: _priceRange,
             lightingExpanded: _lightingExpanded,
@@ -377,7 +405,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             sofasExpanded: _sofasExpanded,
             selectedLeafCategory: _selectedLeafCategory,
             onFurnitureTap: _onFurnitureTap,
+            onFurnitureExpandTap: _onFurnitureExpandTap,
             onSubCategoryTap: _onSubCategoryTap,
+            onSofasExpandTap: _onSofasExpandTap,
             onLeafCategoryTap: _onLeafCategoryTap,
             onPriceChanged: _onPriceChanged,
             onBrandToggle: _onBrandToggle,
@@ -538,6 +568,7 @@ class _FilterPanel extends StatelessWidget {
   const _FilterPanel({
     required this.selectedCategory,
     required this.selectedSubCategory,
+    required this.selectedTreeNode,
     required this.selectedLeafCategory,
     required this.selectedBrands,
     required this.priceRange,
@@ -546,7 +577,9 @@ class _FilterPanel extends StatelessWidget {
     required this.furnitureExpanded,
     required this.sofasExpanded,
     required this.onFurnitureTap,
+    required this.onFurnitureExpandTap,
     required this.onSubCategoryTap,
+    required this.onSofasExpandTap,
     required this.onLeafCategoryTap,
     required this.onPriceChanged,
     required this.onBrandToggle,
@@ -559,6 +592,7 @@ class _FilterPanel extends StatelessWidget {
 
   final String selectedCategory;
   final String selectedSubCategory;
+  final String selectedTreeNode;
   final String selectedLeafCategory;
   final Set<String> selectedBrands;
   final RangeValues priceRange;
@@ -567,7 +601,9 @@ class _FilterPanel extends StatelessWidget {
   final bool furnitureExpanded;
   final bool sofasExpanded;
   final VoidCallback onFurnitureTap;
+  final VoidCallback onFurnitureExpandTap;
   final ValueChanged<String> onSubCategoryTap;
+  final VoidCallback onSofasExpandTap;
   final ValueChanged<String> onLeafCategoryTap;
   final ValueChanged<RangeValues> onPriceChanged;
   final void Function(String brand, bool selected) onBrandToggle;
@@ -586,7 +622,8 @@ class _FilterPanel extends StatelessWidget {
           label: 'Furniture',
           selected: selectedCategory == 'Furniture',
           expanded: furnitureExpanded,
-          onTap: onFurnitureTap,
+          onLabelTap: onFurnitureTap,
+          onArrowTap: onFurnitureExpandTap,
         ),
         _AnimatedExpand(
           expanded: furnitureExpanded,
@@ -597,8 +634,10 @@ class _FilterPanel extends StatelessWidget {
               _TreeNodeRow(
                 title: 'Sofas',
                 expanded: sofasExpanded,
-                selected: selectedSubCategory == 'Sofas',
-                onTap: () => onSubCategoryTap('Sofas'),
+                selected: selectedTreeNode == 'Sofas',
+                onLabelTap: () => onSubCategoryTap('Sofas'),
+                onArrowTap: onSofasExpandTap,
+                showArrow: true,
               ),
               _AnimatedExpand(
                 expanded: sofasExpanded,
@@ -613,7 +652,7 @@ class _FilterPanel extends StatelessWidget {
                           .map(
                             (e) => _TinyTag(
                               label: e,
-                              selected: selectedLeafCategory == e,
+                              selected: selectedTreeNode == e,
                               onTap: () => onLeafCategoryTap(e),
                             ),
                           )
@@ -626,15 +665,19 @@ class _FilterPanel extends StatelessWidget {
               _TreeNodeRow(
                 title: 'Seating',
                 expanded: false,
-                selected: selectedSubCategory == 'Seating',
-                onTap: () => onSubCategoryTap('Seating'),
+                selected: selectedTreeNode == 'Seating',
+                onLabelTap: () => onSubCategoryTap('Seating'),
+                onArrowTap: null,
+                showArrow: false,
               ),
               const SizedBox(height: 4),
               _TreeNodeRow(
                 title: 'Tables',
                 expanded: false,
-                selected: selectedSubCategory == 'Tables',
-                onTap: () => onSubCategoryTap('Tables'),
+                selected: selectedTreeNode == 'Tables',
+                onLabelTap: () => onSubCategoryTap('Tables'),
+                onArrowTap: null,
+                showArrow: false,
               ),
             ],
           ),
@@ -679,18 +722,6 @@ class _FilterPanel extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         treeContent,
-        const SizedBox(height: 10),
-        _ExpandableFilterTile(
-          title: 'Lighting Systems',
-          expanded: lightingExpanded,
-          onChanged: onLightingExpandedChanged,
-        ),
-        const SizedBox(height: 8),
-        _ExpandableFilterTile(
-          title: 'Art & Decor',
-          expanded: artExpanded,
-          onChanged: onArtExpandedChanged,
-        ),
         const SizedBox(height: 14),
         Text(
           'Price Range',
@@ -813,7 +844,9 @@ class _FilterPanel extends StatelessWidget {
                       minimumSize: const Size.fromHeight(40),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text('Apply Filters'),
+                    child: const Text('Apply Filters', style: TextStyle(
+                      fontSize: 14
+                    ),),
                   ),
                 ),
               ],
@@ -843,31 +876,33 @@ class _FilterChipButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.expanded,
-    required this.onTap,
+    required this.onLabelTap,
+    required this.onArrowTap,
   });
 
   final String label;
   final bool selected;
   final bool expanded;
-  final VoidCallback onTap;
+  final VoidCallback onLabelTap;
+  final VoidCallback onArrowTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: selected
-              ? Colors.white.withValues(alpha: 0.26)
-              : Colors.white.withValues(alpha: 0.1),
-        ),
-        child: Row(
-          children: [
-            Expanded(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: selected
+            ? Colors.white.withValues(alpha: 0.26)
+            : Colors.white.withValues(alpha: 0.1),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onLabelTap,
+              borderRadius: BorderRadius.circular(8),
               child: Text(
                 label,
                 style: const TextStyle(
@@ -877,18 +912,39 @@ class _FilterChipButton extends StatelessWidget {
                 ),
               ),
             ),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              turns: expanded ? 0.5 : 0,
-              child: Icon(
-                Icons.expand_more,
-                size: 16,
-                color: Colors.white.withValues(alpha: 0.7),
+          ),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: ClipOval(
+              child: InkResponse(
+                onTap: onArrowTap,
+                customBorder: const CircleBorder(),
+                containedInkWell: true,
+                highlightShape: BoxShape.circle,
+                radius: 14,
+                splashColor: Colors.white.withValues(alpha: 0.16),
+                highlightColor: Colors.white.withValues(alpha: 0.12),
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Center(
+                    child: AnimatedRotation(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      turns: expanded ? 0.5 : 0,
+                      child: Icon(
+                        Icons.expand_more,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -934,44 +990,73 @@ class _TreeNodeRow extends StatelessWidget {
     required this.title,
     required this.selected,
     required this.expanded,
-    required this.onTap,
+    required this.onLabelTap,
+    required this.onArrowTap,
+    required this.showArrow,
   });
 
   final String title;
   final bool selected;
   final bool expanded;
-  final VoidCallback? onTap;
+  final VoidCallback onLabelTap;
+  final VoidCallback? onArrowTap;
+  final bool showArrow;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: double.infinity,
-        height: 28,
+    return SizedBox(
+      width: double.infinity,
+      height: 28,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: selected ? 1 : 0.92),
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              child: InkWell(
+                onTap: onLabelTap,
+                borderRadius: BorderRadius.circular(8),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: selected ? 1 : 0.92),
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              turns: expanded ? 0.5 : 0,
-              child: Icon(
-                Icons.expand_more,
-                size: 15,
-                color: Colors.white.withValues(alpha: 0.74),
+            if (showArrow)
+            Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: ClipOval(
+                child: InkResponse(
+                  onTap: onArrowTap,
+                  customBorder: const CircleBorder(),
+                  containedInkWell: true,
+                  highlightShape: BoxShape.circle,
+                  radius: 12,
+                  splashColor: Colors.white.withValues(alpha: 0.16),
+                  highlightColor: Colors.white.withValues(alpha: 0.12),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Center(
+                      child: AnimatedRotation(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        turns: expanded ? 0.5 : 0,
+                        child: Icon(
+                          Icons.expand_more,
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.74),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                ),
               ),
-            ),
           ],
         ),
       ),

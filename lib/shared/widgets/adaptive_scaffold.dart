@@ -24,10 +24,6 @@ class AdaptiveScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mergedActions = <Widget>[
-      ...?actions,
-    ];
-
     return Scaffold(
      /* appBar: AppBar(
         title: Text(title),

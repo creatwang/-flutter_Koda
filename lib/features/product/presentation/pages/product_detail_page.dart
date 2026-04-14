@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
@@ -12,7 +11,6 @@ import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
-import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
 class ProductDetailPage extends ConsumerStatefulWidget {
   const ProductDetailPage({required this.productId, super.key});
@@ -31,42 +29,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final detailState = ref.watch(productDetailProvider(widget.productId));
-    final cartCount = ref.watch(
-      cartControllerProvider.select(
-        (value) => value.asData?.value.fold<int>(0, (sum, e) => sum + e.quantity) ?? 0,
-      ),
-    );
     return AdaptiveScaffold(
       title: l10n.appTitle,
       automaticallyImplyLeading: false,
-      actions: [
-        HeaderMenuButton(
-          label: l10n.homeProducts,
-          icon: Icons.storefront,
-          selected: true,
-          onTap: () => context.go(AppRoutes.homeWithTab('products')),
-        ),
-        HeaderMenuButton(
-          label: l10n.homeCartWithCount(cartCount),
-          icon: Icons.shopping_cart_outlined,
-          selected: false,
-          onTap: () => context.go(AppRoutes.homeWithTab('cart')),
-        ),
-        HeaderMenuButton(
-          label: l10n.homeOrders,
-          icon: Icons.receipt_long_outlined,
-          selected: false,
-          onTap: () => context.go(AppRoutes.homeWithTab('orders')),
-        ),
-        IconButton(
-          tooltip: l10n.commonLogout,
-          onPressed: () async {
-            await ref.read(sessionControllerProvider.notifier).signOut();
-            if (context.mounted) context.go(AppRoutes.login);
-          },
-          icon: const Icon(Icons.logout),
-        ),
-      ],
       body: SafeArea(
         child: detailState.when(
           loading: () => const AppLoadingView(),
@@ -230,7 +195,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     int selectedId,
     String optionPath,
     List<Product> variants,
-  ) {
+  )
+  {
     final l10n = context.l10n;
     final title = selected.name ?? detail.name ?? '--';
     final category = (selected.categoryName ?? detail.categoryName ?? '').toUpperCase();

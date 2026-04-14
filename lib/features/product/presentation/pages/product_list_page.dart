@@ -3,9 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
+import 'package:groe_app_pad/app/router/app_routes.dart';
+import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
+import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -76,6 +80,9 @@ const Map<int, _SortQuery> _mapSortBy = <int, _SortQuery>{
 };
 
 class _ProductListPageState extends ConsumerState<ProductListPage> {
+  static const double _fabSize = 56;
+  static const double _fabMargin = 20;
+
   final ScrollController _scrollController = ScrollController();
   bool _ensureLoadScheduled = false;
   RangeValues _priceRange = const RangeValues(0, 50000);
@@ -86,6 +93,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   bool _lightingExpanded = false;
   bool _artExpanded = false;
   bool _isFilterCollapsed = false;
+  Offset? _fabOffset;
+  bool _fabDragging = false;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
 
@@ -127,6 +136,47 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     super.dispose();
   }
 
+  Offset _defaultFabOffset(Size size) {
+    final maxX = _maxFabX(size);
+    final maxY = _maxFabY(size);
+    return Offset(maxX, maxY);
+  }
+
+  double _maxFabX(Size size) {
+    final maxX = size.width - _fabSize - _fabMargin;
+    return maxX < _fabMargin ? _fabMargin : maxX;
+  }
+
+  double _maxFabY(Size size) {
+    final maxY = size.height - _fabSize - _fabMargin;
+    return maxY < _fabMargin ? _fabMargin : maxY;
+  }
+
+  Offset _clampFabOffset(Offset value, Size size) {
+    return Offset(
+      value.dx.clamp(_fabMargin, _maxFabX(size)),
+      value.dy.clamp(_fabMargin, _maxFabY(size)),
+    );
+  }
+
+  void _onFabDragUpdate(DragUpdateDetails details, Size canvasSize) {
+    final current = _fabOffset ?? _defaultFabOffset(canvasSize);
+    setState(() {
+      _fabDragging = true;
+      _fabOffset = _clampFabOffset(current + details.delta, canvasSize);
+    });
+  }
+
+  void _onFabDragEnd(Size canvasSize) {
+    final current = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
+    final dockLeft = current.dx + (_fabSize / 2) < (canvasSize.width / 2);
+    final targetX = dockLeft ? _fabMargin : _maxFabX(canvasSize);
+    setState(() {
+      _fabDragging = false;
+      _fabOffset = Offset(targetX, current.dy);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -140,104 +190,110 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             : (_isFilterCollapsed ? 4 : 3))
         : 2;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (isTabletUp)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOutCubic,
-              width: _isFilterCollapsed ? 0 : 225,
-              child: ClipRect(
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 180),
-                  opacity: _isFilterCollapsed ? 0 : 1,
-                  child: IgnorePointer(
-                    ignoring: _isFilterCollapsed,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _FilterPanel(
-                            categories:
-                                categoryTreeState.asData?.value ?? const <ProductCategoryTreeDto>[],
-                            selectedCategoryId: _selectedCategoryId,
-                            selectedBrands: _selectedBrands,
-                            priceRange: _priceRange,
-                            lightingExpanded: _lightingExpanded,
-                            artExpanded: _artExpanded,
-                            onCategoryTap: _onCategoryTap,
-                            onPriceChanged: _onPriceChanged,
-                            onBrandToggle: _onBrandToggle,
-                            onApplyTap: _onApplyTap,
-                            onCollapseTap: () => setState(() => _isFilterCollapsed = true),
-                            onLightingExpandedChanged: (v) => setState(() => _lightingExpanded = v),
-                            onArtExpandedChanged: (v) => setState(() => _artExpanded = v),
-                            pinApplyButtonToBottom: true,
-                          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final fabOffset = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
+        return Stack(
+          children: [
+            Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isTabletUp)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeInOutCubic,
+                  width: _isFilterCollapsed ? 0 : 225,
+                  child: ClipRect(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 180),
+                      opacity: _isFilterCollapsed ? 0 : 1,
+                      child: IgnorePointer(
+                        ignoring: _isFilterCollapsed,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _FilterPanel(
+                                categories:
+                                    categoryTreeState.asData?.value ?? const <ProductCategoryTreeDto>[],
+                                selectedCategoryId: _selectedCategoryId,
+                                selectedBrands: _selectedBrands,
+                                priceRange: _priceRange,
+                                lightingExpanded: _lightingExpanded,
+                                artExpanded: _artExpanded,
+                                onCategoryTap: _onCategoryTap,
+                                onPriceChanged: _onPriceChanged,
+                                onBrandToggle: _onBrandToggle,
+                                onApplyTap: _onApplyTap,
+                                onCollapseTap: () => setState(() => _isFilterCollapsed = true),
+                                onLightingExpandedChanged: (v) => setState(() => _lightingExpanded = v),
+                                onArtExpandedChanged: (v) => setState(() => _artExpanded = v),
+                                pinApplyButtonToBottom: true,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                          ],
                         ),
-                        const SizedBox(width: 14),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          Expanded(
-            child: Column(
-              children: [
-                _SortHeader(
-                  selectedSortValue: _selectedSortValue,
-                  selectedSortLabel: _currentSortOption.text,
-                  onSortChanged: _onSortChanged,
-                  isSidebarCollapsed: _isFilterCollapsed,
-                  onToggleSidebar: isTabletUp
-                      ? () => setState(() => _isFilterCollapsed = !_isFilterCollapsed)
-                      : null,
-                  onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: productsState.when(
-                    loading: () => const AppLoadingView(),
-                    error: (error, _) => AppErrorView(
-                      message: l10n.productLoadFailed(error.toString()),
-                      onRetry: () => ref.read(productsProvider.notifier).refresh(),
+              Expanded(
+                child: Column(
+                  children: [
+                    _SortHeader(
+                      selectedSortValue: _selectedSortValue,
+                      selectedSortLabel: _currentSortOption.text,
+                      onSortChanged: _onSortChanged,
+                      isSidebarCollapsed: _isFilterCollapsed,
+                      onToggleSidebar: isTabletUp
+                          ? () => setState(() => _isFilterCollapsed = !_isFilterCollapsed)
+                          : null,
+                      onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
                     ),
-                    data: (items) {
-                      if (items.items.isEmpty) {
-                        return AppEmptyView(message: l10n.productEmpty);
-                      }
-                      _ensureScrollableAndLoadMoreIfNeeded();
-                      return RefreshIndicator(
-                        onRefresh: () => ref.read(productsProvider.notifier).refresh(),
-                        child: GridView.builder(
-                          controller: _scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 8),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: columns,
-                            crossAxisSpacing: 14,
-                            mainAxisSpacing: 14,
-                            childAspectRatio: 0.76,
-                          ),
-                          itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
-                          itemBuilder: (_, index) {
-                            if (index >= items.items.length) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            final product = items.items[index];
-                            final isCollected = _collectOverrides[product.id] ?? product.isCollect;
-                            return ProductCard(
-                              productItem: product,
-                              isCollected: isCollected,
-                              isCollectSubmitting: _collectSubmitting.contains(product.id),
-                              onCollectTap: () => _onCollectTapped(product),
-                            );
-                          },
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: productsState.when(
+                        loading: () => const AppLoadingView(),
+                        error: (error, _) => AppErrorView(
+                          message: l10n.productLoadFailed(error.toString()),
+                          onRetry: () => ref.read(productsProvider.notifier).refresh(),
                         ),
-                        /* child: Stack(
+                        data: (items) {
+                          if (items.items.isEmpty) {
+                            return AppEmptyView(message: l10n.productEmpty);
+                          }
+                          _ensureScrollableAndLoadMoreIfNeeded();
+                          return RefreshIndicator(
+                            onRefresh: () => ref.read(productsProvider.notifier).refresh(),
+                            child: GridView.builder(
+                              controller: _scrollController,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 8),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                childAspectRatio: 0.76,
+                              ),
+                              itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
+                              itemBuilder: (_, index) {
+                                if (index >= items.items.length) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                final product = items.items[index];
+                                final isCollected = _collectOverrides[product.id] ?? product.isCollect;
+                                return ProductCard(
+                                  productItem: product,
+                                  isCollected: isCollected,
+                                  isCollectSubmitting: _collectSubmitting.contains(product.id),
+                                  onCollectTap: () => _onCollectTapped(product),
+                                );
+                              },
+                            ),
+                            /* child: Stack(
                           children: [
                             MasonryGridView.builder(
                               controller: _scrollController,
@@ -268,15 +324,38 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                               ),
                           ],
                         ),*/
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+            AnimatedPositioned(
+              duration: _fabDragging ? Duration.zero : const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              left: fabOffset.dx,
+              top: fabOffset.dy,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanUpdate: (details) => _onFabDragUpdate(details, canvasSize),
+                onPanEnd: (_) => _onFabDragEnd(canvasSize),
+                child: Tooltip(
+                  message: '扫描二维码',
+                  child: FloatingActionButton(
+                    heroTag: 'product_scan_qr_fab',
+                    onPressed: _onScanQrTap,
+                    child: const Icon(Icons.qr_code_scanner_rounded),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -331,6 +410,29 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         _selectedBrands.remove(brand);
       }
     });
+  }
+
+  Future<void> _onScanQrTap() async {
+    final session = ref.read(sessionControllerProvider).asData?.value;
+    if (session?.isAuthenticated != true) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先登录后再扫码')),
+      );
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    final code = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => const QrScanPage(),
+      ),
+    );
+    if (!mounted || code == null || code.trim().isEmpty) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('扫码结果：$code')),
+    );
   }
   
   /**
@@ -890,24 +992,26 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
             ],
           ),
         ),
-        if (hasChildren && _expanded) ...[
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children
-                  .map(
-                    (child) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: _CategoryTreeNode(
-                        category: child,
-                        selectedCategoryId: widget.selectedCategoryId,
-                        onCategoryTap: widget.onCategoryTap,
+        if (hasChildren) ...[
+          _AnimatedExpand(
+            expanded: _expanded,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, top: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children
+                    .map(
+                      (child) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _CategoryTreeNode(
+                          category: child,
+                          selectedCategoryId: widget.selectedCategoryId,
+                          onCategoryTap: widget.onCategoryTap,
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(growable: false),
+                    )
+                    .toList(growable: false),
+              ),
             ),
           ),
         ],

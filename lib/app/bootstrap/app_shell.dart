@@ -114,7 +114,7 @@ class AppShell extends ConsumerWidget {
               ),
             ),
             content,
-            Positioned(
+       /*     Positioned(
               right: 14,
               bottom: 14,
               child: SafeArea(
@@ -128,7 +128,7 @@ class AppShell extends ConsumerWidget {
                   child: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
                 ),
               ),
-            ),
+            ),*/
           ],
         );
       },

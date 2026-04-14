@@ -66,6 +66,21 @@ class ProductSkuOption extends StatefulWidget {
 class _ProductSkuOptionState extends State<ProductSkuOption> {
   late int _selectedId;
   List<dynamic> options = const [];
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  int? _firstPid(dynamic value) {
+    if (value is List && value.isNotEmpty) {
+      return _asInt(value.first);
+    }
+    return _asInt(value);
+  }
+
   List<Map<String, dynamic>> _normalizeMapList(dynamic value) {
     if (value is List) {
       return value
@@ -116,27 +131,34 @@ class _ProductSkuOptionState extends State<ProductSkuOption> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Product:'),
-        Row(
-          children: [
-            ...products.mapIndexed((idx, el) {
+        const Text('Product:'),
+        if (products.isEmpty)
+          const Text('No product data')
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: products.mapIndexed((idx, el) {
+              final productId = _asInt(el['id']);
+              final isSelected = productId != null && _selectedId == productId;
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedId == el['id'] ? Colors.blue : Colors.black,
-                  foregroundColor: Colors.white, // 别忘了文字颜色，黑色背景下默认文字可能看不清
+                  backgroundColor: isSelected ? Colors.blue : Colors.black,
+                  foregroundColor: Colors.white,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _selectedId = (el['id'] as num?)?.toInt() ?? _selectedId;
-                    options = _normalizeMapList(el['spec_value']);
-                    this.widget.onChange(_selectedId);
-                  });
-                },
-                child: Text(el['name'].toString()),
+                onPressed: productId == null
+                    ? null
+                    : () {
+                        setState(() {
+                          _selectedId = productId;
+                          options = _normalizeMapList(el['spec_value']);
+                        });
+                        widget.onChange(productId);
+                      },
+                child: Text(el['name']?.toString() ?? 'Product ${idx + 1}'),
               );
-            }).toList()
-          ], // 必须转换
-        ),
+            }).toList(growable: false),
+          ),
         ...optionItems.map((el) {
           final optionButtons = _normalizeMapList(el['options']);
           return Column(
@@ -154,7 +176,10 @@ class _ProductSkuOptionState extends State<ProductSkuOption> {
                       foregroundColor: Colors.white, // 别忘了文字颜色，黑色背景下默认文字可能看不清
                     ),
                     onPressed: () {
-                      this.widget.onChange(option['pid'][0]);
+                      final pid = _firstPid(option['pid']);
+                      if (pid != null) {
+                        widget.onChange(pid);
+                      }
                     },
                     child: Text(option['name']?.toString() ?? ''),
                   );

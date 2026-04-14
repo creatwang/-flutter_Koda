@@ -308,6 +308,60 @@ abstract class AppLocalizations {
   /// **'Failed to load details: {error}'**
   String productDetailLoadFailed(Object error);
 
+  /// No description provided for @productDetailVariantsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Product variants are empty'**
+  String get productDetailVariantsEmpty;
+
+  /// No description provided for @productDetailBackToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Case Studies'**
+  String get productDetailBackToList;
+
+  /// No description provided for @productDetailMasterpieceCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'MASTERPIECE COLLECTION'**
+  String get productDetailMasterpieceCollection;
+
+  /// No description provided for @productDetailBuyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Now'**
+  String get productDetailBuyNow;
+
+  /// No description provided for @productScanTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get productScanTooltip;
+
+  /// No description provided for @productScanRequireLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in before scanning'**
+  String get productScanRequireLogin;
+
+  /// No description provided for @productScanResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan result: {code}'**
+  String productScanResult(Object code);
+
+  /// No description provided for @productScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR Code'**
+  String get productScanTitle;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
   /// No description provided for @addToCart.
   ///
   /// In en, this message translates to:

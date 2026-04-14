@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 class QrScanPage extends StatefulWidget {
   const QrScanPage({super.key});
@@ -21,7 +22,7 @@ class _QrScanPageState extends State<QrScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('扫描二维码')),
+      appBar: AppBar(title: Text(context.l10n.productScanTitle)),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -51,7 +52,7 @@ class _QrScanPageState extends State<QrScanPage> {
             bottom: 24,
             child: FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
+              child: Text(context.l10n.commonCancel),
             ),
           ),
         ],

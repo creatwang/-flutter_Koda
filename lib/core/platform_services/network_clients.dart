@@ -11,11 +11,10 @@ import 'package:groe_app_pad/core/storage/secure_storage_service.dart';
 
 import '../network/interceptors/auth_interceptor.dart';
 import '../result/api_result.dart';
-import '../result/app_exception.dart';
 import '../storage/token_pair.dart';
 
 typedef AuthRefreshService = Future<ApiResult<TokenPair>> Function(String refreshToken);
-typedef AuthReadTokenService = Future<String?> Function();
+typedef AuthReadTokenService = Future<int?> Function();
 typedef AuthClearTokenService = Future<void> Function();
 final authReadTokenServiceProvider = Provider<AuthReadTokenService>(
   (ref) => secureStorageService.getCompanyId,

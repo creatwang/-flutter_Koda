@@ -12,12 +12,26 @@ class ProductRequests {
   static const String deleteFavorPath = '/store/collect/delete';
   /// 获取分类树
   static const String getCategoryTree = '/store/category/tree';
+  /// 产品详情
+  static const String getProductDetail = '/store/product/detail';
+}
+
+Future<Response<dynamic>> requestProductDetail({
+  required int id,
+  DioClient? client,
+}) {
+  return (client ?? publicDioClient).get(
+    ProductRequests.getProductDetail,
+    queryParameters: {
+      'id': id,
+    },
+  );
 }
 
 Future<Response<dynamic>> requestProductsPage({
   required int page,
   required int pageSize,
-  required String companyId,
+  required int companyId,
   int shopCateGoryId = 0,
   String? sort,
   int orderBy = 0,
@@ -26,17 +40,18 @@ Future<Response<dynamic>> requestProductsPage({
   return (client ?? protectedDioClient).get(
     ProductRequests.productsPath,
     queryParameters: {
-      'shopCateGoryId': shopCateGoryId,
+      'shop_category_id': shopCateGoryId,
       'order_by': orderBy,
       if (sort != null) 'sort': sort,
       'page_size': pageSize,
       'company_id': companyId,
-      'page': (page - 1) * pageSize,
+      'page': page,
     },
   );
 }
+
 Future<Response<dynamic>> requestCategoryTree({
-  required String? companyId,
+  required int? companyId,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).get(
@@ -58,7 +73,7 @@ Future<Response<dynamic>> requestProductById(
 
 Future<Response<dynamic>> createFavorRequest({
   required String productId,
-  required String companyId,
+  required int companyId,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).post(
@@ -78,7 +93,7 @@ Future<Response<dynamic>> createFavorRequest({
 
 Future<Response<dynamic>> deleteFavorRequest({
   required String productId,
-  required String companyId,
+  required int companyId,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).post(

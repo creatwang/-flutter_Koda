@@ -21,12 +21,12 @@ class AuthInterceptor extends Interceptor {
     // 请求前从安全存储读取 access token。
 
     final companyId = await _storageService.getCompanyId();
-    if (companyId == null || companyId.isEmpty) {
+    if (companyId == null) {
       _log('[NET][AUTH][$requestId] 没有CompanyId ${options.method} ${options.path}');
     } else {
       final token = await _storageService.getTokenByCompanyId(companyId);
       if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = '$token';
+        options.headers['Authorization'] = token;
         _log('[NET][AUTH][$requestId] attach Authorization 注入 token ${options.method} ${options.path}');
       } else {
         // 没有 token 不是异常场景（比如未登录），只记录日志。

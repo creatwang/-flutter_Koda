@@ -6,6 +6,6 @@ class Session {
   });
 
   final bool isAuthenticated;
-  final String? companyId;
+  final int? companyId;
   final String? token;
 }

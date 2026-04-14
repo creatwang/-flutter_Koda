@@ -32,19 +32,13 @@ class SecureStorageService {
   Future<String?> readAccessToken() async => _storage.read(key: _accessTokenKey);
 
   Future<String?> readRefreshToken() async => _storage.read(key: _refreshTokenKey);
-  /**
-   * @Description保存用户信息
-   * @date 2026/04/10 19:03:50
-   */
+  /// 保存用户信息。
   Future<void> saveUserInfoBase(UserInfoBase userInfoBase) async {
     String jsonString = jsonEncode(userInfoBase.toJson());
     await _storage.write(key: _userInfoBase, value: jsonString);
   }
 
-  /**
-   * @Description 获取用户信息
-   * @date 2026/04/10 19:03:16
-   */
+  /// 获取用户信息。
   Future<UserInfoBase?> readUserInfoBase() async {
     String? jsonString = await _storage.read(key: _userInfoBase);
     if (jsonString == null) return null;
@@ -52,45 +46,32 @@ class SecureStorageService {
     return userInfoBase;
   }
 
-  /**
-   * @Description 保存token
-   * @date 2026/04/10 19:03:40
-   */
-  Future<void> saveTokenMap(String companyId, String token) async {
-    String jsonString = jsonEncode({companyId: token});
+  /// 保存 token。
+  Future<void> saveTokenMap(int companyId, String token) async {
+    String jsonString = jsonEncode({companyId.toString(): token});
     await _storage.write(key: _tokenMap, value: jsonString);
   }
 
-  /**
-   * @Description 根据站点id获取token
-   * @date 2026/04/10 19:03:16
-   */
-  Future<String?> getTokenByCompanyId(String companyId) async {
+  /// 根据站点 id 获取 token。
+  Future<String?> getTokenByCompanyId(int companyId) async {
     String? jsonString = await _storage.read(key: _tokenMap);
     if (jsonString == null) return null;
     Map<String, dynamic> tokenMap = jsonDecode(jsonString);
-    if (!tokenMap.containsKey(companyId)) return null;
-    return tokenMap[companyId];
+    final key = companyId.toString();
+    if (!tokenMap.containsKey(key)) return null;
+    return tokenMap[key]?.toString();
   }
 
-  /**
-   * @Description 保存站点Id
-   * @date 2026/04/10 19:03:40
-   */
-  Future<void> saveCompanyId(String companyId) async {
-    await _storage.write(key: _companyId, value: companyId);
+  /// 保存站点 id。
+  Future<void> saveCompanyId(int companyId) async {
+    await _storage.write(key: _companyId, value: companyId.toString());
   }
 
-  /**
-   * @Description 获取站点Id
-   * @date 2026/04/10 19:03:16
-   */
-  Future<String> getCompanyId() async {
+  /// 获取站点 id。
+  Future<int?> getCompanyId() async {
     String? companyId = await _storage.read(key: _companyId);
-    if (companyId == null || companyId.isEmpty) {
-      return '0';
-    }
-    return companyId;
+    if (companyId == null || companyId.isEmpty) return null;
+    return int.tryParse(companyId);
   }
 
 

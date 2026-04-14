@@ -120,6 +120,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get productDetailVariantsEmpty => '商品规格数据为空';
+
+  @override
+  String get productDetailBackToList => '返回案例列表';
+
+  @override
+  String get productDetailMasterpieceCollection => '大师系列';
+
+  @override
+  String get productDetailBuyNow => '立即购买';
+
+  @override
+  String get productScanTooltip => '扫描二维码';
+
+  @override
+  String get productScanRequireLogin => '请先登录后再扫码';
+
+  @override
+  String productScanResult(Object code) {
+    return '扫码结果：$code';
+  }
+
+  @override
+  String get productScanTitle => '扫描二维码';
+
+  @override
+  String get commonCancel => '取消';
+
+  @override
   String get addToCart => '加入购物车';
 
   @override

@@ -7,7 +7,7 @@ class TokenPair {
   }) : resolvedAccessToken = accessToken ?? token ?? '',
        resolvedRefreshToken = refreshToken ?? '';
 
-  final String? companyId;
+  final int? companyId;
   final String? token;
   final String? accessToken;
   final String? refreshToken;

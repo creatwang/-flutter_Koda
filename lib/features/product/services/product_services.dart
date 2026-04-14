@@ -3,6 +3,7 @@ import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/product/api/product_requests.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
+import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/models/product_dto.dart';
 
@@ -16,6 +17,9 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   int orderBy = 0,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
+  if (companyId == null) {
+    return ApiFailure(const AppException('Missing company id'));
+  }
   try {
     final response = await requestProductsPage(
       page: page,
@@ -58,6 +62,9 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
 
 Future<ApiResult<List<ProductCategoryTreeDto>>> fetchCategoryTreeService() async {
   final companyId = await secureStorageService.getCompanyId();
+  if (companyId == null) {
+    return ApiFailure(const AppException('Missing company id'));
+  }
   try {
     final response = await requestCategoryTree(companyId: companyId);
     final data = response.data;
@@ -119,17 +126,51 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   }
 }
 
+Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
+  try {
+    final response = await requestProductDetail(
+      id: id,
+    );
+    final data = response.data;
+    Map<String, dynamic>? payload;
+    if (data is Map<String, dynamic>) {
+      final result = data['result'];
+      if (result is Map<String, dynamic>) {
+        payload = result;
+      } else {
+        payload = data;
+      }
+    }
+    if (payload == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid product detail response format',
+      );
+    }
+    return ApiSuccess(ProductDetailDto.fromJson(payload));
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Fetch product detail failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
 Future<ApiResult<void>> createFavorService({
   required int productId,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null || companyId.isEmpty) {
+  if (companyId == null) {
     return ApiFailure(
       const AppException('Missing company id'),
     );
   }
   try {
-    var result = await createFavorRequest(
+    await createFavorRequest(
       productId: productId.toString(),
       companyId: companyId,
     );
@@ -150,7 +191,7 @@ Future<ApiResult<void>> deleteFavorService({
   required int productId,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null || companyId.isEmpty) {
+  if (companyId == null) {
     return ApiFailure(
       const AppException('Missing company id'),
     );

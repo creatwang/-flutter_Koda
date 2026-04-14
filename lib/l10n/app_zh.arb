@@ -52,6 +52,20 @@
       "error": {}
     }
   },
+  "productDetailVariantsEmpty": "商品规格数据为空",
+  "productDetailBackToList": "返回案例列表",
+  "productDetailMasterpieceCollection": "大师系列",
+  "productDetailBuyNow": "立即购买",
+  "productScanTooltip": "扫描二维码",
+  "productScanRequireLogin": "请先登录后再扫码",
+  "productScanResult": "扫码结果：{code}",
+  "@productScanResult": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "productScanTitle": "扫描二维码",
+  "commonCancel": "取消",
   "addToCart": "加入购物车",
   "productAddedToCart": "已加入购物车: {title}",
   "@productAddedToCart": {

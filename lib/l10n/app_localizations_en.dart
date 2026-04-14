@@ -121,6 +121,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get productDetailVariantsEmpty => 'Product variants are empty';
+
+  @override
+  String get productDetailBackToList => 'Back to Case Studies';
+
+  @override
+  String get productDetailMasterpieceCollection => 'MASTERPIECE COLLECTION';
+
+  @override
+  String get productDetailBuyNow => 'Buy Now';
+
+  @override
+  String get productScanTooltip => 'Scan QR code';
+
+  @override
+  String get productScanRequireLogin => 'Please sign in before scanning';
+
+  @override
+  String productScanResult(Object code) {
+    return 'Scan result: $code';
+  }
+
+  @override
+  String get productScanTitle => 'Scan QR Code';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
   String get addToCart => 'Add to cart';
 
   @override

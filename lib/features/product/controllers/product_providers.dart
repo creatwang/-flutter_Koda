@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
+import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 
@@ -108,6 +109,14 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
 
 final productByIdProvider = FutureProvider.family<ProductItem, int>((ref, id) async {
   final result = await fetchProductByIdService(id);
+  return result.when(
+    success: (data) => data,
+    failure: (exception) => throw exception,
+  );
+});
+
+final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((ref, id) async {
+  final result = await fetchProductDetailService(id);
   return result.when(
     success: (data) => data,
     failure: (exception) => throw exception,

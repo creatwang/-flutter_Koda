@@ -50,11 +50,14 @@ class SessionController extends AsyncNotifier<Session> {
     state = const AsyncData(Session(isAuthenticated: false));
   }
 
-  FutureOr<Session> _toSession(String? companyId) async {
-    if (companyId == null || companyId.isEmpty) {
+  FutureOr<Session> _toSession(int? companyId) async {
+    if (companyId == null) {
       return const Session(isAuthenticated: false);
     }
     final token = await secureStorageService.getTokenByCompanyId(companyId);
+    if (token == null || token.isEmpty) {
+      return const Session(isAuthenticated: false);
+    }
     return Session(
       isAuthenticated: true,
       companyId: companyId,

@@ -13,11 +13,8 @@ export 'package:groe_app_pad/core/platform_services/network_clients.dart'
         AuthRefreshService,
         AuthReadTokenService,
         AuthClearTokenService,
-        authRefreshServiceProvider,
         authReadTokenServiceProvider,
         authClearTokenServiceProvider,
-        authRefreshService,
-        authReadTokenService,
         authClearTokenService;
 
 typedef AuthLoginService = Future<ApiResult<TokenPair>> Function({
@@ -41,10 +38,17 @@ Future<ApiResult<TokenPair>> authLoginService({ required String username, requir
       );
     }
     final userInfoBase = UserInfoBase.fromJson(data);
+    final companyId = userInfoBase.companyId?.toInt();
+    if (companyId == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid company_id in login response',
+      );
+    }
     await secureStorageService.saveUserInfoBase(userInfoBase);
-    await secureStorageService.saveCompanyId(userInfoBase.companyId.toString());
-    await secureStorageService.saveTokenMap(userInfoBase.companyId.toString(), userInfoBase.token.toString());
-    return ApiSuccess(TokenPair(token: userInfoBase.token.toString(), companyId: userInfoBase.companyId.toString()));
+    await secureStorageService.saveCompanyId(companyId);
+    await secureStorageService.saveTokenMap(companyId, userInfoBase.token.toString());
+    return ApiSuccess(TokenPair(token: userInfoBase.token.toString(), companyId: companyId));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(

@@ -2,11 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.dart';
@@ -80,10 +80,8 @@ const Map<int, _SortQuery> _mapSortBy = <int, _SortQuery>{
 };
 
 class _ProductListPageState extends ConsumerState<ProductListPage> {
-  static const double _fabSize = 56;
-  static const double _fabMargin = 20;
-
   final ScrollController _scrollController = ScrollController();
+  late final ProviderSubscription<AsyncValue<PaginatedProductsState>> _productsSubscription;
   bool _ensureLoadScheduled = false;
   RangeValues _priceRange = const RangeValues(0, 50000);
   final Set<String> _selectedBrands = <String>{'B&B Italia'};
@@ -93,8 +91,6 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   bool _lightingExpanded = false;
   bool _artExpanded = false;
   bool _isFilterCollapsed = false;
-  Offset? _fabOffset;
-  bool _fabDragging = false;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
 
@@ -102,6 +98,14 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _productsSubscription = ref.listenManual<AsyncValue<PaginatedProductsState>>(
+      productsProvider,
+      (_, next) {
+        if (next is AsyncData<PaginatedProductsState>) {
+          _ensureScrollableAndLoadMoreIfNeeded();
+        }
+      },
+    );
   }
 
   void _onScroll() {
@@ -130,51 +134,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   @override
   void dispose() {
+    _productsSubscription.close();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
-  }
-
-  Offset _defaultFabOffset(Size size) {
-    final maxX = _maxFabX(size);
-    final maxY = _maxFabY(size);
-    return Offset(maxX, maxY);
-  }
-
-  double _maxFabX(Size size) {
-    final maxX = size.width - _fabSize - _fabMargin;
-    return maxX < _fabMargin ? _fabMargin : maxX;
-  }
-
-  double _maxFabY(Size size) {
-    final maxY = size.height - _fabSize - _fabMargin;
-    return maxY < _fabMargin ? _fabMargin : maxY;
-  }
-
-  Offset _clampFabOffset(Offset value, Size size) {
-    return Offset(
-      value.dx.clamp(_fabMargin, _maxFabX(size)),
-      value.dy.clamp(_fabMargin, _maxFabY(size)),
-    );
-  }
-
-  void _onFabDragUpdate(DragUpdateDetails details, Size canvasSize) {
-    final current = _fabOffset ?? _defaultFabOffset(canvasSize);
-    setState(() {
-      _fabDragging = true;
-      _fabOffset = _clampFabOffset(current + details.delta, canvasSize);
-    });
-  }
-
-  void _onFabDragEnd(Size canvasSize) {
-    final current = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
-    final dockLeft = current.dx + (_fabSize / 2) < (canvasSize.width / 2);
-    final targetX = dockLeft ? _fabMargin : _maxFabX(canvasSize);
-    setState(() {
-      _fabDragging = false;
-      _fabOffset = Offset(targetX, current.dy);
-    });
   }
 
   @override
@@ -190,11 +154,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             : (_isFilterCollapsed ? 4 : 3))
         : 2;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
-        final fabOffset = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
-        return Stack(
+    return Stack(
           children: [
             Padding(
           padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
@@ -262,37 +222,47 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                           onRetry: () => ref.read(productsProvider.notifier).refresh(),
                         ),
                         data: (items) {
-                          if (items.items.isEmpty) {
-                            return AppEmptyView(message: l10n.productEmpty);
-                          }
-                          _ensureScrollableAndLoadMoreIfNeeded();
                           return RefreshIndicator(
                             onRefresh: () => ref.read(productsProvider.notifier).refresh(),
-                            child: GridView.builder(
-                              controller: _scrollController,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 8),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 14,
-                                childAspectRatio: 0.76,
-                              ),
-                              itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
-                              itemBuilder: (_, index) {
-                                if (index >= items.items.length) {
-                                  return const Center(child: CircularProgressIndicator());
-                                }
-                                final product = items.items[index];
-                                final isCollected = _collectOverrides[product.id] ?? product.isCollect;
-                                return ProductCard(
-                                  productItem: product,
-                                  isCollected: isCollected,
-                                  isCollectSubmitting: _collectSubmitting.contains(product.id),
-                                  onCollectTap: () => _onCollectTapped(product),
-                                );
-                              },
-                            ),
+                            child: items.items.isEmpty
+                                ? ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.only(top: 60),
+                                    children: [
+                                      AppEmptyView(message: l10n.productEmpty),
+                                    ],
+                                  )
+                                : Builder(
+                                    builder: (_) {
+                                      return GridView.builder(
+                                        controller: _scrollController,
+                                        physics: const AlwaysScrollableScrollPhysics(),
+                                        padding:
+                                            const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 8),
+                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: columns,
+                                          crossAxisSpacing: 14,
+                                          mainAxisSpacing: 14,
+                                          childAspectRatio: 0.76,
+                                        ),
+                                        itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
+                                        itemBuilder: (_, index) {
+                                          if (index >= items.items.length) {
+                                            return const Center(child: CircularProgressIndicator());
+                                          }
+                                          final product = items.items[index];
+                                          final isCollected =
+                                              _collectOverrides[product.id] ?? product.isCollect;
+                                          return ProductCard(
+                                            productItem: product,
+                                            isCollected: isCollected,
+                                            isCollectSubmitting: _collectSubmitting.contains(product.id),
+                                            onCollectTap: () => _onCollectTapped(product),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                             /* child: Stack(
                           children: [
                             MasonryGridView.builder(
@@ -334,28 +304,13 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             ],
           ),
         ),
-            AnimatedPositioned(
-              duration: _fabDragging ? Duration.zero : const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              left: fabOffset.dx,
-              top: fabOffset.dy,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onPanUpdate: (details) => _onFabDragUpdate(details, canvasSize),
-                onPanEnd: (_) => _onFabDragEnd(canvasSize),
-                child: Tooltip(
-                  message: '扫描二维码',
-                  child: FloatingActionButton(
-                    heroTag: 'product_scan_qr_fab',
-                    onPressed: _onScanQrTap,
-                    child: const Icon(Icons.qr_code_scanner_rounded),
-                  ),
-                ),
+            Positioned.fill(
+              child: _DraggableScanFab(
+                tooltip: context.l10n.productScanTooltip,
+                onTap: _onScanQrTap,
               ),
             ),
           ],
-        );
-      },
     );
   }
 
@@ -417,7 +372,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     if (session?.isAuthenticated != true) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先登录后再扫码')),
+        SnackBar(content: Text(context.l10n.productScanRequireLogin)),
       );
       context.go(AppRoutes.login);
       return;
@@ -431,14 +386,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     if (!mounted || code == null || code.trim().isEmpty) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('扫码结果：$code')),
+      SnackBar(content: Text(context.l10n.productScanResult(code))),
     );
   }
   
-  /**
-   * @Description 点击收藏
-   * @date 2026/04/11 18:21:50
-   */
+  /// 点击收藏。
   Future<void> _onCollectTapped(ProductItem product) async {
     final productId = product.id;
     if (_collectSubmitting.contains(productId)) return;
@@ -486,9 +438,13 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void _onCategoryTap(ProductCategoryTreeDto category) {
     final id = category.id;
     if (id == null) return;
+    final isSameCategory = _selectedCategoryId == id;
+    final nextCategoryId = isSameCategory ? null : id;
+    final nextCategoryLabel = isSameCategory ? '' : (category.name ?? '');
+
     setState(() {
-      _selectedCategoryId = id;
-      _selectedCategoryLabel = category.name ?? '';
+      _selectedCategoryId = nextCategoryId;
+      _selectedCategoryLabel = nextCategoryLabel;
     });
   }
 
@@ -530,6 +486,101 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DraggableScanFab extends StatefulWidget {
+  const _DraggableScanFab({
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  State<_DraggableScanFab> createState() => _DraggableScanFabState();
+}
+
+class _DraggableScanFabState extends State<_DraggableScanFab> {
+  static const double _fabSize = 56;
+  static const double _fabMargin = 20;
+
+  Offset? _fabOffset;
+  bool _fabDragging = false;
+
+  Offset _defaultFabOffset(Size size) {
+    final maxX = _maxFabX(size);
+    final maxY = _maxFabY(size);
+    return Offset(maxX, maxY);
+  }
+
+  double _maxFabX(Size size) {
+    final maxX = size.width - _fabSize - _fabMargin;
+    return maxX < _fabMargin ? _fabMargin : maxX;
+  }
+
+  double _maxFabY(Size size) {
+    final maxY = size.height - _fabSize - _fabMargin;
+    return maxY < _fabMargin ? _fabMargin : maxY;
+  }
+
+  Offset _clampFabOffset(Offset value, Size size) {
+    return Offset(
+      value.dx.clamp(_fabMargin, _maxFabX(size)),
+      value.dy.clamp(_fabMargin, _maxFabY(size)),
+    );
+  }
+
+  void _onFabDragUpdate(DragUpdateDetails details, Size canvasSize) {
+    final current = _fabOffset ?? _defaultFabOffset(canvasSize);
+    setState(() {
+      _fabDragging = true;
+      _fabOffset = _clampFabOffset(current + details.delta, canvasSize);
+    });
+  }
+
+  void _onFabDragEnd(Size canvasSize) {
+    final current = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
+    final dockLeft = current.dx + (_fabSize / 2) < (canvasSize.width / 2);
+    final targetX = dockLeft ? _fabMargin : _maxFabX(canvasSize);
+    setState(() {
+      _fabDragging = false;
+      _fabOffset = Offset(targetX, current.dy);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final fabOffset = _clampFabOffset(_fabOffset ?? _defaultFabOffset(canvasSize), canvasSize);
+        return Stack(
+          children: [
+            AnimatedPositioned(
+              duration: _fabDragging ? Duration.zero : const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              left: fabOffset.dx,
+              top: fabOffset.dy,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanUpdate: (details) => _onFabDragUpdate(details, canvasSize),
+                onPanEnd: (_) => _onFabDragEnd(canvasSize),
+                child: Tooltip(
+                  message: widget.tooltip,
+                  child: FloatingActionButton(
+                    heroTag: 'product_scan_qr_fab',
+                    onPressed: widget.onTap,
+                    child: const Icon(Icons.qr_code_scanner_rounded),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -903,18 +954,6 @@ class _FilterPanel extends StatelessWidget {
     );
   }
 
-  String _formatYuan(double value) {
-    final valueStr = value.toInt().toString();
-    final buffer = StringBuffer();
-    for (var i = 0; i < valueStr.length; i++) {
-      final reverseIndex = valueStr.length - i;
-      buffer.write(valueStr[i]);
-      if (reverseIndex > 1 && reverseIndex % 3 == 1) {
-        buffer.write(',');
-      }
-    }
-    return buffer.toString();
-  }
 }
 
 class _CategoryTreeNode extends StatefulWidget {
@@ -1020,298 +1059,6 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
   }
 }
 
-class _FilterChipButton extends StatelessWidget {
-  const _FilterChipButton({
-    required this.label,
-    required this.selected,
-    required this.expanded,
-    required this.onLabelTap,
-    required this.onArrowTap,
-  });
-
-  final String label;
-  final bool selected;
-  final bool expanded;
-  final VoidCallback onLabelTap;
-  final VoidCallback onArrowTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: selected
-            ? Colors.white.withValues(alpha: 0.26)
-            : Colors.white.withValues(alpha: 0.1),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: onLabelTap,
-              borderRadius: BorderRadius.circular(8),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: ClipOval(
-              child: InkResponse(
-                onTap: onArrowTap,
-                customBorder: const CircleBorder(),
-                containedInkWell: true,
-                highlightShape: BoxShape.circle,
-                radius: 14,
-                splashColor: Colors.white.withValues(alpha: 0.16),
-                highlightColor: Colors.white.withValues(alpha: 0.12),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: Center(
-                    child: AnimatedRotation(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      turns: expanded ? 0.5 : 0,
-                      child: Icon(
-                        Icons.expand_more,
-                        size: 16,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TinyTag extends StatelessWidget {
-  const _TinyTag({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: selected ? Colors.white.withValues(alpha: 0.26) : Colors.black.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.90),
-                  fontSize: 10,
-                ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TreeNodeRow extends StatelessWidget {
-  const _TreeNodeRow({
-    required this.title,
-    required this.selected,
-    required this.expanded,
-    required this.onLabelTap,
-    required this.onArrowTap,
-    required this.showArrow,
-  });
-
-  final String title;
-  final bool selected;
-  final bool expanded;
-  final VoidCallback onLabelTap;
-  final VoidCallback? onArrowTap;
-  final bool showArrow;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 28,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: onLabelTap,
-                borderRadius: BorderRadius.circular(8),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: selected ? 1 : 0.92),
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
-            if (showArrow)
-            Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: ClipOval(
-                child: InkResponse(
-                  onTap: onArrowTap,
-                  customBorder: const CircleBorder(),
-                  containedInkWell: true,
-                  highlightShape: BoxShape.circle,
-                  radius: 12,
-                  splashColor: Colors.white.withValues(alpha: 0.16),
-                  highlightColor: Colors.white.withValues(alpha: 0.12),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Center(
-                      child: AnimatedRotation(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                        turns: expanded ? 0.5 : 0,
-                        child: Icon(
-                          Icons.expand_more,
-                          size: 14,
-                          color: Colors.white.withValues(alpha: 0.74),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BrandOptionTile extends StatelessWidget {
-  const _BrandOptionTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Row(
-        children: [
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              color: selected ? const Color(0xFFA7B2E8) : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.72), width: 1.4),
-            ),
-            child: selected
-                ? const Icon(Icons.check, size: 14, color: Color(0xFF22242A))
-                : null,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.92),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpandableFilterTile extends StatelessWidget {
-  const _ExpandableFilterTile({
-    required this.title,
-    required this.expanded,
-    required this.onChanged,
-  });
-
-  final String title;
-  final bool expanded;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(!expanded),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              turns: expanded ? 0.5 : 0,
-              child: const Icon(
-                Icons.expand_more,
-                size: 18,
-                color: Colors.white70,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _AnimatedExpand extends StatelessWidget {
   const _AnimatedExpand({
     required this.expanded,
@@ -1331,67 +1078,6 @@ class _AnimatedExpand extends StatelessWidget {
         heightFactor: expanded ? 1 : 0,
         child: child,
       ),
-    );
-  }
-}
-
-class _RingRangeSliderThumbShape extends RangeSliderThumbShape {
-  const _RingRangeSliderThumbShape({
-    required this.ringColor,
-    required this.fillColor,
-    required this.outerRadius,
-    required this.innerRadius,
-  });
-
-  final Color ringColor;
-  final Color fillColor;
-  final double outerRadius;
-  final double innerRadius;
-
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) => Size.square(outerRadius * 2);
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    bool isDiscrete = false,
-    bool isEnabled = false,
-    bool isOnTop = false,
-    required SliderThemeData sliderTheme,
-    TextDirection? textDirection,
-    Thumb? thumb,
-    bool isPressed = false,
-  }) {
-    final canvas = context.canvas;
-    final ringPaint = Paint()..color = ringColor;
-    final fillPaint = Paint()..color = fillColor;
-    canvas.drawCircle(center, outerRadius, ringPaint);
-    canvas.drawCircle(center, innerRadius, fillPaint);
-  }
-}
-
-class _FullWidthRangeSliderTrackShape extends RoundedRectRangeSliderTrackShape {
-  const _FullWidthRangeSliderTrackShape();
-
-  @override
-  Rect getPreferredRect({
-    required RenderBox parentBox,
-    Offset offset = Offset.zero,
-    required SliderThemeData sliderTheme,
-    bool isEnabled = false,
-    bool isDiscrete = false,
-  }) {
-    final trackHeight = sliderTheme.trackHeight ?? 3;
-    final trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
-    const horizontalInset = 10.0;
-    return Rect.fromLTWH(
-      offset.dx + horizontalInset,
-      trackTop,
-      parentBox.size.width - (horizontalInset * 2),
-      trackHeight,
     );
   }
 }

@@ -52,6 +52,20 @@
       "error": {}
     }
   },
+  "productDetailVariantsEmpty": "Product variants are empty",
+  "productDetailBackToList": "Back to Case Studies",
+  "productDetailMasterpieceCollection": "MASTERPIECE COLLECTION",
+  "productDetailBuyNow": "Buy Now",
+  "productScanTooltip": "Scan QR code",
+  "productScanRequireLogin": "Please sign in before scanning",
+  "productScanResult": "Scan result: {code}",
+  "@productScanResult": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "productScanTitle": "Scan QR Code",
+  "commonCancel": "Cancel",
   "addToCart": "Add to cart",
   "productAddedToCart": "Added to cart: {title}",
   "@productAddedToCart": {

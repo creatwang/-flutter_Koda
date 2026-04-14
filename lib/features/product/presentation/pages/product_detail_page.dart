@@ -24,6 +24,20 @@ class ProductDetailPage extends ConsumerStatefulWidget {
 class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   int? _selectedProductId;
   int _selectedImageIndex = 0;
+  int _productNum = 1;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,16 +85,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     }
     final optionPath = optionPathByPid[selectedId] ?? '';
 
-    final images = <String>[
-      ...(selected.subImages ?? const <String>[]).where((e) => e.trim().isNotEmpty),
-      if ((selected.subImages ?? const <String>[]).isEmpty)
-        ...(detail.subImages ?? const <String>[]).where((e) => e.trim().isNotEmpty),
-      if ((selected.subImages ?? const <String>[]).isEmpty &&
-          (detail.subImages ?? const <String>[]).isEmpty &&
-          (selected.mainImage?.trim().isNotEmpty ?? false))
-        selected.mainImage!,
-    ];
+    final images = _buildGalleryImages(detail, variants);
     final imageIndex = images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
+    _syncCarouselIndex(imageIndex, hasImages: images.isNotEmpty);
 
     return Center(
       child: ConstrainedBox(
@@ -114,7 +121,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                 itemBuilder: (_, index) {
                                   final selectedThumb = imageIndex == index;
                                   return GestureDetector(
-                                    onTap: () => setState(() => _selectedImageIndex = index),
+                                    onTap: () => _onThumbnailTap(index),
                                     child: Container(
                                       height: 74,
                                       decoration: BoxDecoration(
@@ -149,11 +156,20 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                   color: Colors.black.withValues(alpha: 0.12),
                                   child: images.isEmpty
                                       ? const Center(child: Icon(Icons.image_not_supported))
-                                      : Image.network(
-                                          images[imageIndex],
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Center(child: Icon(Icons.image_not_supported)),
+                                      : PageView.builder(
+                                          controller: _pageController,
+                                          itemCount: images.length,
+                                          onPageChanged: (index) {
+                                            if (_selectedImageIndex == index) return;
+                                            setState(() => _selectedImageIndex = index);
+                                          },
+                                          itemBuilder: (_, index) => Image.network(
+                                            images[index],
+                                            fit: BoxFit.cover,
+                                            gaplessPlayback: true,
+                                            errorBuilder: (_, __, ___) =>
+                                                const Center(child: Icon(Icons.image_not_supported)),
+                                          ),
                                         ),
                                 ),
                               ),
@@ -200,8 +216,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     final l10n = context.l10n;
     final title = selected.name ?? detail.name ?? '--';
     final category = (selected.categoryName ?? detail.categoryName ?? '').toUpperCase();
-    final price = selected.price ?? detail.price ?? 0;
-    final maxPrice = selected.maxPrice ?? detail.maxPrice ?? price;
+    final unitPrice = _resolveUnitPrice(detail, selected, selectedId);
+    final unitMaxPrice = selected.maxPrice ?? detail.maxPrice ?? unitPrice;
+    final totalPrice = unitPrice * _productNum;
+    final totalMaxPrice = unitMaxPrice * _productNum;
     final specGroups = selected.specValue ?? const <SpecValue>[];
 
     return Column(
@@ -233,7 +251,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '€${price.toStringAsFixed(2)}',
+              '€${totalPrice.toStringAsFixed(2)}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 44,
@@ -241,11 +259,11 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               ),
             ),
             const SizedBox(width: 12),
-            if (maxPrice > price)
+            if (totalMaxPrice > totalPrice)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  '€${maxPrice.toStringAsFixed(2)}',
+                  '€${totalMaxPrice.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     decoration: TextDecoration.lineThrough,
@@ -254,6 +272,46 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                   ),
                 ),
               ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Text(
+              'product_num',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 10),
+            _QtyAdjustButton(
+              icon: Icons.remove,
+              onTap: _productNum <= 1
+                  ? null
+                  : () => setState(() {
+                        _productNum -= 1;
+                      }),
+            ),
+            Container(
+              width: 46,
+              alignment: Alignment.center,
+              child: Text(
+                '$_productNum',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            _QtyAdjustButton(
+              icon: Icons.add,
+              onTap: () => setState(() {
+                _productNum += 1;
+              }),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -288,10 +346,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                             onTap: pid == null
                                 ? null
                                 : () {
-                                    setState(() {
-                                      _selectedProductId = pid;
-                                      _selectedImageIndex = 0;
-                                    });
+                                    _selectProduct(pid);
                                   },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -351,10 +406,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                               onTap: () {
                                 final pid = option.pid?.firstOrNull;
                                 if (pid == null) return;
-                                setState(() {
-                                  _selectedProductId = pid;
-                                  _selectedImageIndex = 0;
-                                });
+                                _selectProduct(pid);
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -394,7 +446,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           width: double.infinity,
           child: FilledButton(
             onPressed: () {
-              ref.read(cartControllerProvider.notifier).addProduct(_toProductItem(selected));
+              _addProductToCart(selected, _productNum);
               context.go(AppRoutes.homeWithTab('cart'));
             },
             style: FilledButton.styleFrom(
@@ -410,7 +462,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
-              ref.read(cartControllerProvider.notifier).addProduct(_toProductItem(selected));
+              _addProductToCart(selected, _productNum);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(context.l10n.productAddedToCart(title))),
               );
@@ -447,6 +499,115 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       isHot: '${product.isHot ?? 0}',
       mainImage: product.mainImage ?? '',
       isCollect: product.isCollect ?? false,
+    );
+  }
+
+  void _selectProduct(int pid) {
+    if (_selectedProductId == pid) return;
+    setState(() {
+      _selectedProductId = pid;
+    });
+  }
+
+  double _resolveUnitPrice(ProductDetailDto detail, Product selected, int selectedId) {
+    final detailSub = detail.productSub?.firstWhereOrNull((e) => e.pid == selectedId);
+    final selectedSub = selected.productSub?.firstWhereOrNull((e) => e.pid == selectedId);
+    final salesPrice = detailSub?.salesPrice ?? selectedSub?.salesPrice;
+    return salesPrice ?? selected.price ?? detail.price ?? 0;
+  }
+
+  void _addProductToCart(Product selected, int qty) {
+    final cart = ref.read(cartControllerProvider.notifier);
+    for (var i = 0; i < qty; i++) {
+      cart.addProduct(_toProductItem(selected));
+    }
+  }
+
+  List<String> _buildGalleryImages(ProductDetailDto detail, List<Product> variants) {
+    final detailImages = (detail.subImages ?? const <String>[])
+        .where((e) => e.trim().isNotEmpty)
+        .toList(growable: false);
+    if (detailImages.isNotEmpty) return detailImages;
+
+    final firstVariantImages = (variants.firstOrNull?.subImages ?? const <String>[])
+        .where((e) => e.trim().isNotEmpty)
+        .toList(growable: false);
+    if (firstVariantImages.isNotEmpty) return firstVariantImages;
+
+    final detailMainImage = detail.mainImage?.trim();
+    if (detailMainImage != null && detailMainImage.isNotEmpty) {
+      return <String>[detailMainImage];
+    }
+
+    final firstVariantMain = variants.firstOrNull?.mainImage?.trim();
+    if (firstVariantMain != null && firstVariantMain.isNotEmpty) {
+      return <String>[firstVariantMain];
+    }
+
+    return const <String>[];
+  }
+
+  void _syncCarouselIndex(int imageIndex, {required bool hasImages}) {
+    if (!hasImages) return;
+
+    if (_selectedImageIndex != imageIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _selectedImageIndex = imageIndex);
+      });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageController.hasClients) return;
+      final currentPage = (_pageController.page ?? _pageController.initialPage.toDouble()).round();
+      if (currentPage != imageIndex) {
+        _pageController.jumpToPage(imageIndex);
+      }
+    });
+  }
+
+  void _onThumbnailTap(int index) {
+    if (_selectedImageIndex != index) {
+      setState(() => _selectedImageIndex = index);
+    }
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+}
+
+class _QtyAdjustButton extends StatelessWidget {
+  const _QtyAdjustButton({
+    required this.icon,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: Colors.white.withValues(alpha: 0.12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: onTap == null ? Colors.white38 : Colors.white,
+        ),
+      ),
     );
   }
 }

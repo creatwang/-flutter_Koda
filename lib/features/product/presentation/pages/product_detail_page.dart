@@ -203,7 +203,14 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       child: Container(
                         padding: const EdgeInsets.all(22),
                         decoration: _cardDecoration(),
-                        child: _buildInfoPanel(context, detail, selected, selectedId, optionPath),
+                        child: _buildInfoPanel(
+                          context,
+                          detail,
+                          selected,
+                          selectedId,
+                          optionPath,
+                          variants,
+                        ),
                       ),
                     ),
                   ],
@@ -222,6 +229,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     Product selected,
     int selectedId,
     String optionPath,
+    List<Product> variants,
   ) {
     final l10n = context.l10n;
     final title = selected.name ?? detail.name ?? '--';
@@ -287,19 +295,16 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: specGroups
-                  .where((group) => (group.options ?? const <Options>[]).isNotEmpty)
-                  .map((group) {
-                final options = group.options ?? const <Options>[];
-                return Padding(
+              children: [
+                Padding(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        (group.name ?? '').toUpperCase(),
+                      const Text(
+                        'Product:',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white70,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -308,20 +313,20 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: options.map((option) {
-                          final spec = option.spec ?? '';
-                          final isSelected = spec.isNotEmpty && optionPath.contains(spec);
-                          final display = option.name ?? option.nameCn ?? '--';
+                        children: variants.map((product) {
+                          final pid = product.id;
+                          final isSelected = pid != null && pid == selectedId;
+                          final display = product.name ?? product.nameCn ?? '--';
                           return InkWell(
                             borderRadius: BorderRadius.circular(8),
-                            onTap: () {
-                              final pid = option.pid?.firstOrNull;
-                              if (pid == null) return;
-                              setState(() {
-                                _selectedProductId = pid;
-                                _selectedImageIndex = 0;
-                              });
-                            },
+                            onTap: pid == null
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _selectedProductId = pid;
+                                      _selectedImageIndex = 0;
+                                    });
+                                  },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
@@ -349,8 +354,72 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       ),
                     ],
                   ),
-                );
-              }).toList(growable: false),
+                ),
+                ...specGroups
+                    .where((group) => (group.options ?? const <Options>[]).isNotEmpty)
+                    .map((group) {
+                  final options = group.options ?? const <Options>[];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (group.name ?? '').toUpperCase(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: options.map((option) {
+                            final spec = option.spec ?? '';
+                            final isSelected = spec.isNotEmpty && optionPath.contains(spec);
+                            final display = option.name ?? option.nameCn ?? '--';
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () {
+                                final pid = option.pid?.firstOrNull;
+                                if (pid == null) return;
+                                setState(() {
+                                  _selectedProductId = pid;
+                                  _selectedImageIndex = 0;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: isSelected
+                                      ? Colors.white.withValues(alpha: 0.25)
+                                      : Colors.white.withValues(alpha: 0.1),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Text(
+                                  display,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(growable: false),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
         ),

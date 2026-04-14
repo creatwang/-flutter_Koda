@@ -215,7 +215,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   {
     final l10n = context.l10n;
     final title = selected.name ?? detail.name ?? '--';
-    final category = (selected.categoryName ?? detail.categoryName ?? '').toUpperCase();
+    // final category = (selected.categoryName ?? detail.categoryName ?? '').toUpperCase();
+    final productCode = (selected.uniqid ?? detail.uniqid ?? '');
     final unitPrice = _resolveUnitPrice(detail, selected, selectedId);
     final unitMaxPrice = selected.maxPrice ?? detail.maxPrice ?? unitPrice;
     final totalPrice = unitPrice * _productNum;
@@ -225,8 +226,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          category.isEmpty ? l10n.productDetailMasterpieceCollection : category,
+        Text(productCode,
           style: const TextStyle(
             color: Colors.white70,
             fontWeight: FontWeight.w600,

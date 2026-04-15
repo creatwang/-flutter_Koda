@@ -98,12 +98,16 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               OutlinedButton.icon(
+                style: ButtonStyle(
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                ),
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back, size: 16),
-                label: Text(l10n.productDetailBackToList),
+                label: Text(l10n.productDetailBackToList, style: TextStyle(color: Colors.white),),
               ),
               const SizedBox(height: 14),
-              Expanded(
+              SizedBox(
+                height: 540,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -240,7 +244,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
-            fontSize: 46,
+            fontSize: 40,
             height: 1.05,
           ),
           maxLines: 2,
@@ -251,15 +255,15 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              totalPrice.toStringAsFixed(2),
+              '\$${totalPrice.toStringAsFixed(2)}',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 44,
+                fontSize: 25,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(width: 12),
-            if (totalMaxPrice > totalPrice)
+            /*if (totalMaxPrice > totalPrice)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
@@ -271,7 +275,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
+              ),*/
           ],
         ),
         const SizedBox(height: 10),

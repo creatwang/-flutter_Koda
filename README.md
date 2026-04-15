@@ -7,7 +7,7 @@
 
 修改国际化之后
 flutter gen-l10n
-
+dart run build_runner
 打包
 flutter clean
 删 android/.gradle 和 项目根 .dart_tool（可选）

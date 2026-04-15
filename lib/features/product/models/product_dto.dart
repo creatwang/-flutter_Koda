@@ -63,33 +63,33 @@ class ProductDto {
     if (json['product_imgs'] != null) {
       productImgs = <ProductImgs>[];
       json['product_imgs'].forEach((v) {
-        productImgs!.add(new ProductImgs.fromJson(v));
+        productImgs!.add(ProductImgs.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['category_id'] = this.categoryId;
-    data['main_image'] = this.mainImage;
-    data['sub_images'] = this.subImages;
-    data['name'] = this.name;
-    data['unit'] = this.unit;
-    data['viewed'] = this.viewed;
-    data['sales'] = this.sales;
-    data['price'] = this.price;
-    data['cny_price'] = this.cnyPrice;
-    data['category_name'] = this.categoryName;
-    data['is_collect'] = this.isCollect;
-    data['max_price'] = this.maxPrice;
-    data['is_hot'] = this.isHot;
-    data['sort_order'] = this.sortOrder;
-    data['uniqid'] = this.uniqid;
-    data['formula_type'] = this.formulaType;
-    data['shop_category_id'] = this.shopCategoryId;
-    if (this.productImgs != null) {
-      data['product_imgs'] = this.productImgs!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['category_id'] = categoryId;
+    data['main_image'] = mainImage;
+    data['sub_images'] = subImages;
+    data['name'] = name;
+    data['unit'] = unit;
+    data['viewed'] = viewed;
+    data['sales'] = sales;
+    data['price'] = price;
+    data['cny_price'] = cnyPrice;
+    data['category_name'] = categoryName;
+    data['is_collect'] = isCollect;
+    data['max_price'] = maxPrice;
+    data['is_hot'] = isHot;
+    data['sort_order'] = sortOrder;
+    data['uniqid'] = uniqid;
+    data['formula_type'] = formulaType;
+    data['shop_category_id'] = shopCategoryId;
+    if (productImgs != null) {
+      data['product_imgs'] = productImgs!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -111,11 +111,11 @@ class ProductImgs {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['url'] = this.url;
-    data['id'] = this.id;
-    data['priovity'] = this.priovity;
-    data['water_url'] = this.waterUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['url'] = url;
+    data['id'] = id;
+    data['priovity'] = priovity;
+    data['water_url'] = waterUrl;
     return data;
   }
 }

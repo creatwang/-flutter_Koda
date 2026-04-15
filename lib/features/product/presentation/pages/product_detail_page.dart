@@ -251,7 +251,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '€${totalPrice.toStringAsFixed(2)}',
+              totalPrice.toStringAsFixed(2),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 44,

@@ -36,7 +36,7 @@ class _DetailState extends State<Detail> {
             id: detailId,
             optionPath: optionPath[detailId.toString()] ?? '',
             onChange: (id) {
-              this.setState(() {
+              setState(() {
                 detailId = id;
               });
             },
@@ -187,7 +187,7 @@ class _ProductSkuOptionState extends State<ProductSkuOption> {
               ),
             ],
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -329,9 +329,9 @@ Map<String, dynamic> getJson() {
   }
   ],
   "shop_product_descs": null,
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63\/177593636569cf21002cddf772274834.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63/177593636569cf21002cddf772274834.png",
   "sub_images": [
-  "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63\/177593636569cf21002cddf772274834.png"
+  "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63/177593636569cf21002cddf772274834.png"
   ],
   "price": 836,
   "max_price": 2123,
@@ -344,10 +344,10 @@ Map<String, dynamic> getJson() {
   "name": "1+3+Imperial Concubine Position",
   "name_cn": "1+3+\u8d35\u5983\u4f4d",
   "uniqid": "ECO-SOF-DP-YY0S63",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63\/177593636569cf21002cddf772274834.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63/177593636569cf21002cddf772274834.png",
   "detail_images": null,
   "sub_images": [
-  "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63\/177593636569cf21002cddf772274834.png"
+  "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63/177593636569cf21002cddf772274834.png"
   ],
   "category_name": "Sofa",
   "formula_type": "",
@@ -694,10 +694,10 @@ Map<String, dynamic> getJson() {
   "name": "Three-person seat",
   "name_cn": "\u4e09\u4eba\u4f4d",
   "uniqid": "ECO-SOF-DP-YY0S63-1",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-1\/177572771069cf210414a05905876400.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-1/177572771069cf210414a05905876400.png",
   "detail_images": null,
   "sub_images": [
-  "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-1\/177572771069cf210414a05905876400.png"
+  "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-1/177572771069cf210414a05905876400.png"
   ],
   "category_name": "",
   "formula_type": "",
@@ -1055,10 +1055,10 @@ Map<String, dynamic> getJson() {
   "name": "Two-person seat",
   "name_cn": "\u53cc\u4eba\u4f4d",
   "uniqid": "ECO-SOF-DP-YY0S63-2",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-2\/177553242369cf2124249d8268701908.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-2/177553242369cf2124249d8268701908.png",
   "detail_images": null,
   "sub_images": [
-  "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-2\/177553242369cf2124249d8268701908.png"
+  "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-2/177553242369cf2124249d8268701908.png"
   ],
   "category_name": "",
   "formula_type": "",
@@ -1416,10 +1416,10 @@ Map<String, dynamic> getJson() {
   "name": "Single seat",
   "name_cn": "\u5355\u4eba\u4f4d",
   "uniqid": "ECO-SOF-DP-YY0S63-3",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-3\/177615066269cf2127c154e529236277.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-3/177615066269cf2127c154e529236277.png",
   "detail_images": null,
   "sub_images": [
-  "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0S63-3\/177615066269cf2127c154e529236277.png"
+  "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0S63-3/177615066269cf2127c154e529236277.png"
   ],
   "category_name": "",
   "formula_type": "",
@@ -1777,28 +1777,28 @@ Map<String, dynamic> getJson() {
   {
   "id": 117307,
   "name": "Single seat",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY0QS606-2\/177569414269cf21be8ca1e445275622.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY0QS606-2/177569414269cf21be8ca1e445275622.png",
   "price": 840,
   "max_price": 840
   },
   {
   "id": 117306,
   "name": "Three-person seat",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY01815\/177556648869cf21bab2887682551532.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY01815/177556648869cf21bab2887682551532.png",
   "price": 2690,
   "max_price": 2690
   },
   {
   "id": 117305,
   "name": "Four-seater electric sofa",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY01815-3\/177537384269cf21b6bf822377944576.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY01815-3/177537384269cf21b6bf822377944576.png",
   "price": 4090,
   "max_price": 4090
   },
   {
   "id": 117304,
   "name": "footstool",
-  "main_image": "https:\/\/img.gbuilderchina.com\/commonimg\/product\/gbjj\/ECO-SOF-DP-YY01817-2\/177570807169cf21b302c62197095022.png",
+  "main_image": "https://img.gbuilderchina.com/commonimg/product/gbjj/ECO-SOF-DP-YY01817-2/177570807169cf21b302c62197095022.png",
   "price": 690,
   "max_price": 690
   }

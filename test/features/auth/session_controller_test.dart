@@ -9,17 +9,15 @@ import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 void main() {
   group('SessionController + FakeAuthApi', () {
     test('登录成功：不打网络也能测流程', () async {
-      TokenPair? storedToken;
       final container = ProviderContainer(
         overrides: [
           authLoginServiceProvider.overrideWithValue(
             ({required username, required password}) async {
               const pair = TokenPair(accessToken: 'access_1', refreshToken: 'refresh_1');
-              storedToken = pair;
               return const ApiSuccess(pair);
             },
           ),
-          authClearTokenServiceProvider.overrideWithValue(() async => storedToken = null),
+          authClearTokenServiceProvider.overrideWithValue(() async {}),
         ],
       );
       addTearDown(container.dispose);

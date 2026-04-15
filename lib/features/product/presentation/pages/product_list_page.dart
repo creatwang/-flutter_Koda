@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/features/product/controllers/product_list_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
-import 'package:groe_app_pad/features/product/presentation/controllers/product_list_view_model.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/draggable_scan_fab.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_filter_panel.dart';
@@ -37,7 +37,7 @@ class ProductListPage extends ConsumerStatefulWidget {
 class _ProductListPageState extends ConsumerState<ProductListPage> {
   final ScrollController _scrollController = ScrollController();
   late final ProviderSubscription<AsyncValue<PaginatedProductsState>> _productsSubscription;
-  final ProductListViewModel _viewModel = ProductListViewModel();
+  final ProductListController _controller = ProductListController();
   bool _ensureLoadScheduled = false;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
@@ -97,8 +97,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final columns = isTabletUp
         ? (isLandscape
-            ? (_viewModel.isFilterCollapsed ? 5 : 4)
-            : (_viewModel.isFilterCollapsed ? 4 : 3))
+            ? (_controller.isFilterCollapsed ? 5 : 4)
+            : (_controller.isFilterCollapsed ? 4 : 3))
         : 2;
 
     return Stack(
@@ -112,23 +112,23 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
                   curve: Curves.easeInOutCubic,
-                  width: _viewModel.isFilterCollapsed ? 0 : 225,
+                  width: _controller.isFilterCollapsed ? 0 : 225,
                   child: ClipRect(
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 180),
-                      opacity: _viewModel.isFilterCollapsed ? 0 : 1,
+                      opacity: _controller.isFilterCollapsed ? 0 : 1,
                       child: IgnorePointer(
-                        ignoring: _viewModel.isFilterCollapsed,
+                        ignoring: _controller.isFilterCollapsed,
                         child: Row(
                           children: [
                             Expanded(
                               child: ProductFilterPanel(
                                 categories:
                                     categoryTreeState.asData?.value ?? const <ProductCategoryTreeDto>[],
-                                selectedCategoryId: _viewModel.selectedCategoryId,
+                                selectedCategoryId: _controller.selectedCategoryId,
                                 onCategoryTap: _onCategoryTap,
                                 onApplyTap: _onApplyTap,
-                                onCollapseTap: () => setState(_viewModel.collapseSidebar),
+                                onCollapseTap: () => setState(_controller.collapseSidebar),
                                 pinApplyButtonToBottom: true,
                               ),
                             ),
@@ -143,12 +143,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                 child: Column(
                   children: [
                     ProductSortHeader(
-                      selectedSortValue: _viewModel.selectedSortValue,
-                      selectedSortLabel: _viewModel.currentSortOption.text,
+                      selectedSortValue: _controller.selectedSortValue,
+                      selectedSortLabel: _controller.currentSortOption.text,
                       onSortChanged: _onSortChanged,
-                      isSidebarCollapsed: _viewModel.isFilterCollapsed,
+                      isSidebarCollapsed: _controller.isFilterCollapsed,
                       onToggleSidebar: isTabletUp
-                          ? () => setState(_viewModel.toggleSidebar)
+                          ? () => setState(_controller.toggleSidebar)
                           : null,
                       onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
                     ),
@@ -183,11 +183,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   void _onSortChanged(int value) {
-    setState(() => _viewModel.setSortValue(value));
-    widget.onSortChanged?.call(_viewModel.currentSortOption.text);
-    final query = _viewModel.currentSortQuery;
+    setState(() => _controller.setSortValue(value));
+    widget.onSortChanged?.call(_controller.currentSortOption.text);
+    final query = _controller.currentSortQuery;
     ref.read(productsProvider.notifier).applyFilters(
-          categoryId: _viewModel.selectedCategoryId,
+          categoryId: _controller.selectedCategoryId,
           sort: query.sort,
           orderBy: query.orderBy,
         );
@@ -196,12 +196,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void _onApplyTap() {
     _logSearchParams();
     ref.read(productsProvider.notifier).applyFilters(
-          categoryId: _viewModel.selectedCategoryId,
-          sort: _viewModel.currentSortQuery.sort,
-          orderBy: _viewModel.currentSortQuery.orderBy,
+          categoryId: _controller.selectedCategoryId,
+          sort: _controller.currentSortQuery.sort,
+          orderBy: _controller.currentSortQuery.orderBy,
         );
-    widget.onSortChanged?.call(_viewModel.currentSortOption.text);
-    widget.onCategoryChanged?.call(_viewModel.selectedCategoryLabel);
+    widget.onSortChanged?.call(_controller.currentSortOption.text);
+    widget.onCategoryChanged?.call(_controller.selectedCategoryLabel);
     widget.onSubCategoryChanged?.call('');
     widget.onApplyFilters?.call();
   }
@@ -275,11 +275,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   void _onCategoryTap(ProductCategoryTreeDto category) {
-    setState(() => _viewModel.toggleCategory(category));
+    setState(() => _controller.toggleCategory(category));
   }
 
   void _logSearchParams() {
-    debugPrint(_viewModel.buildSearchLog(trigger: 'apply_filters'));
+    debugPrint(_controller.buildSearchLog(trigger: 'apply_filters'));
   }
 
   Future<void> _openMobileFilterSheet() async {
@@ -292,7 +292,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
           padding: const EdgeInsets.all(12),
           child: ProductFilterPanel(
             categories: categories,
-            selectedCategoryId: _viewModel.selectedCategoryId,
+            selectedCategoryId: _controller.selectedCategoryId,
             onCategoryTap: _onCategoryTap,
             onApplyTap: _onApplyTap,
             onCollapseTap: null,

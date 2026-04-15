@@ -1,7 +1,7 @@
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
 
-class ProductListViewModel {
+class ProductListController {
   int? selectedCategoryId;
   String selectedCategoryLabel = '';
   int selectedSortValue = 0;
@@ -15,7 +15,8 @@ class ProductListViewModel {
   }
 
   SortQuery get currentSortQuery {
-    return sortByQueryMap[selectedSortValue] ?? const SortQuery(sort: null, orderBy: 0);
+    return sortByQueryMap[selectedSortValue] ??
+        const SortQuery(sort: null, orderBy: 0);
   }
 
   void setSortValue(int value) {
@@ -34,18 +35,16 @@ class ProductListViewModel {
     selectedCategoryLabel = isSameCategory ? '' : (category.name ?? '');
   }
 
-  void toggleSidebar() {
-    isFilterCollapsed = !isFilterCollapsed;
-  }
+  void toggleSidebar() => isFilterCollapsed = !isFilterCollapsed;
 
-  void collapseSidebar() {
-    isFilterCollapsed = true;
-  }
+  void collapseSidebar() => isFilterCollapsed = true;
 
   String buildSearchLog({required String trigger}) {
     return '[product_list] trigger=$trigger, sortValue=$selectedSortValue, '
-        'sort=${currentSortQuery.sort ?? 'null'}, order_by=${currentSortQuery.orderBy}, '
+        'sort=${currentSortQuery.sort ?? 'null'}, '
+        'order_by=${currentSortQuery.orderBy}, '
         'shopCateGoryId=${selectedCategoryId ?? 0}, '
-        'categoryLabel=${selectedCategoryLabel.isEmpty ? 'none' : selectedCategoryLabel}';
+        'categoryLabel='
+        '${selectedCategoryLabel.isEmpty ? 'none' : selectedCategoryLabel}';
   }
 }

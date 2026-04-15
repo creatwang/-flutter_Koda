@@ -5,13 +5,13 @@ class UserInfoBase {
   String? username;
   num? companyId;
   String? avatar;
-  Null? telephone;
-  Null? description;
+  Null telephone;
+  Null description;
   num? status;
   num? type;
   String? updatedAt;
   String? createdAt;
-  Null? deletedAt;
+  Null deletedAt;
   num? registerFrom;
   num? languageId;
   num? tourist;
@@ -81,32 +81,32 @@ class UserInfoBase {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['account_id'] = this.accountId;
-    data['name'] = this.name;
-    data['username'] = this.username;
-    data['company_id'] = this.companyId;
-    data['avatar'] = this.avatar;
-    data['telephone'] = this.telephone;
-    data['description'] = this.description;
-    data['status'] = this.status;
-    data['type'] = this.type;
-    data['updated_at'] = this.updatedAt;
-    data['created_at'] = this.createdAt;
-    data['deleted_at'] = this.deletedAt;
-    data['register_from'] = this.registerFrom;
-    data['language_id'] = this.languageId;
-    data['tourist'] = this.tourist;
-    data['email'] = this.email;
-    data['nickname'] = this.nickname;
-    data['wechat'] = this.wechat;
-    data['customer_id'] = this.customerId;
-    data['last_order_time'] = this.lastOrderTime;
-    data['user_main_id'] = this.userMainId;
-    data['shop_id'] = this.shopId;
-    data['token'] = this.token;
-    data['is_auth_account'] = this.isAuthAccount;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['account_id'] = accountId;
+    data['name'] = name;
+    data['username'] = username;
+    data['company_id'] = companyId;
+    data['avatar'] = avatar;
+    data['telephone'] = telephone;
+    data['description'] = description;
+    data['status'] = status;
+    data['type'] = type;
+    data['updated_at'] = updatedAt;
+    data['created_at'] = createdAt;
+    data['deleted_at'] = deletedAt;
+    data['register_from'] = registerFrom;
+    data['language_id'] = languageId;
+    data['tourist'] = tourist;
+    data['email'] = email;
+    data['nickname'] = nickname;
+    data['wechat'] = wechat;
+    data['customer_id'] = customerId;
+    data['last_order_time'] = lastOrderTime;
+    data['user_main_id'] = userMainId;
+    data['shop_id'] = shopId;
+    data['token'] = token;
+    data['is_auth_account'] = isAuthAccount;
     return data;
   }
 }

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_list_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
@@ -35,10 +38,13 @@ class ProductListPage extends ConsumerStatefulWidget {
 }
 
 class _ProductListPageState extends ConsumerState<ProductListPage> {
+  static const Duration _sidebarAnimationDuration = Duration(milliseconds: 260);
   final ScrollController _scrollController = ScrollController();
   late final ProviderSubscription<AsyncValue<PaginatedProductsState>> _productsSubscription;
   final ProductListController _controller = ProductListController();
   bool _ensureLoadScheduled = false;
+  bool _useCollapsedGridColumns = false;
+  int _sidebarLayoutSwitchToken = 0;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
 
@@ -46,6 +52,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _useCollapsedGridColumns = _controller.isFilterCollapsed;
     _productsSubscription = ref.listenManual<AsyncValue<PaginatedProductsState>>(
       productsProvider,
       (_, next) {
@@ -82,6 +89,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   @override
   void dispose() {
+    _sidebarLayoutSwitchToken++;
     _productsSubscription.close();
     _scrollController
       ..removeListener(_onScroll)
@@ -94,17 +102,21 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     final productsState = ref.watch(productsProvider);
     final categoryTreeState = ref.watch(categoryTreeProvider);
     final isTabletUp = context.isTabletUp;
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     final columns = isTabletUp
         ? (isLandscape
-            ? (_controller.isFilterCollapsed ? 5 : 4)
-            : (_controller.isFilterCollapsed ? 4 : 3))
+            ? (_useCollapsedGridColumns ? 5 : 4)
+            : (_useCollapsedGridColumns ? 4 : 3))
         : 2;
 
     return Stack(
           children: [
             Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 30),
+          padding: EdgeInsets.symmetric(
+            horizontal: isLandscape ? 52 : 10,
+            vertical: 30,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -128,7 +140,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                                 selectedCategoryId: _controller.selectedCategoryId,
                                 onCategoryTap: _onCategoryTap,
                                 onApplyTap: _onApplyTap,
-                                onCollapseTap: () => setState(_controller.collapseSidebar),
+                                onCollapseTap: _onCollapseSidebar,
                                 pinApplyButtonToBottom: true,
                               ),
                             ),
@@ -147,9 +159,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                       selectedSortLabel: _controller.currentSortOption.text,
                       onSortChanged: _onSortChanged,
                       isSidebarCollapsed: _controller.isFilterCollapsed,
-                      onToggleSidebar: isTabletUp
-                          ? () => setState(_controller.toggleSidebar)
-                          : null,
+                      onToggleSidebar: isTabletUp ? _onToggleSidebar : null,
                       onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
                     ),
                     const SizedBox(height: 12),
@@ -161,6 +171,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                         collectOverrides: _collectOverrides,
                         collectSubmitting: _collectSubmitting,
                         onCollectTap: _onCollectTapped,
+                        onAddToCartTap: _onAddToCartTapped,
                         onRetry: () => ref.read(productsProvider.notifier).refresh(),
                         onRefresh: () => ref.read(productsProvider.notifier).refresh(),
                         onEnsureLoadMore: _ensureScrollableAndLoadMoreIfNeeded,
@@ -274,8 +285,50 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     setState(() => _collectSubmitting.remove(productId));
   }
 
+  void _onAddToCartTapped(ProductItem product) {
+    ref.read(cartControllerProvider.notifier).addProduct(product);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.productAddedToCart(product.name))),
+    );
+  }
+
   void _onCategoryTap(ProductCategoryTreeDto category) {
     setState(() => _controller.toggleCategory(category));
+  }
+
+  void _onCollapseSidebar() {
+    _setSidebarCollapsed(true);
+  }
+
+  void _onToggleSidebar() {
+    _setSidebarCollapsed(!_controller.isFilterCollapsed);
+  }
+
+  void _setSidebarCollapsed(bool collapsed) {
+    if (_controller.isFilterCollapsed == collapsed && _useCollapsedGridColumns == collapsed) return;
+
+    if (!collapsed) {
+      setState(() {
+        _sidebarLayoutSwitchToken++;
+        _controller.isFilterCollapsed = false;
+        _useCollapsedGridColumns = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _sidebarLayoutSwitchToken++;
+      _controller.isFilterCollapsed = true;
+      // 收起动画进行中时，先保留展开态列数，避免卡片区域瞬时变窄导致溢出。
+      _useCollapsedGridColumns = false;
+    });
+
+    final token = _sidebarLayoutSwitchToken;
+    Future<void>.delayed(_sidebarAnimationDuration, () {
+      if (!mounted || token != _sidebarLayoutSwitchToken || !_controller.isFilterCollapsed) return;
+      setState(() => _useCollapsedGridColumns = true);
+    });
   }
 
   void _logSearchParams() {

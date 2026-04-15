@@ -43,7 +43,7 @@ class ProductListController {
     return '[product_list] trigger=$trigger, sortValue=$selectedSortValue, '
         'sort=${currentSortQuery.sort ?? 'null'}, '
         'order_by=${currentSortQuery.orderBy}, '
-        'shopCateGoryId=${selectedCategoryId ?? 0}, '
+        'shopCateGoryId=${selectedCategoryId ?? 0},'
         'categoryLabel='
         '${selectedCategoryLabel.isEmpty ? 'none' : selectedCategoryLabel}';
   }

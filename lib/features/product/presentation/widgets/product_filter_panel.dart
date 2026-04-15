@@ -170,13 +170,22 @@ class _CategoryTreeNode extends StatefulWidget {
 class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
   bool _expanded = false;
 
+  bool _containsSelected(ProductCategoryTreeDto node, int? selectedId) {
+    if (selectedId == null) return false;
+    if (node.id == selectedId) return true;
+    for (final child in node.children) {
+      if (_containsSelected(child, selectedId)) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoryId = widget.category.id;
     final categoryName = widget.category.name ?? '';
     final children = widget.category.children;
     final hasChildren = children.isNotEmpty;
-    final selected = categoryId != null && widget.selectedCategoryId == categoryId;
+    final selected = _containsSelected(widget.category, widget.selectedCategoryId);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +196,7 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: selected
-                ? Colors.white.withValues(alpha: 0.26)
+                ? Colors.black.withValues(alpha: 0.26)
                 : Colors.white.withValues(alpha: 0.1),
           ),
           child: Row(
@@ -210,17 +219,34 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
                 ),
               ),
               if (hasChildren)
-                InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () => setState(() => _expanded = !_expanded),
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    turns: _expanded ? 0.5 : 0,
-                    child: Icon(
-                      Icons.expand_more,
-                      size: 18,
-                      color: Colors.white.withValues(alpha: 0.8),
+                Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: ClipOval(
+                    child: InkResponse(
+                      onTap: () => setState(() => _expanded = !_expanded),
+                      customBorder: const CircleBorder(),
+                      containedInkWell: true,
+                      highlightShape: BoxShape.circle,
+                      radius: 12,
+                      splashColor: Colors.white.withValues(alpha: 0.16),
+                      highlightColor: Colors.white.withValues(alpha: 0.12),
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: Center(
+                          child: AnimatedRotation(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            turns: _expanded ? 0.5 : 0,
+                            child: Icon(
+                              Icons.expand_more,
+                              size: 18,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

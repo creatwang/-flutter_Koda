@@ -16,6 +16,7 @@ class ProductGridSection extends StatelessWidget {
     required this.collectOverrides,
     required this.collectSubmitting,
     required this.onCollectTap,
+    required this.onAddToCartTap,
     required this.onRetry,
     required this.onRefresh,
     required this.onEnsureLoadMore,
@@ -28,6 +29,7 @@ class ProductGridSection extends StatelessWidget {
   final Map<int, bool> collectOverrides;
   final Set<int> collectSubmitting;
   final ValueChanged<ProductItem> onCollectTap;
+  final ValueChanged<ProductItem> onAddToCartTap;
   final VoidCallback onRetry;
   final Future<void> Function() onRefresh;
   final VoidCallback onEnsureLoadMore;
@@ -67,10 +69,12 @@ class ProductGridSection extends StatelessWidget {
                         final product = items.items[index];
                         final isCollected = collectOverrides[product.id] ?? product.isCollect;
                         return ProductCard(
+                          key: ValueKey<int>(product.id),
                           productItem: product,
                           isCollected: isCollected,
                           isCollectSubmitting: collectSubmitting.contains(product.id),
                           onCollectTap: () => onCollectTap(product),
+                          onAddToCartTap: () => onAddToCartTap(product),
                         );
                       },
                     );

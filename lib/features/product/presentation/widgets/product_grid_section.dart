@@ -45,13 +45,7 @@ class ProductGridSection extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: onRefresh,
           child: items.items.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 60),
-                  children: [
-                    AppEmptyView(message: l10n.productEmpty),
-                  ],
-                )
+              ? AppEmptyView(message: l10n.productEmpty)
               : Builder(
                   builder: (_) {
                     onEnsureLoadMore();

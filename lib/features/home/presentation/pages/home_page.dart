@@ -6,7 +6,6 @@ import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
-import 'package:groe_app_pad/features/product/presentation/pages/product_detail_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
@@ -101,7 +100,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         bottom: false,
         child: body,
       ),
-      bottomBarVisibility: AdaptiveBottomBarVisibility.mobileOnly,
+      bottomBarVisibility: AdaptiveBottomBarVisibility.always,
       bottomNavigationBar: FrostedBottomMenu(
         items: [
           FrostedBottomMenuItem(

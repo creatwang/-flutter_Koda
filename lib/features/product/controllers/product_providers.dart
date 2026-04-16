@@ -12,6 +12,16 @@ final productsProvider =
   ProductsNotifier.new,
 );
 
+final favoritesRevisionProvider =
+    NotifierProvider<FavoritesRevisionNotifier, int>(
+  FavoritesRevisionNotifier.new,
+);
+
+final favoriteProductsProvider =
+    AsyncNotifierProvider<FavoriteProductsNotifier, PaginatedProductsState>(
+  FavoriteProductsNotifier.new,
+);
+
 class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 8;
   int _selectedShopCategoryId = 0;
@@ -104,6 +114,80 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     _sort = sort;
     _orderBy = orderBy;
     await refresh();
+  }
+}
+
+class FavoritesRevisionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
+  static const int _pageSize = 20;
+
+  @override
+  FutureOr<PaginatedProductsState> build() async {
+    ref.watch(favoritesRevisionProvider);
+    final result = await fetchFavorProductsPageService(
+      page: 1,
+      pageSize: _pageSize,
+    );
+    return result.when(
+      success: (data) => PaginatedProductsState(
+        items: data,
+        page: 1,
+        hasMore: data.length >= _pageSize,
+      ),
+      failure: (exception) => throw exception,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final result = await fetchFavorProductsPageService(
+        page: 1,
+        pageSize: _pageSize,
+      );
+      return result.when(
+        success: (data) => PaginatedProductsState(
+          items: data,
+          page: 1,
+          hasMore: data.length >= _pageSize,
+        ),
+        failure: (exception) => throw exception,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.page + 1;
+    final result = await fetchFavorProductsPageService(
+      page: nextPage,
+      pageSize: _pageSize,
+    );
+    state = result.when(
+      success: (allData) {
+        final oldIds = current.items.map((e) => e.id).toSet();
+        final delta = allData.where((e) => !oldIds.contains(e.id)).toList();
+        final merged = [...current.items, ...delta];
+        return AsyncData(
+          current.copyWith(
+            items: merged,
+            page: nextPage,
+            hasMore: delta.isNotEmpty && allData.length >= _pageSize,
+            isLoadingMore: false,
+          ),
+        );
+      },
+      failure: (exception) => AsyncError(exception, StackTrace.current),
+    );
   }
 }
 

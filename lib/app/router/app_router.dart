@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/presentation/pages/login_page.dart';
@@ -8,8 +9,10 @@ import 'package:groe_app_pad/features/product/presentation/pages/product_detail_
 GoRouter buildAppRouter({
   required bool isLoading,
   required bool isLoggedIn,
+  GlobalKey<NavigatorState>? navigatorKey,
 }) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     routes: [
       GoRoute(
         path: AppRoutes.splash,

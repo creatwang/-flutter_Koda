@@ -261,6 +261,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
     result.when(
       success: (_) {
+        ref.read(favoritesRevisionProvider.notifier).bump();
         debugPrint(
           '[product_list] trigger=collect_changed, productId=$productId, isCollect=$target',
         );

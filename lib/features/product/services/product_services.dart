@@ -6,6 +6,7 @@ import 'package:groe_app_pad/features/product/models/product_category_tree_dto.d
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/models/product_dto.dart';
+import 'package:groe_app_pad/features/product/models/product_fav_dto.dart';
 
 import '../../../core/platform_services/network_clients.dart';
 
@@ -52,6 +53,53 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
     return ApiFailure(
       AppException(
         e.message ?? 'Fetch products failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+Future<ApiResult<List<ProductItem>>> fetchFavorProductsPageService({
+  required int page,
+  required int pageSize,
+}) async {
+  final companyId = await secureStorageService.getCompanyId();
+  if (companyId == null) {
+    return ApiFailure(const AppException('Missing company id'));
+  }
+  try {
+    final response = await requestFavorPageList(
+      page: page,
+      pageSize: pageSize,
+      companyId: companyId,
+    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid favorites response format',
+      );
+    }
+    final list = data['items'];
+    if (list is! List) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid favorites list format',
+      );
+    }
+    final dtos = list
+        .whereType<Map>()
+        .map((e) => ProductFavDto.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+    return ApiSuccess(
+      dtos.map((e) => e.toModel()).toList(growable: false),
+    );
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Fetch favorites failed',
         code: e.response?.statusCode?.toString(),
       ),
     );

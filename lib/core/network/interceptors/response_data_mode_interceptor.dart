@@ -15,8 +15,15 @@ class ResponseDataModeInterceptor extends Interceptor {
     final requestMode = _resolveRequestMode(response.requestOptions);
     final data = response.data;
     if (data is Map<String, dynamic> && _isBusinessError(data)) {
+      final code = data['code'];
       final message = _extractBusinessMessage(data);
-      showGlobalErrorMessage(message);
+      if (_isSessionExpiredCode(code)) {
+        showSessionExpiredDialog(
+          message.trim().isEmpty ? '您的登录已过期，请重新登录。' : message,
+        );
+      } else {
+        showGlobalErrorMessage(message);
+      }
       handler.reject(
         DioException(
           requestOptions: response.requestOptions,
@@ -39,7 +46,9 @@ class ResponseDataModeInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    showGlobalErrorMessage(_extractErrorMessage(err));
+    if (!_isSessionExpiredCode(_extractCode(err.response?.data))) {
+      showGlobalErrorMessage(_extractErrorMessage(err));
+    }
     handler.next(err);
   }
 
@@ -57,6 +66,21 @@ class ResponseDataModeInterceptor extends Interceptor {
     final code = data['code'];
     if (code is num) return code != 0;
     if (code is String) return code != '0' && code.toLowerCase() != 'success';
+    return false;
+  }
+
+  dynamic _extractCode(dynamic data) {
+    if (data is Map<String, dynamic>) return data['code'];
+    return null;
+  }
+
+  bool _isSessionExpiredCode(dynamic code) {
+    if (code is num) {
+      return code == 1002 || code == 1004 || code == 1102;
+    }
+    if (code is String) {
+      return code == '1002' || code == '1004' || code == '1102';
+    }
     return false;
   }
 

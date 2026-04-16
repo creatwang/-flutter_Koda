@@ -25,6 +25,10 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    registerSessionExpiredHandler(
+      () => ref.read(sessionControllerProvider.notifier).signOut(),
+    );
+
     final appThemeMode = ref.watch(appThemeModeProvider);
     final isDark = appThemeMode == AppThemeMode.dark;
     final localeMode = ref.watch(appLocaleModeProvider);
@@ -32,6 +36,7 @@ class AppShell extends ConsumerWidget {
     final router = buildAppRouter(
       isLoading: sessionState.isLoading,
       isLoggedIn: sessionState.asData?.value.isAuthenticated ?? false,
+      navigatorKey: appNavigatorKey,
     );
 
     return MaterialApp.router(

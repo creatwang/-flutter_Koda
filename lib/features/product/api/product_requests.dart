@@ -14,6 +14,8 @@ class ProductRequests {
   static const String getCategoryTree = '/store/category/tree';
   /// 产品详情
   static const String getProductDetail = '/store/product/detail';
+  /// 收藏列表
+  static const String getFavorPageList = '/store/collect/getPageList';
 }
 
 Future<Response<dynamic>> requestProductDetail({
@@ -46,6 +48,22 @@ Future<Response<dynamic>> requestProductsPage({
       'page_size': pageSize,
       'company_id': companyId,
       'page': page,
+    },
+  );
+}
+
+Future<Response<dynamic>> requestFavorPageList({
+  required int page,
+  required int pageSize,
+  required int companyId,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).get(
+    ProductRequests.getFavorPageList,
+    queryParameters: {
+      'page': page,
+      'pag_size': pageSize,
+      'company_id': companyId,
     },
   );
 }

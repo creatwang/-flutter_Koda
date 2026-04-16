@@ -26,15 +26,18 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   int _selectedImageIndex = 0;
   int _productNum = 1;
   late final PageController _pageController;
+  late final ScrollController _thumbScrollController;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _thumbScrollController = ScrollController();
   }
 
   @override
   void dispose() {
+    _thumbScrollController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -46,6 +49,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     return AdaptiveScaffold(
       title: l10n.appTitle,
       automaticallyImplyLeading: false,
+      bottomBarVisibility: AdaptiveBottomBarVisibility.never,
       body: SafeArea(
         child: detailState.when(
           loading: () => const AppLoadingView(),
@@ -469,9 +473,15 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       decoration: _cardDecoration(),
       child: Row(
         children: [
-          SizedBox(
-            width: 78,
+          Container(
+            width: 110,
+            padding: EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(5),
+            ),
             child: ListView.separated(
+              controller: _thumbScrollController,
               itemCount: images.length,
               separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (_, index) {
@@ -479,17 +489,18 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                 return GestureDetector(
                   onTap: () => _onThumbnailTap(index),
                   child: Container(
-                    height: 74,
+                    height: 70,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
+                        width: 2.0,
                         color: selectedThumb
-                            ? Colors.white
+                            ? Colors.black
                             : Colors.white.withValues(alpha: 0.2),
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(5),
                       child: Image.network(
                         images[index],
                         fit: BoxFit.cover,
@@ -614,6 +625,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureSelectedThumbnailVisible(imageIndex);
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
       final currentPage = (_pageController.page ?? _pageController.initialPage.toDouble()).round();
       if (currentPage != imageIndex) {
@@ -633,6 +648,42 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         curve: Curves.easeOutCubic,
       );
     }
+  }
+
+  void _ensureSelectedThumbnailVisible(int index) {
+    if (!mounted || !_thumbScrollController.hasClients) return;
+
+    const itemHeight = 74.0;
+    const itemGap = 10.0;
+    const itemExtent = itemHeight + itemGap;
+
+    final position = _thumbScrollController.position;
+    final currentOffset = position.pixels;
+    final viewportHeight = position.viewportDimension;
+
+    final itemTop = index * itemExtent;
+    final itemBottom = itemTop + itemHeight;
+    final viewportTop = currentOffset;
+    final viewportBottom = viewportTop + viewportHeight;
+
+    double? targetOffset;
+    if (itemTop < viewportTop) {
+      targetOffset = itemTop;
+    } else if (itemBottom > viewportBottom) {
+      targetOffset = itemBottom - viewportHeight;
+    }
+
+    if (targetOffset == null) return;
+
+    final safeOffset = targetOffset.clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    _thumbScrollController.animateTo(
+      safeOffset,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
   }
 }
 

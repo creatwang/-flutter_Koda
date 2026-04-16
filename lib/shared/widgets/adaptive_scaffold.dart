@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+
+enum AdaptiveBottomBarVisibility {
+  always,
+  mobileOnly,
+  never,
+}
 
 class AdaptiveScaffold extends StatelessWidget {
   const AdaptiveScaffold({
@@ -11,6 +18,7 @@ class AdaptiveScaffold extends StatelessWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.bottomNavigationBar,
+    this.bottomBarVisibility = AdaptiveBottomBarVisibility.always,
   });
 
   final String title;
@@ -21,9 +29,11 @@ class AdaptiveScaffold extends StatelessWidget {
   final Widget? leading;
   final bool automaticallyImplyLeading;
   final Widget? bottomNavigationBar;
+  final AdaptiveBottomBarVisibility bottomBarVisibility;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedBottomBar = _resolveBottomNavigationBar(context);
     return Scaffold(
      /* appBar: AppBar(
         title: Text(title),
@@ -35,7 +45,18 @@ class AdaptiveScaffold extends StatelessWidget {
       ),*/
       floatingActionButton: floatingActionButton,
       body: body,
-      bottomNavigationBar: bottomNavigationBar,
+      bottomNavigationBar: resolvedBottomBar,
     );
+  }
+
+  Widget? _resolveBottomNavigationBar(BuildContext context) {
+    if (bottomNavigationBar == null) return null;
+
+    return switch (bottomBarVisibility) {
+      AdaptiveBottomBarVisibility.always => bottomNavigationBar,
+      AdaptiveBottomBarVisibility.mobileOnly =>
+        context.isTabletUp ? null : bottomNavigationBar,
+      AdaptiveBottomBarVisibility.never => null,
+    };
   }
 }

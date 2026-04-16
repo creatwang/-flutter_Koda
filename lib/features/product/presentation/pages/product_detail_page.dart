@@ -52,17 +52,17 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       title: l10n.appTitle,
       automaticallyImplyLeading: false,
       bottomBarVisibility: AdaptiveBottomBarVisibility.never,
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Assets.images.detailBgc.image(
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const ColoredBox(
-                color: Color(0xFFE8ECEF),
-              ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Assets.images.detailBgc.image(
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const ColoredBox(
+              color: Color(0xFFE8ECEF),
             ),
-            detailState.when(
+          ),
+          SafeArea(
+            child: detailState.when(
               loading: () => const AppLoadingView(),
               error: (error, _) => AppErrorView(
                 message: l10n.productDetailLoadFailed(error.toString()),
@@ -71,8 +71,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               ),
               data: (detail) => _buildDetailContent(context, detail),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

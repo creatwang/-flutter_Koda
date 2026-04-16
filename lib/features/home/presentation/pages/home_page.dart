@@ -97,7 +97,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           icon: const Icon(Icons.logout),
         ),
       ],
-      body: body,
+      body: SafeArea(
+        bottom: false,
+        child: body,
+      ),
       bottomBarVisibility: AdaptiveBottomBarVisibility.mobileOnly,
       bottomNavigationBar: FrostedBottomMenu(
         items: [

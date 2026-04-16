@@ -62,11 +62,13 @@ class AppShell extends ConsumerWidget {
               final enableScale = !context.isTabletUp;
               return MaxWidthBox(
                 maxWidth: 1400,
-                child: ResponsiveScaledBox(
-                  // < 600：按 1024 基准做等比缩放（开启）
-                  // >= 600：不做全局等比缩放（关闭）
-                  width: enableScale ? 1024 : null,
-                  child: child ?? const SizedBox.shrink(),
+                child: ClipRect(
+                  child: ResponsiveScaledBox(
+                    // < 600：按 1024 基准做等比缩放（开启）
+                    // >= 600：不做全局等比缩放（关闭）
+                    width: enableScale ? 1024 : null,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               );
             },

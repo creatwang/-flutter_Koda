@@ -33,14 +33,6 @@ class ProductTechnicalDataPanel extends StatelessWidget {
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF5B554E).withValues(alpha: 0.62),
-            const Color(0xFF23262B).withValues(alpha: 0.70),
-          ],
-        ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(

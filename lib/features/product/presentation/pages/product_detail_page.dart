@@ -8,6 +8,7 @@ import 'package:groe_app_pad/features/product/controllers/product_providers.dart
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_technical_data_panel.dart';
+import 'package:groe_app_pad/gen/assets.gen.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
@@ -52,13 +53,25 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       automaticallyImplyLeading: false,
       bottomBarVisibility: AdaptiveBottomBarVisibility.never,
       body: SafeArea(
-        child: detailState.when(
-          loading: () => const AppLoadingView(),
-          error: (error, _) => AppErrorView(
-            message: l10n.productDetailLoadFailed(error.toString()),
-            onRetry: () => ref.invalidate(productDetailProvider(widget.productId)),
-          ),
-          data: (detail) => _buildDetailContent(context, detail),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Assets.images.detailBgc.image(
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const ColoredBox(
+                color: Color(0xFFE8ECEF),
+              ),
+            ),
+            detailState.when(
+              loading: () => const AppLoadingView(),
+              error: (error, _) => AppErrorView(
+                message: l10n.productDetailLoadFailed(error.toString()),
+                onRetry: () =>
+                    ref.invalidate(productDetailProvider(widget.productId)),
+              ),
+              data: (detail) => _buildDetailContent(context, detail),
+            ),
+          ],
         ),
       ),
     );
@@ -73,7 +86,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
 
     final fallbackId = detail.id ?? variants.first.id ?? widget.productId;
     final currentId = _selectedProductId ?? fallbackId;
-    final selected = variants.firstWhereOrNull((e) => e.id == currentId) ?? variants.first;
+    final selected =
+        variants.firstWhereOrNull((e) => e.id == currentId) ?? variants.first;
     final selectedId = selected.id ?? fallbackId;
 
     final optionPathByPid = <int, String>{
@@ -91,13 +105,13 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     final optionPath = optionPathByPid[selectedId] ?? '';
 
     final images = _buildGalleryImages(detail, variants);
-    final imageIndex = images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
+    final imageIndex =
+        images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
     _syncCarouselIndex(imageIndex, hasImages: images.isNotEmpty);
     final selectedParams = selected.productParam ?? const <ProductParam>[];
-    final contentPadding =
-        context.isTabletUp
-            ? const EdgeInsets.fromLTRB(62, 20, 62, 10)
-            : const EdgeInsets.fromLTRB(20, 16, 20, 10);
+    final contentPadding = context.isTabletUp
+        ? const EdgeInsets.fromLTRB(62, 20, 62, 10)
+        : const EdgeInsets.fromLTRB(20, 16, 20, 10);
 
     return Stack(
       children: [

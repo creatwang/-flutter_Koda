@@ -6,6 +6,7 @@ import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
 import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
 import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
+import 'package:groe_app_pad/features/profile/presentation/pages/profile_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
@@ -14,7 +15,7 @@ import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
 import '../../../product/presentation/pages/product_category_page.dart';
 
-enum HomeSection { products, cart, orders, productCategory }
+enum HomeSection { products, cart, orders, productCategory, profile }
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, this.initialTab});
@@ -38,6 +39,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return switch (tab) {
       'cart' => HomeSection.cart,
       'orders' => HomeSection.orders,
+      'profile' => HomeSection.profile,
       _ => HomeSection.products,
     };
   }
@@ -57,6 +59,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       HomeSection.cart => const CartPage(),
       HomeSection.orders => const OrderPage(),
       HomeSection.productCategory => const ProductCategoryPage(),
+      HomeSection.profile => const ProfilePage(),
     };
 
     return AdaptiveScaffold(
@@ -86,6 +89,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           icon: Icons.receipt_long_outlined,
           selected: _section == HomeSection.orders,
           onTap: () => setState(() => _section = HomeSection.orders),
+        ),
+        HeaderMenuButton(
+          label: 'Profile',
+          icon: Icons.person_outline,
+          selected: _section == HomeSection.profile,
+          onTap: () => setState(() => _section = HomeSection.profile),
         ),
         IconButton(
           tooltip: l10n.commonLogout,
@@ -126,6 +135,12 @@ class _HomePageState extends ConsumerState<HomePage> {
             label: l10n.homeOrders,
             selected: _section == HomeSection.orders,
             onTap: () => setState(() => _section = HomeSection.orders),
+          ),
+          FrostedBottomMenuItem(
+            icon: Icons.person_outline,
+            label: 'Profile',
+            selected: _section == HomeSection.profile,
+            onTap: () => setState(() => _section = HomeSection.profile),
           ),
         ],
       ),

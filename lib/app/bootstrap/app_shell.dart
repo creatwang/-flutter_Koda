@@ -13,6 +13,8 @@ import 'package:groe_app_pad/shared/services/app_message_service.dart';
 import 'package:groe_app_pad/theme/app_theme.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
+import '../../gen/assets.gen.dart';
+
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
@@ -61,8 +63,8 @@ class AppShell extends ConsumerWidget {
               return MaxWidthBox(
                 maxWidth: 1400,
                 child: ResponsiveScaledBox(
-                  // enableScale == true（小屏）=> 传 1024，开启等比缩放
-                  // enableScale == false（平板及以上）=> 传 null，不做缩放
+                  // < 600：按 1024 基准做等比缩放（开启）
+                  // >= 600：不做全局等比缩放（关闭）
                   width: enableScale ? 1024 : null,
                   child: child ?? const SizedBox.shrink(),
                 ),
@@ -71,6 +73,7 @@ class AppShell extends ConsumerWidget {
           ),
           breakpoints: const [
             Breakpoint(start: 0, end: 599, name: MOBILE),
+            // 评判区间
             Breakpoint(start: 600, end: 1023, name: TABLET),
             Breakpoint(start: 1024, end: 3000, name: DESKTOP),
           ],
@@ -79,20 +82,26 @@ class AppShell extends ConsumerWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              isDark ? _darkBackgroundImageUrl : _lightBackgroundImageUrl,
+            Assets.images.mainBgc.image(
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const ColoredBox(
                 color: Color(0xFFE8ECEF),
               ),
             ),
+            // Image.network(
+            //   isDark ? _darkBackgroundImageUrl : _lightBackgroundImageUrl,
+            //   fit: BoxFit.cover,
+            //   errorBuilder: (_, __, ___) => const ColoredBox(
+            //     color: Color(0xFFE8ECEF),
+            //   ),
+            // ),
             // 全局毛玻璃层：对背景图做轻度模糊，增强前景内容可读性。
             ClipRect(
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                 child: Container(
                   color: isDark
-                      ? Colors.black.withValues(alpha: 0.05)
+                      ? Colors.black.withValues(alpha: 0.16)
                       : Colors.white.withValues(alpha: 0.16),
                 ),
               ),

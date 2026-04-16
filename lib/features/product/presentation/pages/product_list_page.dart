@@ -102,8 +102,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     final productsState = ref.watch(productsProvider);
     final categoryTreeState = ref.watch(categoryTreeProvider);
     final isTabletUp = context.isTabletUp;
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final columns = isTabletUp
         ? (isLandscape
             ? (_useCollapsedGridColumns ? 5 : 4)
@@ -337,19 +336,30 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   Future<void> _openMobileFilterSheet() async {
     final categories = ref.read(categoryTreeProvider).asData?.value ?? const <ProductCategoryTreeDto>[];
+    var selectedCategoryId = _controller.selectedCategoryId;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
-          child: ProductFilterPanel(
-            categories: categories,
-            selectedCategoryId: _controller.selectedCategoryId,
-            onCategoryTap: _onCategoryTap,
-            onApplyTap: _onApplyTap,
-            onCollapseTap: null,
-            pinApplyButtonToBottom: false,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModalState) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: ProductFilterPanel(
+              categories: categories,
+              selectedCategoryId: selectedCategoryId,
+              onCategoryTap: (category) {
+                _controller.toggleCategory(category);
+                selectedCategoryId = _controller.selectedCategoryId;
+                setState(() {});
+                setModalState(() {});
+              },
+              onApplyTap: () {
+                _onApplyTap();
+                Navigator.of(context).pop();
+              },
+              onCollapseTap: null,
+              pinApplyButtonToBottom: false,
+            ),
           ),
         ),
       ),

@@ -88,12 +88,13 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     final images = _buildGalleryImages(detail, variants);
     final imageIndex = images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
     _syncCarouselIndex(imageIndex, hasImages: images.isNotEmpty);
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1320),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: isLandscape ? const EdgeInsets.fromLTRB(62, 20, 62, 20) : const EdgeInsets.fromLTRB(20, 20, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -106,99 +107,77 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                 label: Text(l10n.productDetailBackToList, style: TextStyle(color: Colors.white),),
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 540,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: _cardDecoration(),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 78,
-                              child: ListView.separated(
-                                itemCount: images.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                                itemBuilder: (_, index) {
-                                  final selectedThumb = imageIndex == index;
-                                  return GestureDetector(
-                                    onTap: () => _onThumbnailTap(index),
-                                    child: Container(
-                                      height: 74,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: selectedThumb
-                                              ? Colors.white
-                                              : Colors.white.withValues(alpha: 0.2),
-                                        ),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(9),
-                                        child: Image.network(
-                                          images[index],
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const ColoredBox(
-                                            color: Color(0x22111111),
-                                            child: Icon(Icons.broken_image, color: Colors.white70),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    const panelGap = 18.0;
+                    const mediaAspectRatio = 1.3; // width / height
+                    final isPhone = !context.isTabletUp;
+
+                    if (isPhone) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AspectRatio(
+                            aspectRatio: mediaAspectRatio,
+                            child: _buildMediaPanel(images: images, imageIndex: imageIndex),
+                          ),
+                          const SizedBox(height: panelGap),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(22),
+                              decoration: _cardDecoration(),
+                              child: _buildInfoPanel(
+                                context,
+                                detail,
+                                selected,
+                                selectedId,
+                                optionPath,
+                                variants,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: ColoredBox(
-                                  color: Colors.black.withValues(alpha: 0.12),
-                                  child: images.isEmpty
-                                      ? const Center(child: Icon(Icons.image_not_supported))
-                                      : PageView.builder(
-                                          controller: _pageController,
-                                          itemCount: images.length,
-                                          onPageChanged: (index) {
-                                            if (_selectedImageIndex == index) return;
-                                            setState(() => _selectedImageIndex = index);
-                                          },
-                                          itemBuilder: (_, index) => Image.network(
-                                            images[index],
-                                            fit: BoxFit.cover,
-                                            gaplessPlayback: true,
-                                            errorBuilder: (_, __, ___) =>
-                                                const Center(child: Icon(Icons.image_not_supported)),
-                                          ),
-                                        ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    final rowWidth = constraints.maxWidth;
+                    final leftWidth = (rowWidth - panelGap) * 0.6;
+                    final rightWidth = (rowWidth - panelGap) * 0.4;
+                    final panelHeight = leftWidth / mediaAspectRatio;
+
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        height: panelHeight,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: leftWidth,
+                              child: _buildMediaPanel(images: images, imageIndex: imageIndex),
+                            ),
+                            const SizedBox(width: panelGap),
+                            SizedBox(
+                              width: rightWidth,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: _cardDecoration(),
+                                child: _buildInfoPanel(
+                                  context,
+                                  detail,
+                                  selected,
+                                  selectedId,
+                                  optionPath,
+                                  variants,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 18),
-                    SizedBox(
-                      width: 390,
-                      child: Container(
-                        padding: const EdgeInsets.all(22),
-                        decoration: _cardDecoration(),
-                        child: _buildInfoPanel(
-                          context,
-                          detail,
-                          selected,
-                          selectedId,
-                          optionPath,
-                          variants,
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -232,7 +211,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       children: [
         Text(productCode,
           style: const TextStyle(
-            color: Colors.white70,
+            color: Colors.white,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.8,
             fontSize: 12,
@@ -250,7 +229,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -279,46 +258,6 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           ],
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Text(
-              'product_num',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 10),
-            _QtyAdjustButton(
-              icon: Icons.remove,
-              onTap: _productNum <= 1
-                  ? null
-                  : () => setState(() {
-                        _productNum -= 1;
-                      }),
-            ),
-            Container(
-              width: 46,
-              alignment: Alignment.center,
-              child: Text(
-                '$_productNum',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            _QtyAdjustButton(
-              icon: Icons.add,
-              onTap: () => setState(() {
-                _productNum += 1;
-              }),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
@@ -330,7 +269,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Product:',
+                        'PRODUCT:',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
@@ -353,7 +292,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                     _selectProduct(pid);
                                   },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 color: isSelected
@@ -370,7 +309,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -413,7 +352,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                 _selectProduct(pid);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
                                   color: isSelected
@@ -430,7 +369,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 12,
+                                    fontSize: 10,
                                   ),
                                 ),
                               ),
@@ -446,6 +385,38 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           ),
         ),
         const SizedBox(height: 10),
+        Row(
+          children: [
+            const SizedBox(width: 10),
+            _QtyAdjustButton(
+              icon: Icons.remove,
+              onTap: _productNum <= 1
+                  ? null
+                  : () => setState(() {
+                _productNum -= 1;
+              }),
+            ),
+            Container(
+              width: 46,
+              alignment: Alignment.center,
+              child: Text(
+                '$_productNum',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            _QtyAdjustButton(
+              icon: Icons.add,
+              onTap: () => setState(() {
+                _productNum += 1;
+              }),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -456,30 +427,111 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
             style: FilledButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(50),
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
             ),
-            child: Text(l10n.productDetailBuyNow),
+            child: Text(l10n.productDetailBuyNow, style: TextStyle(fontSize: 14)),
           ),
         ),
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
+          child: FilledButton(
             onPressed: () {
               _addProductToCart(selected, _productNum);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(context.l10n.productAddedToCart(title))),
               );
             },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.7)),
-              minimumSize: const Size.fromHeight(50),
+            style: FilledButton.styleFrom(
+              backgroundColor: Color.fromRGBO(200, 200, 200, 1),
+              foregroundColor: Color.fromRGBO(58, 72, 91, 1),
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
             ),
-            child: Text(context.l10n.addToCart),
+            child: Text(context.l10n.addToCart, style: TextStyle(fontSize: 14),),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMediaPanel({
+    required List<String> images,
+    required int imageIndex,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: _cardDecoration(),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 78,
+            child: ListView.separated(
+              itemCount: images.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (_, index) {
+                final selectedThumb = imageIndex == index;
+                return GestureDetector(
+                  onTap: () => _onThumbnailTap(index),
+                  child: Container(
+                    height: 74,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selectedThumb
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(9),
+                      child: Image.network(
+                        images[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const ColoredBox(
+                          color: Color(0x22111111),
+                          child: Icon(Icons.broken_image, color: Colors.white70),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.12),
+                child: images.isEmpty
+                    ? const Center(child: Icon(Icons.image_not_supported))
+                    : PageView.builder(
+                        controller: _pageController,
+                        itemCount: images.length,
+                        onPageChanged: (index) {
+                          if (_selectedImageIndex == index) return;
+                          setState(() => _selectedImageIndex = index);
+                        },
+                        itemBuilder: (_, index) => Image.network(
+                          images[index],
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                          errorBuilder: (_, __, ___) =>
+                              const Center(child: Icon(Icons.image_not_supported)),
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

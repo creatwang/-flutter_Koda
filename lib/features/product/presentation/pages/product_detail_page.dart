@@ -7,6 +7,7 @@ import 'package:groe_app_pad/features/cart/presentation/providers/cart_controlle
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/product_technical_data_panel.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
@@ -92,106 +93,150 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     final images = _buildGalleryImages(detail, variants);
     final imageIndex = images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
     _syncCarouselIndex(imageIndex, hasImages: images.isNotEmpty);
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final selectedParams = selected.productParam ?? const <ProductParam>[];
+    final contentPadding =
+        context.isTabletUp
+            ? const EdgeInsets.fromLTRB(62, 20, 62, 10)
+            : const EdgeInsets.fromLTRB(20, 16, 20, 10);
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1320),
-        child: Padding(
-          padding: isLandscape ? const EdgeInsets.fromLTRB(62, 20, 62, 20) : const EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilledButton.icon(
-                style: ButtonStyle(
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                  backgroundColor: WidgetStateProperty.all(Colors.white10),
-                ),
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, size: 16),
-                label: Text(
-                  l10n.productDetailBackToList,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const panelGap = 18.0;
-                    const mediaAspectRatio = 1.3; // width / height
-                    final isPhone = !context.isTabletUp;
-
-                    if (isPhone) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AspectRatio(
-                            aspectRatio: mediaAspectRatio,
-                            child: _buildMediaPanel(images: images, imageIndex: imageIndex),
-                          ),
-                          const SizedBox(height: panelGap),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(22),
-                              decoration: _cardDecoration(),
-                              child: _buildInfoPanel(
-                                context,
-                                detail,
-                                selected,
-                                selectedId,
-                                optionPath,
-                                variants,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-
-                    final rowWidth = constraints.maxWidth;
-                    final leftWidth = (rowWidth - panelGap) * 0.6;
-                    final rightWidth = (rowWidth - panelGap) * 0.4;
-                    final panelHeight = leftWidth / mediaAspectRatio;
-
-                    return Align(
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        height: panelHeight,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(
-                              width: leftWidth,
-                              child: _buildMediaPanel(images: images, imageIndex: imageIndex),
-                            ),
-                            const SizedBox(width: panelGap),
-                            SizedBox(
-                              width: rightWidth,
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: _cardDecoration(),
-                                child: _buildInfoPanel(
-                                  context,
-                                  detail,
-                                  selected,
-                                  selectedId,
-                                  optionPath,
-                                  variants,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: SingleChildScrollView(
+            padding: contentPadding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1320),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 56),
+                    _buildMainSection(
+                      context: context,
+                      detail: detail,
+                      selected: selected,
+                      selectedId: selectedId,
+                      optionPath: optionPath,
+                      variants: variants,
+                      images: images,
+                      imageIndex: imageIndex,
+                    ),
+                    const SizedBox(height: 16),
+                    ProductTechnicalDataPanel(
+                      referenceCode: detail.uniqid ?? '--',
+                      params: selectedParams,
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        Positioned(
+          left: contentPadding.left,
+          top: 12,
+          child: FilledButton.icon(
+            style: ButtonStyle(
+              foregroundColor: WidgetStateProperty.all(Colors.white),
+              backgroundColor: WidgetStateProperty.all(Color.fromRGBO(129, 119, 110, 1)),
+            ),
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back, size: 16),
+            label: Text(
+              l10n.productDetailBackToList,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainSection({
+    required BuildContext context,
+    required ProductDetailDto detail,
+    required Product selected,
+    required int selectedId,
+    required String optionPath,
+    required List<Product> variants,
+    required List<String> images,
+    required int imageIndex,
+  }) {
+    const panelGap = 18.0;
+    const mediaAspectRatio = 1.3;
+    final isPhone = !context.isTabletUp;
+
+    if (isPhone) {
+      final infoHeight = (MediaQuery.of(context).size.height * 0.58).clamp(
+        360.0,
+        620.0,
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AspectRatio(
+            aspectRatio: mediaAspectRatio,
+            child: _buildMediaPanel(images: images, imageIndex: imageIndex),
+          ),
+          const SizedBox(height: panelGap),
+          SizedBox(
+            height: infoHeight,
+            child: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: _cardDecoration(),
+              child: _buildInfoPanel(
+                context,
+                detail,
+                selected,
+                selectedId,
+                optionPath,
+                variants,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rowWidth = constraints.maxWidth;
+        final leftWidth = (rowWidth - panelGap) * 0.6;
+        final rightWidth = (rowWidth - panelGap) * 0.4;
+        final panelHeight = leftWidth / mediaAspectRatio;
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            height: panelHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: leftWidth,
+                  child: _buildMediaPanel(images: images, imageIndex: imageIndex),
+                ),
+                const SizedBox(width: panelGap),
+                SizedBox(
+                  width: rightWidth,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: _cardDecoration(),
+                    child: _buildInfoPanel(
+                      context,
+                      detail,
+                      selected,
+                      selectedId,
+                      optionPath,
+                      variants,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -473,7 +518,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     required int imageIndex,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
       child: Row(
         children: [
@@ -552,7 +597,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.12),
+      color: Colors.black.withValues(alpha: 0.2),
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
     );

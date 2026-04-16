@@ -53,8 +53,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     final Widget body = switch (_section) {
-      // HomeSection.products => const ProductListPage(),
-      HomeSection.products => const ProductDetailPage(productId: 63842),
+      HomeSection.products => const ProductListPage(),
+      // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
       HomeSection.orders => const OrderPage(),
       HomeSection.productCategory => const ProductCategoryPage(),

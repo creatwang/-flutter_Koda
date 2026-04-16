@@ -102,13 +102,17 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              OutlinedButton.icon(
+              FilledButton.icon(
                 style: ButtonStyle(
                   foregroundColor: WidgetStateProperty.all(Colors.white),
+                  backgroundColor: WidgetStateProperty.all(Colors.white10),
                 ),
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back, size: 16),
-                label: Text(l10n.productDetailBackToList, style: TextStyle(color: Colors.white),),
+                label: Text(
+                  l10n.productDetailBackToList,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               const SizedBox(height: 14),
               Expanded(

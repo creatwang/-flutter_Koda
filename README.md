@@ -1,6 +1,6 @@
 # flutter pad端商城最佳实践
 
-删除资源之后执行清理 `flutter pub run build_runner build --delete-conflicting-outputs`
+`flutter pub run build_runner build --delete-conflicting-outputs`
 
 `flutter pub get`
 `flutter pub run build_runner -w`
@@ -20,4 +20,14 @@ flutter build apk --release
 
 添加超时登录
 
-清理缓存 flutter clean && flutter pub get
+清理缓存
+flutter clean
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+
+
+添加静态资源
+单次
+dart run build_runner build
+监听
+dart run build_runner watch --delete-conflicting-outputs

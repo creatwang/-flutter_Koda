@@ -82,7 +82,7 @@ class AppShell extends ConsumerWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Assets.images.mainBgc.image(
+            Assets.images.detailBgc.image(
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const ColoredBox(
                 color: Color(0xFFE8ECEF),
@@ -96,7 +96,7 @@ class AppShell extends ConsumerWidget {
             //   ),
             // ),
             // 全局毛玻璃层：对背景图做轻度模糊，增强前景内容可读性。
-            ClipRect(
+    /*        ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                 child: Container(
@@ -105,7 +105,7 @@ class AppShell extends ConsumerWidget {
                       : Colors.white.withValues(alpha: 0.16),
                 ),
               ),
-            ),
+            ),*/
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

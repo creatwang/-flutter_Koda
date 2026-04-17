@@ -5,9 +5,10 @@ import 'package:groe_app_pad/features/order/models/order_create_item.dart';
 import 'package:groe_app_pad/features/order/models/order_summary.dart';
 import 'package:groe_app_pad/features/order/services/order_services.dart';
 
-final ordersProvider = AsyncNotifierProvider<OrdersNotifier, List<OrderSummary>>(
-  OrdersNotifier.new,
-);
+final ordersProvider =
+    AsyncNotifierProvider<OrdersNotifier, List<OrderSummary>>(
+      OrdersNotifier.new,
+    );
 
 class OrdersNotifier extends AsyncNotifier<List<OrderSummary>> {
   @override
@@ -34,10 +35,7 @@ class OrdersNotifier extends AsyncNotifier<List<OrderSummary>> {
     required int userId,
     required List<OrderCreateItem> items,
   }) async {
-    final result = await createOrderService(
-      userId: userId,
-      items: items,
-    );
+    final result = await createOrderService(userId: userId, items: items);
     return result.when(
       success: (order) {
         final current = state.asData?.value ?? [];
@@ -46,5 +44,16 @@ class OrdersNotifier extends AsyncNotifier<List<OrderSummary>> {
       },
       failure: (_) => false,
     );
+  }
+
+  Future<bool> createOrderBySites({
+    required List<int> companyIds,
+    required List<Map<String, dynamic>> cart,
+  }) async {
+    final result = await createOrderBySitesService(
+      companyIds: companyIds,
+      cart: cart,
+    );
+    return result.when(success: (_) => true, failure: (_) => false);
   }
 }

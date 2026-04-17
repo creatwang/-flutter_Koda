@@ -18,33 +18,21 @@ class ProMaxGlassCardWidget extends StatelessWidget {
     final borderRadius = BorderRadius.circular(ProMaxTokens.radiusCard);
     return ClipRRect(
       borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                ProMaxTokens.shimmerStart,
-                ProMaxTokens.cardBackground,
-                ProMaxTokens.shimmerEnd,
-              ],
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          border: Border.all(color: ProMaxTokens.cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x2A000000),
+              blurRadius: 20,
+              spreadRadius: 1,
+              offset: Offset(0, 10),
             ),
-            border: Border.all(color: ProMaxTokens.cardBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x2A000000),
-                blurRadius: 20,
-                spreadRadius: 1,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: child,
+          ],
         ),
+        child: child,
       ),
     );
   }

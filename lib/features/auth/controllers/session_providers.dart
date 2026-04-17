@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
+import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 
 import '../../../core/platform_services/network_clients.dart';
 
-final sessionControllerProvider = AsyncNotifierProvider<SessionController, Session>(SessionController.new);
+final sessionControllerProvider =
+    AsyncNotifierProvider<SessionController, Session>(SessionController.new);
 
 class SessionController extends AsyncNotifier<Session> {
   @override
@@ -44,8 +46,15 @@ class SessionController extends AsyncNotifier<Session> {
     );
   }
 
-
   Future<void> signOut() async {
+    final previousSession = state.asData?.value;
+    if (previousSession?.isAuthenticated == true) {
+      try {
+        await clearCartListFromLocal();
+      } catch (_) {
+        // SharedPreferences 在部分测试环境未初始化，允许安全降级。
+      }
+    }
     await ref.read(authClearTokenServiceProvider)();
     state = const AsyncData(Session(isAuthenticated: false));
   }
@@ -58,10 +67,6 @@ class SessionController extends AsyncNotifier<Session> {
     if (token == null || token.isEmpty) {
       return const Session(isAuthenticated: false);
     }
-    return Session(
-      isAuthenticated: true,
-      companyId: companyId,
-      token: token
-    );
+    return Session(isAuthenticated: true, companyId: companyId, token: token);
   }
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
@@ -57,9 +57,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         children: [
           Assets.images.detailBgc.image(
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const ColoredBox(
-              color: Color(0xFFE8ECEF),
-            ),
+            errorBuilder: (_, __, ___) =>
+                const ColoredBox(color: Color(0xFFE8ECEF)),
           ),
           SafeArea(
             child: detailState.when(
@@ -105,8 +104,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     final optionPath = optionPathByPid[selectedId] ?? '';
 
     final images = _buildGalleryImages(detail, variants);
-    final imageIndex =
-        images.isEmpty ? 0 : _selectedImageIndex.clamp(0, images.length - 1);
+    final imageIndex = images.isEmpty
+        ? 0
+        : _selectedImageIndex.clamp(0, images.length - 1);
     _syncCarouselIndex(imageIndex, hasImages: images.isNotEmpty);
     final selectedParams = selected.productParam ?? const <ProductParam>[];
     final contentPadding = context.isTabletUp
@@ -152,7 +152,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           child: FilledButton.icon(
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.all(Colors.white),
-              backgroundColor: WidgetStateProperty.all(Color.fromRGBO(129, 119, 110, 1)),
+              backgroundColor: WidgetStateProperty.all(
+                Color.fromRGBO(129, 119, 110, 1),
+              ),
             ),
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, size: 16),
@@ -228,7 +230,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               children: [
                 SizedBox(
                   width: leftWidth,
-                  child: _buildMediaPanel(images: images, imageIndex: imageIndex),
+                  child: _buildMediaPanel(
+                    images: images,
+                    imageIndex: imageIndex,
+                  ),
                 ),
                 const SizedBox(width: panelGap),
                 SizedBox(
@@ -261,22 +266,20 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     int selectedId,
     String optionPath,
     List<Product> variants,
-  )
-  {
+  ) {
     final l10n = context.l10n;
     final title = selected.name ?? detail.name ?? '--';
     // final category = (selected.categoryName ?? detail.categoryName ?? '').toUpperCase();
     final productCode = (selected.uniqid ?? detail.uniqid ?? '');
     final unitPrice = _resolveUnitPrice(detail, selected, selectedId);
-    final unitMaxPrice = selected.maxPrice ?? detail.maxPrice ?? unitPrice;
     final totalPrice = unitPrice * _productNum;
-    final totalMaxPrice = unitMaxPrice * _productNum;
     final specGroups = selected.specValue ?? const <SpecValue>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(productCode,
+        Text(
+          productCode,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -347,106 +350,134 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: variants.map((product) {
-                          final pid = product.id;
-                          final isSelected = pid != null && pid == selectedId;
-                          final display = product.name ?? product.nameCn ?? '--';
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            onTap: pid == null
-                                ? null
-                                : () {
-                                    _selectProduct(pid);
-                                  },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
+                        children: variants
+                            .map((product) {
+                              final pid = product.id;
+                              final isSelected =
+                                  pid != null && pid == selectedId;
+                              final display =
+                                  product.name ?? product.nameCn ?? '--';
+                              return InkWell(
                                 borderRadius: BorderRadius.circular(8),
-                                color: isSelected
-                                    ? Colors.white.withValues(alpha: 0.25)
-                                    : Colors.white.withValues(alpha: 0.1),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.25),
+                                onTap: pid == null
+                                    ? null
+                                    : () {
+                                        _selectProduct(pid);
+                                      },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: isSelected
+                                        ? Colors.white.withValues(alpha: 0.25)
+                                        : Colors.white.withValues(alpha: 0.1),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white.withValues(
+                                              alpha: 0.25,
+                                            ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    display,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                display,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(growable: false),
+                              );
+                            })
+                            .toList(growable: false),
                       ),
                     ],
                   ),
                 ),
                 ...specGroups
-                    .where((group) => (group.options ?? const <Options>[]).isNotEmpty)
+                    .where(
+                      (group) =>
+                          (group.options ?? const <Options>[]).isNotEmpty,
+                    )
                     .map((group) {
-                  final options = group.options ?? const <Options>[];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          (group.name ?? '').toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: options.map((option) {
-                            final spec = option.spec ?? '';
-                            final isSelected = spec.isNotEmpty && optionPath.contains(spec);
-                            final display = option.name ?? option.nameCn ?? '--';
-                            return InkWell(
-                              borderRadius: BorderRadius.circular(8),
-                              onTap: () {
-                                final pid = option.pid?.firstOrNull;
-                                if (pid == null) return;
-                                _selectProduct(pid);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: isSelected
-                                      ? Colors.white.withValues(alpha: 0.25)
-                                      : Colors.white.withValues(alpha: 0.1),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.white.withValues(alpha: 0.25),
-                                  ),
-                                ),
-                                child: Text(
-                                  display,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 10,
-                                  ),
-                                ),
+                      final options = group.options ?? const <Options>[];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (group.name ?? '').toUpperCase(),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
-                            );
-                          }).toList(growable: false),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: options
+                                  .map((option) {
+                                    final spec = option.spec ?? '';
+                                    final isSelected =
+                                        spec.isNotEmpty &&
+                                        optionPath.contains(spec);
+                                    final display =
+                                        option.name ?? option.nameCn ?? '--';
+                                    return InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: () {
+                                        final pid = option.pid?.firstOrNull;
+                                        if (pid == null) return;
+                                        _selectProduct(pid);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          color: isSelected
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.25,
+                                                )
+                                              : Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.white.withValues(
+                                                    alpha: 0.25,
+                                                  ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          display,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  })
+                                  .toList(growable: false),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                }),
+                      );
+                    }),
               ],
             ),
           ),
@@ -460,8 +491,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               onTap: _productNum <= 1
                   ? null
                   : () => setState(() {
-                _productNum -= 1;
-              }),
+                      _productNum -= 1;
+                    }),
             ),
             Container(
               width: 46,
@@ -499,7 +530,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            child: Text(l10n.productDetailBuyNow, style: TextStyle(fontSize: 14)),
+            child: Text(
+              l10n.productDetailBuyNow,
+              style: TextStyle(fontSize: 14),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -520,7 +554,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            child: Text(context.l10n.addToCart, style: TextStyle(fontSize: 14),),
+            child: Text(context.l10n.addToCart, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],
@@ -569,7 +603,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const ColoredBox(
                           color: Color(0x22111111),
-                          child: Icon(Icons.broken_image, color: Colors.white70),
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white70,
+                          ),
                         ),
                       ),
                     ),
@@ -597,8 +634,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                           images[index],
                           fit: BoxFit.cover,
                           gaplessPlayback: true,
-                          errorBuilder: (_, __, ___) =>
-                              const Center(child: Icon(Icons.image_not_supported)),
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.image_not_supported),
+                          ),
                         ),
                       ),
               ),
@@ -639,9 +677,17 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     });
   }
 
-  double _resolveUnitPrice(ProductDetailDto detail, Product selected, int selectedId) {
-    final detailSub = detail.productSub?.firstWhereOrNull((e) => e.pid == selectedId);
-    final selectedSub = selected.productSub?.firstWhereOrNull((e) => e.pid == selectedId);
+  double _resolveUnitPrice(
+    ProductDetailDto detail,
+    Product selected,
+    int selectedId,
+  ) {
+    final detailSub = detail.productSub?.firstWhereOrNull(
+      (e) => e.pid == selectedId,
+    );
+    final selectedSub = selected.productSub?.firstWhereOrNull(
+      (e) => e.pid == selectedId,
+    );
     final salesPrice = detailSub?.salesPrice ?? selectedSub?.salesPrice;
     return salesPrice ?? selected.price ?? detail.price ?? 0;
   }
@@ -653,15 +699,19 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     }
   }
 
-  List<String> _buildGalleryImages(ProductDetailDto detail, List<Product> variants) {
+  List<String> _buildGalleryImages(
+    ProductDetailDto detail,
+    List<Product> variants,
+  ) {
     final detailImages = (detail.subImages ?? const <String>[])
         .where((e) => e.trim().isNotEmpty)
         .toList(growable: false);
     if (detailImages.isNotEmpty) return detailImages;
 
-    final firstVariantImages = (variants.firstOrNull?.subImages ?? const <String>[])
-        .where((e) => e.trim().isNotEmpty)
-        .toList(growable: false);
+    final firstVariantImages =
+        (variants.firstOrNull?.subImages ?? const <String>[])
+            .where((e) => e.trim().isNotEmpty)
+            .toList(growable: false);
     if (firstVariantImages.isNotEmpty) return firstVariantImages;
 
     final detailMainImage = detail.mainImage?.trim();
@@ -693,7 +743,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
-      final currentPage = (_pageController.page ?? _pageController.initialPage.toDouble()).round();
+      final currentPage =
+          (_pageController.page ?? _pageController.initialPage.toDouble())
+              .round();
       if (currentPage != imageIndex) {
         _pageController.jumpToPage(imageIndex);
       }
@@ -751,10 +803,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
 }
 
 class _QtyAdjustButton extends StatelessWidget {
-  const _QtyAdjustButton({
-    required this.icon,
-    this.onTap,
-  });
+  const _QtyAdjustButton({required this.icon, this.onTap});
 
   final IconData icon;
   final VoidCallback? onTap;

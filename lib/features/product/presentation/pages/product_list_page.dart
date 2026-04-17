@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_list_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';

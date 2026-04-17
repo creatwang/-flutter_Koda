@@ -10,6 +10,7 @@ class SecureStorageService {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _userInfoBase = 'user_info_base';
+  static const _userProfileInfo = 'user_profile_info';
   static const _tokenMap = 'token_map';
   static const _companyId = 'company_id';
 
@@ -18,7 +19,10 @@ class SecureStorageService {
   Future<void> saveTokenPair(TokenPair pair) async {
     await _storage.write(key: _accessTokenKey, value: pair.resolvedAccessToken);
     if (pair.resolvedRefreshToken.isNotEmpty) {
-      await _storage.write(key: _refreshTokenKey, value: pair.resolvedRefreshToken);
+      await _storage.write(
+        key: _refreshTokenKey,
+        value: pair.resolvedRefreshToken,
+      );
     }
   }
 
@@ -29,9 +33,12 @@ class SecureStorageService {
     return TokenPair(accessToken: accessToken, refreshToken: refreshToken);
   }
 
-  Future<String?> readAccessToken() async => _storage.read(key: _accessTokenKey);
+  Future<String?> readAccessToken() async =>
+      _storage.read(key: _accessTokenKey);
 
-  Future<String?> readRefreshToken() async => _storage.read(key: _refreshTokenKey);
+  Future<String?> readRefreshToken() async =>
+      _storage.read(key: _refreshTokenKey);
+
   /// 保存用户信息。
   Future<void> saveUserInfoBase(UserInfoBase userInfoBase) async {
     String jsonString = jsonEncode(userInfoBase.toJson());
@@ -48,18 +55,35 @@ class SecureStorageService {
 
   /// 保存 token。
   Future<void> saveTokenMap(int companyId, String token) async {
-    String jsonString = jsonEncode({companyId.toString(): token});
+    final previousMap = await _readTokenMap();
+    previousMap[companyId.toString()] = token;
+    String jsonString = jsonEncode(previousMap);
     await _storage.write(key: _tokenMap, value: jsonString);
   }
 
   /// 根据站点 id 获取 token。
   Future<String?> getTokenByCompanyId(int companyId) async {
-    String? jsonString = await _storage.read(key: _tokenMap);
-    if (jsonString == null) return null;
-    Map<String, dynamic> tokenMap = jsonDecode(jsonString);
+    final tokenMap = await _readTokenMap();
     final key = companyId.toString();
     if (!tokenMap.containsKey(key)) return null;
     return tokenMap[key]?.toString();
+  }
+
+  Future<void> saveUserProfileInfo(Map<String, dynamic> profileJson) async {
+    final jsonString = jsonEncode(profileJson);
+    await _storage.write(key: _userProfileInfo, value: jsonString);
+  }
+
+  Future<Map<String, dynamic>?> readUserProfileInfo() async {
+    final jsonString = await _storage.read(key: _userProfileInfo);
+    if (jsonString == null || jsonString.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) return null;
+      return decoded;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// 保存站点 id。
@@ -74,13 +98,28 @@ class SecureStorageService {
     return int.tryParse(companyId);
   }
 
-
-
   Future<void> clear() async {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userInfoBase);
+    await _storage.delete(key: _userProfileInfo);
     await _storage.delete(key: _tokenMap);
     await _storage.delete(key: _companyId);
+  }
+
+  Future<Map<String, dynamic>> _readTokenMap() async {
+    String? jsonString = await _storage.read(key: _tokenMap);
+    if (jsonString == null || jsonString.isEmpty) {
+      return <String, dynamic>{};
+    }
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return <String, dynamic>{};
+      }
+      return decoded;
+    } catch (_) {
+      return <String, dynamic>{};
+    }
   }
 }

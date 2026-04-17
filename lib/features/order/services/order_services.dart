@@ -69,3 +69,22 @@ Future<ApiResult<OrderSummary>> createOrderService({
     return ApiFailure(AppException(e.toString()));
   }
 }
+
+Future<ApiResult<void>> createOrderBySitesService({
+  required List<int> companyIds,
+  required List<Map<String, dynamic>> cart,
+}) async {
+  try {
+    await requestCreateOrderBySites(companyIds: companyIds, cart: cart);
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Create order by sites failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}

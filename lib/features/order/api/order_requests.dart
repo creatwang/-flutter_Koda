@@ -7,6 +7,7 @@ import '../../../core/platform_services/network_clients.dart';
 class OrderRequests {
   static const String cartsPath = '/carts';
   static const String cartsAddPath = '/carts/add';
+  static const String createBySitesPath = '/store/order/createBySites';
 }
 
 Future<Response<dynamic>> requestOrders({
@@ -32,5 +33,16 @@ Future<Response<dynamic>> requestCreateOrder({
           .map((e) => {'id': e.productId, 'quantity': e.quantity})
           .toList(growable: false),
     },
+  );
+}
+
+Future<Response<dynamic>> requestCreateOrderBySites({
+  required List<int> companyIds,
+  required List<Map<String, dynamic>> cart,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    OrderRequests.createBySitesPath,
+    data: <String, dynamic>{'company_ids': companyIds, 'cart': cart},
   );
 }

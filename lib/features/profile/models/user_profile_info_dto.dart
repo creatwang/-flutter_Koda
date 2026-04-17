@@ -28,8 +28,22 @@ class UserProfileInfoDto {
       telephone: json['telephone']?.toString(),
       description: json['description']?.toString(),
       tourist: _asInt(json['tourist']),
-      isAuthAccount: json['is_auth_account'] == true || json['is_auth_account'] == 1,
+      isAuthAccount:
+          json['is_auth_account'] == true || json['is_auth_account'] == 1,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'name': name,
+      'username': username,
+      'avatar': avatar,
+      'telephone': telephone,
+      'description': description,
+      'tourist': tourist,
+      'is_auth_account': isAuthAccount,
+    };
   }
 }
 

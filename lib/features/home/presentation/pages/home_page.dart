@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
-import 'package:groe_app_pad/features/cart/presentation/providers/cart_controller.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
 import 'package:groe_app_pad/features/profile/presentation/pages/profile_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
@@ -47,11 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final cartCount = ref.watch(
-      cartControllerProvider.select(
-        (value) => value.asData?.value.fold<int>(0, (sum, e) => sum + e.quantity) ?? 0,
-      ),
-    );
+    final cartCount = ref.watch(cartBadgeCountProvider);
 
     final Widget body = switch (_section) {
       HomeSection.products => const ProductListPage(),
@@ -105,10 +101,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           icon: const Icon(Icons.logout),
         ),
       ],
-      body: SafeArea(
-        bottom: false,
-        child: body,
-      ),
+      body: SafeArea(bottom: false, child: body),
       bottomBarVisibility: AdaptiveBottomBarVisibility.always,
       bottomNavigationBar: FrostedBottomMenu(
         items: [

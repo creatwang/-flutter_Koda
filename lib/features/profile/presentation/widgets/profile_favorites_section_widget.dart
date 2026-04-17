@@ -65,9 +65,8 @@ class _ProfileFavoritesSectionWidgetState
 
     if (!mounted) return;
     result.when(
-      success: (_) async {
+      success: (_) {
         ref.read(favoritesRevisionProvider.notifier).bump();
-        await ref.read(favoriteProductsProvider.notifier).refresh();
       },
       failure: (_) {
         setState(() {
@@ -92,45 +91,68 @@ class _ProfileFavoritesSectionWidgetState
     );
   }
 
+  Future<void> _onRefreshFavorites() async {
+    _clearCollectState();
+    await ref.read(favoriteProductsProvider.notifier).refresh();
+  }
+
+  void _clearCollectState() {
+    if (!mounted) return;
+    setState(() {
+      _collectOverrides.clear();
+      _collectSubmitting.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final favoritesState = ref.watch(favoriteProductsProvider);
     return favoritesState.when(
       loading: () => const AppLoadingView(),
-      error: (error, _) => AppErrorView(
-        message: error.toString(),
-        onRetry: () => ref.read(favoriteProductsProvider.notifier).refresh(),
-      ),
+      error: (error, _) =>
+          AppErrorView(message: error.toString(), onRetry: _onRefreshFavorites),
       data: (state) {
         if (state.items.isEmpty) {
-          return const AppEmptyView(message: 'Favorites is empty');
+          return RefreshIndicator(
+            onRefresh: _onRefreshFavorites,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 120),
+                AppEmptyView(message: 'Favorites is empty'),
+              ],
+            ),
+          );
         }
-        return GridView.builder(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.76,
+        return RefreshIndicator(
+          onRefresh: _onRefreshFavorites,
+          child: GridView.builder(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.76,
+            ),
+            itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= state.items.length) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final product = state.items[index];
+              final isCollected =
+                  _collectOverrides[product.id] ?? product.isCollect;
+              return ProductCard(
+                key: ValueKey<int>(product.id),
+                productItem: product,
+                isCollected: isCollected,
+                isCollectSubmitting: _collectSubmitting.contains(product.id),
+                onCollectTap: () => _onCollectTap(product),
+                onAddToCartTap: () => _onAddToCartTap(product),
+              );
+            },
           ),
-          itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index >= state.items.length) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final product = state.items[index];
-            final isCollected =
-                _collectOverrides[product.id] ?? product.isCollect;
-            return ProductCard(
-              key: ValueKey<int>(product.id),
-              productItem: product,
-              isCollected: isCollected,
-              isCollectSubmitting: _collectSubmitting.contains(product.id),
-              onCollectTap: () => _onCollectTap(product),
-              onAddToCartTap: () => _onAddToCartTap(product),
-            );
-          },
         );
       },
     );

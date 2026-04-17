@@ -9,18 +9,18 @@ import 'package:groe_app_pad/features/product/services/product_services.dart';
 
 final productsProvider =
     AsyncNotifierProvider<ProductsNotifier, PaginatedProductsState>(
-  ProductsNotifier.new,
-);
+      ProductsNotifier.new,
+    );
 
 final favoritesRevisionProvider =
     NotifierProvider<FavoritesRevisionNotifier, int>(
-  FavoritesRevisionNotifier.new,
-);
+      FavoritesRevisionNotifier.new,
+    );
 
 final favoriteProductsProvider =
     AsyncNotifierProvider<FavoriteProductsNotifier, PaginatedProductsState>(
-  FavoriteProductsNotifier.new,
-);
+      FavoriteProductsNotifier.new,
+    );
 
 class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 8;
@@ -136,9 +136,10 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     );
     return result.when(
       success: (data) => PaginatedProductsState(
-        items: data,
+        items: data.items,
         page: 1,
-        hasMore: data.length >= _pageSize,
+        hasMore: data.items.length >= _pageSize,
+        totalCount: data.total,
       ),
       failure: (exception) => throw exception,
     );
@@ -153,9 +154,10 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
       );
       return result.when(
         success: (data) => PaginatedProductsState(
-          items: data,
+          items: data.items,
           page: 1,
-          hasMore: data.length >= _pageSize,
+          hasMore: data.items.length >= _pageSize,
+          totalCount: data.total,
         ),
         failure: (exception) => throw exception,
       );
@@ -175,14 +177,17 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     state = result.when(
       success: (allData) {
         final oldIds = current.items.map((e) => e.id).toSet();
-        final delta = allData.where((e) => !oldIds.contains(e.id)).toList();
+        final delta = allData.items
+            .where((e) => !oldIds.contains(e.id))
+            .toList();
         final merged = [...current.items, ...delta];
         return AsyncData(
           current.copyWith(
             items: merged,
             page: nextPage,
-            hasMore: delta.isNotEmpty && allData.length >= _pageSize,
+            hasMore: delta.isNotEmpty && merged.length < allData.total,
             isLoadingMore: false,
+            totalCount: allData.total,
           ),
         );
       },
@@ -191,7 +196,10 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 }
 
-final productByIdProvider = FutureProvider.family<ProductItem, int>((ref, id) async {
+final productByIdProvider = FutureProvider.family<ProductItem, int>((
+  ref,
+  id,
+) async {
   final result = await fetchProductByIdService(id);
   return result.when(
     success: (data) => data,
@@ -199,7 +207,10 @@ final productByIdProvider = FutureProvider.family<ProductItem, int>((ref, id) as
   );
 });
 
-final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((ref, id) async {
+final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((
+  ref,
+  id,
+) async {
   final result = await fetchProductDetailService(id);
   return result.when(
     success: (data) => data,
@@ -207,7 +218,9 @@ final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((ref,
   );
 });
 
-final categoryTreeProvider = FutureProvider<List<ProductCategoryTreeDto>>((ref) async {
+final categoryTreeProvider = FutureProvider<List<ProductCategoryTreeDto>>((
+  ref,
+) async {
   final result = await fetchCategoryTreeService();
   return result.when(
     success: (data) => data,

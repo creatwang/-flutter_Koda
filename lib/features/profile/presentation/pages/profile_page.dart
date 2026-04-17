@@ -172,6 +172,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       (item) => item.section == _currentSection,
     );
     final userInfoState = ref.watch(profileUserInfoProvider);
+    final favoriteState = ref.watch(favoriteProductsProvider);
+    final favoriteData = favoriteState.asData?.value;
+    final favoriteCount =
+        favoriteData?.totalCount ?? favoriteData?.items.length ?? 0;
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id;
@@ -203,6 +207,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     avatarUrl: avatarUrl,
                     profileName: userName,
                     profileId: userId,
+                    favoriteCount: favoriteCount,
                     currentSection: _currentSection,
                     menus: _menus,
                     onSectionChanged: (next) {
@@ -251,6 +256,7 @@ class _ProfileSidebar extends StatelessWidget {
     required this.avatarUrl,
     required this.profileName,
     required this.profileId,
+    required this.favoriteCount,
     required this.currentSection,
     required this.menus,
     required this.onSectionChanged,
@@ -259,6 +265,7 @@ class _ProfileSidebar extends StatelessWidget {
   final String avatarUrl;
   final String profileName;
   final int? profileId;
+  final int favoriteCount;
   final ProfileContentSection currentSection;
   final List<_ProfileSectionMeta> menus;
   final ValueChanged<ProfileContentSection> onSectionChanged;
@@ -361,18 +368,18 @@ class _ProfileSidebar extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 28),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
                           Expanded(
                             child: _StatTile(
-                              value: '128',
-                              label: 'SAVED ITEMS',
+                              value: '$favoriteCount',
+                              label: 'FAV NUM',
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Expanded(
+                          const SizedBox(width: 10),
+                          const Expanded(
                             child: _StatTile(value: '24', label: 'CONCEPTS'),
                           ),
                         ],

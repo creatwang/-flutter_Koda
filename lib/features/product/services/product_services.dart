@@ -10,6 +10,13 @@ import 'package:groe_app_pad/features/product/models/product_fav_dto.dart';
 
 import '../../../core/platform_services/network_clients.dart';
 
+class FavoriteProductsPageResult {
+  const FavoriteProductsPageResult({required this.items, required this.total});
+
+  final List<ProductItem> items;
+  final int total;
+}
+
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
@@ -61,7 +68,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   }
 }
 
-Future<ApiResult<List<ProductItem>>> fetchFavorProductsPageService({
+Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
   required int page,
   required int pageSize,
 }) async {
@@ -94,7 +101,10 @@ Future<ApiResult<List<ProductItem>>> fetchFavorProductsPageService({
         .map((e) => ProductFavDto.fromJson(Map<String, dynamic>.from(e)))
         .toList(growable: false);
     return ApiSuccess(
-      dtos.map((e) => e.toModel()).toList(growable: false),
+      FavoriteProductsPageResult(
+        items: dtos.map((e) => e.toModel()).toList(growable: false),
+        total: _parseTotalCount(data, fallback: dtos.length),
+      ),
     );
   } on DioException catch (e) {
     return ApiFailure(
@@ -108,7 +118,16 @@ Future<ApiResult<List<ProductItem>>> fetchFavorProductsPageService({
   }
 }
 
-Future<ApiResult<List<ProductCategoryTreeDto>>> fetchCategoryTreeService() async {
+int _parseTotalCount(Map<String, dynamic> data, {required int fallback}) {
+  final raw = data['total'] ?? data['count'] ?? data['total_count'];
+  if (raw is int) return raw;
+  if (raw is num) return raw.toInt();
+  if (raw is String) return int.tryParse(raw) ?? fallback;
+  return fallback;
+}
+
+Future<ApiResult<List<ProductCategoryTreeDto>>>
+fetchCategoryTreeService() async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
     return ApiFailure(const AppException('Missing company id'));
@@ -136,7 +155,9 @@ Future<ApiResult<List<ProductCategoryTreeDto>>> fetchCategoryTreeService() async
 
     final categories = rawList
         .whereType<Map>()
-        .map((e) => ProductCategoryTreeDto.fromJson(Map<String, dynamic>.from(e)))
+        .map(
+          (e) => ProductCategoryTreeDto.fromJson(Map<String, dynamic>.from(e)),
+        )
         .toList(growable: false);
     return ApiSuccess(categories);
   } on DioException catch (e) {
@@ -176,9 +197,7 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
 
 Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
   try {
-    final response = await requestProductDetail(
-      id: id,
-    );
+    final response = await requestProductDetail(id: id);
     final data = response.data;
     Map<String, dynamic>? payload;
     if (data is Map<String, dynamic>) {
@@ -208,14 +227,10 @@ Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
   }
 }
 
-Future<ApiResult<void>> createFavorService({
-  required int productId,
-}) async {
+Future<ApiResult<void>> createFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(
-      const AppException('Missing company id'),
-    );
+    return ApiFailure(const AppException('Missing company id'));
   }
   try {
     await createFavorRequest(
@@ -235,14 +250,10 @@ Future<ApiResult<void>> createFavorService({
   }
 }
 
-Future<ApiResult<void>> deleteFavorService({
-  required int productId,
-}) async {
+Future<ApiResult<void>> deleteFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(
-      const AppException('Missing company id'),
-    );
+    return ApiFailure(const AppException('Missing company id'));
   }
   try {
     await deleteFavorRequest(

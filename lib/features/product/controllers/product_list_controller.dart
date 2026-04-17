@@ -38,13 +38,4 @@ class ProductListController {
   void toggleSidebar() => isFilterCollapsed = !isFilterCollapsed;
 
   void collapseSidebar() => isFilterCollapsed = true;
-
-  String buildSearchLog({required String trigger}) {
-    return '[product_list] trigger=$trigger, sortValue=$selectedSortValue, '
-        'sort=${currentSortQuery.sort ?? 'null'}, '
-        'order_by=${currentSortQuery.orderBy}, '
-        'shopCateGoryId=${selectedCategoryId ?? 0},'
-        'categoryLabel='
-        '${selectedCategoryLabel.isEmpty ? 'none' : selectedCategoryLabel}';
-  }
 }

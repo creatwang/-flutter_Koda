@@ -100,17 +100,18 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     );
   }
 
-  Future<void> applyCategoryFilter(int? categoryId) async {
+  Future<void> applyCategoryFilter(
+    int? categoryId, {
+    String? sort,
+    int? orderBy,
+  }) async {
     _selectedShopCategoryId = categoryId ?? 0;
+    _sort = sort ?? _sort;
+    _orderBy = orderBy ?? _orderBy;
     await refresh();
   }
 
-  Future<void> applyFilters({
-    int? categoryId,
-    String? sort,
-    int orderBy = 0,
-  }) async {
-    _selectedShopCategoryId = categoryId ?? 0;
+  Future<void> applySort({String? sort, int orderBy = 0}) async {
     _sort = sort;
     _orderBy = orderBy;
     await refresh();

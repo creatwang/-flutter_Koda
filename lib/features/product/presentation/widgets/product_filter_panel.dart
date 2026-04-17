@@ -8,7 +8,6 @@ class ProductFilterPanel extends StatelessWidget {
     required this.categories,
     required this.selectedCategoryId,
     required this.onCategoryTap,
-    required this.onApplyTap,
     required this.onCollapseTap,
     required this.pinApplyButtonToBottom,
     super.key,
@@ -17,7 +16,6 @@ class ProductFilterPanel extends StatelessWidget {
   final List<ProductCategoryTreeDto> categories;
   final int? selectedCategoryId;
   final ValueChanged<ProductCategoryTreeDto> onCategoryTap;
-  final VoidCallback onApplyTap;
   final VoidCallback? onCollapseTap;
   final bool pinApplyButtonToBottom;
 
@@ -36,17 +34,17 @@ class ProductFilterPanel extends StatelessWidget {
               ),
             ]
           : categories
-              .map(
-                (category) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _CategoryTreeNode(
-                    category: category,
-                    selectedCategoryId: selectedCategoryId,
-                    onCategoryTap: onCategoryTap,
+                .map(
+                  (category) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _CategoryTreeNode(
+                      category: category,
+                      selectedCategoryId: selectedCategoryId,
+                      onCategoryTap: onCategoryTap,
+                    ),
                   ),
-                ),
-              )
-              .toList(growable: false),
+                )
+                .toList(growable: false),
     );
 
     final filterBody = Column(
@@ -58,10 +56,10 @@ class ProductFilterPanel extends StatelessWidget {
               child: Text(
                 'Product Categories',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
               ),
             ),
             if (onCollapseTap != null)
@@ -111,30 +109,9 @@ class ProductFilterPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (pinApplyButtonToBottom)
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: filterBody,
-                    ),
-                  )
+                  Expanded(child: SingleChildScrollView(child: filterBody))
                 else
                   filterBody,
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: onApplyTap,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFA19E9A),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(40),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text(
-                      'Apply Filters',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -177,7 +154,10 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
     final categoryName = widget.category.name ?? '';
     final children = widget.category.children;
     final hasChildren = children.isNotEmpty;
-    final selected = _containsSelected(widget.category, widget.selectedCategoryId);
+    final selected = _containsSelected(
+      widget.category,
+      widget.selectedCategoryId,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +175,9 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
             children: [
               Expanded(
                 child: InkWell(
-                  onTap: categoryId == null ? null : () => widget.onCategoryTap(widget.category),
+                  onTap: categoryId == null
+                      ? null
+                      : () => widget.onCategoryTap(widget.category),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
@@ -274,10 +256,7 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
 }
 
 class _AnimatedExpand extends StatelessWidget {
-  const _AnimatedExpand({
-    required this.expanded,
-    required this.child,
-  });
+  const _AnimatedExpand({required this.expanded, required this.child});
 
   final bool expanded;
   final Widget child;

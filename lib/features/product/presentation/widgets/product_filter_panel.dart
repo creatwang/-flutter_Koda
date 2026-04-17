@@ -195,46 +195,37 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOutCubic,
-          width: isCompactNode ? null : double.infinity,
-          height: tileHeight,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 0,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(tileRadius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: selected
-                  ? const [Color(0x4A2C3F58), Color(0x36131D2F)]
-                  : const [Color(0x1AFFFFFF), Color(0x120F1727)],
+        ConstrainedBox(
+          constraints: isCompactNode
+              ? const BoxConstraints(minWidth: 72, maxWidth: 120)
+              : const BoxConstraints(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOutCubic,
+            width: isCompactNode ? null : double.infinity,
+            height: tileHeight,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 0,
             ),
-            border: Border.all(
-              color: selected
-                  ? ProMaxTokens.inputBorderFocused.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(tileRadius),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: selected
+                    ? const [Color(0x4A2C3F58), Color(0x36131D2F)]
+                    : const [Color(0x1AFFFFFF), Color(0x120F1727)],
+              ),
+              border: Border.all(
+                color: selected
+                    ? ProMaxTokens.inputBorderFocused.withValues(alpha: 0.5)
+                    : Colors.white.withValues(alpha: 0.10),
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: isCompactNode ? MainAxisSize.min : MainAxisSize.max,
-            children: [
-              if (isCompactNode)
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 120),
-                  child: _CategoryNameButton(
-                    onTap: categoryId == null
-                        ? null
-                        : () => widget.onCategoryTap(widget.category),
-                    categoryName: categoryName,
-                    selected: selected,
-                    fontSize: fontSize,
-                  ),
-                )
-              else
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
                 Expanded(
                   child: _CategoryNameButton(
                     onTap: categoryId == null
@@ -245,65 +236,63 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
                     fontSize: fontSize,
                   ),
                 ),
-              if (hasChildren)
-                Row(
-                  children: [
-                    if (selected && !isCompactNode)
-                      Container(
-                        margin: const EdgeInsets.only(right: 6),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
+                if (hasChildren) ...[
+                  if (selected && !isCompactNode)
+                    Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ProMaxTokens.iconPrimary.withValues(
+                          alpha: 0.12,
                         ),
-                        decoration: BoxDecoration(
-                          color: ProMaxTokens.iconPrimary.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${children.length}',
-                          style: const TextStyle(
-                            color: ProMaxTokens.iconPrimary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${children.length}',
+                        style: const TextStyle(
+                          color: ProMaxTokens.iconPrimary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    Material(
-                      color: Colors.transparent,
-                      shape: const CircleBorder(),
-                      child: InkResponse(
-                        onTap: () => setState(() => _expanded = !_expanded),
-                        customBorder: const CircleBorder(),
-                        containedInkWell: true,
-                        highlightShape: BoxShape.circle,
-                        radius: 12,
-                        splashColor: Colors.white.withValues(alpha: 0.16),
-                        highlightColor: Colors.white.withValues(alpha: 0.12),
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Center(
-                            child: AnimatedRotation(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeInOut,
-                              turns: _expanded ? 0.5 : 0,
-                              child: Icon(
-                                Icons.expand_more_rounded,
-                                size: 19,
-                                color: ProMaxTokens.textSecondary.withValues(
-                                  alpha: 0.9,
-                                ),
+                    ),
+                  Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    child: InkResponse(
+                      onTap: () => setState(() => _expanded = !_expanded),
+                      customBorder: const CircleBorder(),
+                      containedInkWell: true,
+                      highlightShape: BoxShape.circle,
+                      radius: 12,
+                      splashColor: Colors.white.withValues(alpha: 0.16),
+                      highlightColor: Colors.white.withValues(alpha: 0.12),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Center(
+                          child: AnimatedRotation(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            turns: _expanded ? 0.5 : 0,
+                            child: Icon(
+                              Icons.expand_more_rounded,
+                              size: 19,
+                              color: ProMaxTokens.textSecondary.withValues(
+                                alpha: 0.9,
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-            ],
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
         if (hasChildren) ...[

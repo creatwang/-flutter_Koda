@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:groe_app_pad/app/router/app_routes.dart';
+import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
+import 'package:groe_app_pad/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
+import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
-enum ProfileContentSection {
-  settings,
-  myCustomers,
-  orderCenter,
-  favorites,
-}
+enum ProfileContentSection { settings, myCustomers, orderCenter, favorites }
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -21,8 +22,9 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   ProfileContentSection _currentSection = ProfileContentSection.settings;
-  final TextEditingController _fullNameController =
-      TextEditingController(text: 'Molin Chen');
+  final TextEditingController _fullNameController = TextEditingController(
+    text: 'Molin Chen',
+  );
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -89,7 +91,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _settingsErrorMessage = 'Please complete all password fields.';
         return false;
       }
-      final hasShortPassword = oldPassword.length < 6 ||
+      final hasShortPassword =
+          oldPassword.length < 6 ||
           newPassword.length < 6 ||
           confirmPassword.length < 6;
       if (hasShortPassword) {
@@ -99,8 +102,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
 
     if (newPassword != confirmPassword) {
-      _settingsErrorMessage =
-          'New Password and Confirm Password must match.';
+      _settingsErrorMessage = 'New Password and Confirm Password must match.';
       return false;
     }
     _settingsErrorMessage = null;
@@ -116,7 +118,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
 
     setState(() => _isSavingSettings = true);
-    final result = await ref.read(profileUserInfoProvider.notifier).updateUserInfo(
+    final result = await ref
+        .read(profileUserInfoProvider.notifier)
+        .updateUserInfo(
           name: _fullNameController.text.trim(),
           oldPassword: _oldPasswordController.text.trim(),
           newPassword: _newPasswordController.text.trim(),
@@ -129,9 +133,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _oldPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Updated successfully.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Updated successfully.')));
       },
       failure: (exception) => _settingsErrorMessage = exception.message,
     );
@@ -148,6 +152,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _hasHydratedName = true;
     }
     setState(() {});
+  }
+
+  Future<void> _onSignOut() async {
+    await ref.read(sessionControllerProvider.notifier).signOut();
+    if (!mounted) return;
+    context.go(AppRoutes.login);
+  }
+
+  Future<void> _onSwitchAccount() async {
+    await ref.read(sessionControllerProvider.notifier).signOut();
+    if (!mounted) return;
+    context.go(AppRoutes.login);
   }
 
   @override
@@ -170,7 +186,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         final resolvedHeight = constraints.hasBoundedHeight
             ? constraints.maxHeight - 20
             : fallbackHeight;
-        final panelHeight = resolvedHeight > 0 ? resolvedHeight : fallbackHeight;
+        final panelHeight = resolvedHeight > 0
+            ? resolvedHeight
+            : fallbackHeight;
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
@@ -210,10 +228,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       validationMessage: _settingsErrorMessage,
                       onSaveSettings: _onSaveSettings,
                       onRefreshSettings: _onRefreshSettings,
+                      onSignOut: _onSignOut,
+                      onSwitchAccount: _onSwitchAccount,
                       isSavingSettings: _isSavingSettings,
                       isLoadingUserInfo:
                           _currentSection == ProfileContentSection.settings &&
-                              userInfoState.isLoading,
+                          userInfoState.isLoading,
                     ),
                   ),
                 ),
@@ -245,24 +265,27 @@ class _ProfileSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 230,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 20, left: 10,right: 10,bottom: 18),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight - 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    child: Column(
+    return ProMaxGlassCardWidget(
+      padding: EdgeInsets.zero,
+      child: SizedBox(
+        width: 230,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                top: 20,
+                left: 10,
+                right: 10,
+                bottom: 18,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Transform.rotate(
@@ -280,7 +303,9 @@ class _ProfileSidebar extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF3D67B2).withValues(alpha: 0.42),
+                                  color: const Color(
+                                    0xFF3D67B2,
+                                  ).withValues(alpha: 0.42),
                                   blurRadius: 12,
                                   spreadRadius: 0.5,
                                   offset: const Offset(0, 2),
@@ -298,17 +323,18 @@ class _ProfileSidebar extends StatelessWidget {
                                 color: Colors.black26,
                                 child: avatarUrl.trim().isEmpty
                                     ? const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                )
+                                        Icons.person,
+                                        color: Colors.white,
+                                      )
                                     : Image.network(
-                                  avatarUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                                        avatarUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            const Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                            ),
+                                      ),
                               ),
                             ),
                           ),
@@ -324,69 +350,67 @@ class _ProfileSidebar extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'ID: ${profileId ?? '--'}',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            letterSpacing: 1.2,
+                          'UID: ${profileId ?? '--'}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            letterSpacing: 1.4,
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatTile(
-                            value: '128',
-                            label: 'SAVED ITEMS',
+                    const SizedBox(height: 28),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _StatTile(
+                              value: '128',
+                              label: 'SAVED ITEMS',
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _StatTile(
-                            value: '24',
-                            label: 'CONCEPTS',
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: _StatTile(value: '24', label: 'CONCEPTS'),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'ACCOUNT & PREFERENCES',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.76),
-                        letterSpacing: 1.5,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...menus.map((menu) {
-                    final isSelected = menu.section == currentSection;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _ProfileMenuTile(
-                        label: menu.label,
-                        icon: menu.icon,
-                        selected: isSelected,
-                        onTap: () => onSectionChanged(menu.section),
+                    const SizedBox(height: 30),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'ACCOUNT & PREFERENCES',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          letterSpacing: 1.6,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    );
-                  }),
-                ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...menus.map((menu) {
+                      final isSelected = menu.section == currentSection;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _ProfileMenuTile(
+                          label: menu.label,
+                          icon: menu.icon,
+                          selected: isSelected,
+                          onTap: () => onSectionChanged(menu.section),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -412,8 +436,7 @@ String? _buildConfirmPasswordError({
   if (isPasswordGroupRequired && confirmPassword.trim().isEmpty) {
     return 'Required';
   }
-  if (confirmPassword.trim().isNotEmpty &&
-      confirmPassword.trim().length < 6) {
+  if (confirmPassword.trim().isNotEmpty && confirmPassword.trim().length < 6) {
     return 'Min 6 chars';
   }
   if (newPassword.trim().isNotEmpty &&
@@ -447,6 +470,8 @@ class _ProfileContentArea extends StatelessWidget {
     required this.validationMessage,
     required this.onSaveSettings,
     required this.onRefreshSettings,
+    required this.onSignOut,
+    required this.onSwitchAccount,
     required this.isSavingSettings,
     required this.isLoadingUserInfo,
   });
@@ -461,6 +486,8 @@ class _ProfileContentArea extends StatelessWidget {
   final String? validationMessage;
   final Future<void> Function() onSaveSettings;
   final Future<void> Function() onRefreshSettings;
+  final Future<void> Function() onSignOut;
+  final Future<void> Function() onSwitchAccount;
   final bool isSavingSettings;
   final bool isLoadingUserInfo;
 
@@ -489,15 +516,37 @@ class _ProfileContentArea extends StatelessWidget {
       isPasswordGroupRequired: isPasswordGroupRequired,
       value: newPasswordController.text,
     );
+    Future<void> ensureFieldVisible() async {
+      await Future<void>.delayed(const Duration(milliseconds: 220));
+      if (!context.mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.2,
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        color: ProMaxTokens.panelBackground,
+        borderRadius: BorderRadius.circular(ProMaxTokens.radiusPanel),
+        border: Border.all(color: ProMaxTokens.panelBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x30000000),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+        padding: const EdgeInsets.fromLTRB(
+          ProMaxTokens.space5,
+          18,
+          ProMaxTokens.space5,
+          18,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -506,28 +555,36 @@ class _ProfileContentArea extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
+                    style: TextStyle(
+                      color: ProMaxTokens.textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0x55000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 if (isSettings)
                   Material(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(8),
+                    color: ProMaxTokens.cardBackground,
+                    borderRadius: BorderRadius.circular(10),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: isLoadingUserInfo ? null : () => onRefreshSettings(),
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: isLoadingUserInfo
+                          ? null
+                          : () => onRefreshSettings(),
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.refresh,
-                          color: Colors.white.withValues(
-                            alpha: isLoadingUserInfo ? 0.45 : 0.92,
-                          ),
-                          size: 18,
+                          color: Colors.white,
+                          size: 19,
                         ),
                       ),
                     ),
@@ -550,22 +607,16 @@ class _ProfileContentArea extends StatelessWidget {
                       const Text(
                         'Account Settings',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          color: ProMaxTokens.iconPrimary,
+                          fontSize: 12,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
+                      const SizedBox(height: 10),
+                      ProMaxGlassCardWidget(
                         padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.10),
-                          ),
-                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -573,39 +624,49 @@ class _ProfileContentArea extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(Icons.person, color: Colors.white.withValues(alpha: 0.72), size: 20,),
+                                Icon(
+                                  Icons.person,
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 4),
                                 const Text(
                                   'Personal Information',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 18,
+                                    letterSpacing: 0.6,
                                     fontWeight: FontWeight.w700,
                                   ),
-                                )
+                                ),
                               ],
                             ),
                             const SizedBox(height: 14),
                             Row(
                               children: [
                                 Expanded(
-                                  child: _SettingsInputField(
+                                  child: ProMaxInputFieldWidget(
                                     label: 'FULL NAME',
                                     controller: fullNameController,
                                     obscureText: false,
-                                    errorMessage: showValidation &&
-                                            fullNameController.text.trim().isEmpty
+                                    onTap: ensureFieldVisible,
+                                    errorText:
+                                        showValidation &&
+                                            fullNameController.text
+                                                .trim()
+                                                .isEmpty
                                         ? 'Required'
                                         : null,
                                   ),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
-                                  child: _SettingsInputField(
+                                  child: ProMaxInputFieldWidget(
                                     label: 'OLD PASSWORD',
                                     controller: oldPasswordController,
                                     obscureText: true,
-                                    errorMessage: oldPasswordError,
+                                    onTap: ensureFieldVisible,
+                                    errorText: oldPasswordError,
                                   ),
                                 ),
                               ],
@@ -614,92 +675,167 @@ class _ProfileContentArea extends StatelessWidget {
                             Row(
                               children: [
                                 Expanded(
-                                  child: _SettingsInputField(
+                                  child: ProMaxInputFieldWidget(
                                     label: 'NEW PASSWORD',
                                     controller: newPasswordController,
                                     obscureText: true,
-                                    errorMessage: newPasswordError,
+                                    onTap: ensureFieldVisible,
+                                    errorText: newPasswordError,
                                   ),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
-                                  child: _SettingsInputField(
+                                  child: ProMaxInputFieldWidget(
                                     label: 'CONFIRM PASSWORD',
                                     controller: confirmPasswordController,
                                     obscureText: true,
-                                    errorMessage: confirmPasswordError,
+                                    onTap: ensureFieldVisible,
+                                    errorText: confirmPasswordError,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 14),
-                            if (validationMessage != null)
-                              SelectableText.rich(
-                                TextSpan(
-                                  text: validationMessage!,
-                                  style: const TextStyle(
-                                    color: Colors.redAccent,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                            const SizedBox(height: 2),
+                            SizedBox(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 44,
+                                      child: validationMessage == null
+                                          ? const SizedBox.shrink()
+                                          : DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                color: const Color(0x26FF6E76),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: const Color(
+                                                    0x55FF7F86,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons
+                                                          .error_outline_rounded,
+                                                      size: 14,
+                                                      color: Color(0xFFFFA9AD),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Expanded(
+                                                      child: SelectableText.rich(
+                                                        TextSpan(
+                                                          text:
+                                                              validationMessage!,
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Color(
+                                                                  0xFFFFC8CB,
+                                                                ),
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                        ),
+                                                        maxLines: 1,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            if (validationMessage != null)
-                              const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: FilledButton(
-                                onPressed: isSavingSettings
-                                    ? null
-                                    : () => onSaveSettings(),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(120, 44),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
+                                  const SizedBox(width: 10),
+                                  FilledButton(
+                                    onPressed: isSavingSettings
+                                        ? null
+                                        : () => onSaveSettings(),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size(120, 44),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                    child: isSavingSettings
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Save Changes'),
                                   ),
-                                ),
-                                child: isSavingSettings
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text('Save Changes'),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'Another Settings',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+                      ProMaxGlassCardWidget(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Account Actions',
+                              style: TextStyle(
+                                color: ProMaxTokens.iconPrimary,
+                                fontSize: 12,
+                                letterSpacing: 1.2,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Manage your active session and sign-in account.',
+                              style: TextStyle(
+                                color: ProMaxTokens.textSecondary.withValues(
+                                  alpha: 0.92,
+                                ),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _SettingsAccountActionButton(
+                                    icon: Icons.switch_account_rounded,
+                                    title: 'Switch Account',
+                                    subtitle: 'Sign in with another account',
+                                    onTap: onSwitchAccount,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _SettingsAccountActionButton(
+                                    icon: Icons.logout_rounded,
+                                    title: 'Sign Out',
+                                    subtitle: 'Exit current account',
+                                    isDanger: true,
+                                    onTap: onSignOut,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: const [
-                          Expanded(
-                            child: _SettingsActionTile(
-                              icon: Icons.compare_arrows_rounded,
-                              text: 'switch  Account',
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: _SettingsActionTile(
-                              icon: Icons.power_settings_new,
-                              text: 'logout',
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -737,23 +873,29 @@ class _ProfileMenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const selectedTextColor = Color(0xFFD5DAE2);
+    const selectedIconColor = Color(0xFFB8C0CC);
+    const selectedBorderColor = Color(0x66737E8D);
+    const unselectedBorderColor = Color(0x33FFFFFF);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           decoration: BoxDecoration(
-            color: selected
-                ? Colors.black.withValues(alpha: 0.32)
-                : Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: selected
+                  ? const [Color(0x5639404A), Color(0x3A1E232B)]
+                  : const [Color(0x14FFFFFF), Color(0x120E1626)],
+            ),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected
-                  ? Colors.white.withValues(alpha: 0.24)
-                  : Colors.transparent,
+              color: selected ? selectedBorderColor : unselectedBorderColor,
             ),
           ),
           child: Row(
@@ -761,22 +903,27 @@ class _ProfileMenuTile extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: Colors.white,
+                color: selected ? selectedIconColor : Colors.white70,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: selected
+                        ? selectedTextColor
+                        : ProMaxTokens.textPrimary,
                     fontSize: 12,
+                    letterSpacing: 0.4,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               Icon(
                 Icons.chevron_right,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: selected
+                    ? selectedIconColor
+                    : Colors.white.withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -786,164 +933,115 @@ class _ProfileMenuTile extends StatelessWidget {
   }
 }
 
-class _SettingsInputField extends StatelessWidget {
-  const _SettingsInputField({
-    required this.label,
-    required this.controller,
-    required this.obscureText,
-    required this.errorMessage,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final bool obscureText;
-  final String? errorMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.86),
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          onTap: () async {
-            // 键盘弹出后再次确保当前输入框处于可视区。
-            await Future<void>.delayed(const Duration(milliseconds: 220));
-            if (!context.mounted) return;
-            Scrollable.ensureVisible(
-              context,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: 0.2,
-            );
-          },
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            isDense: true,
-            constraints: const BoxConstraints(
-              minHeight: 40,
-              maxHeight: 40,
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.12),
-            hintText: obscureText ? '********' : 'Molin Chen',
-            hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.60),
-              fontSize: 12,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.20),
-              ),
-            ),
-            errorText: errorMessage,
-            errorStyle: const TextStyle(
-              color: Colors.redAccent,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsActionTile extends StatelessWidget {
-  const _SettingsActionTile({
+class _SettingsAccountActionButton extends StatelessWidget {
+  const _SettingsAccountActionButton({
     required this.icon,
-    required this.text,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.isDanger = false,
   });
 
   final IconData icon;
-  final String text;
+  final String title;
+  final String subtitle;
+  final Future<void> Function() onTap;
+  final bool isDanger;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 30,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w500,
+    final iconColor = isDanger
+        ? const Color(0xFFFF9EA1)
+        : ProMaxTokens.iconPrimary;
+    final titleColor = isDanger
+        ? const Color(0xFFFFD7D8)
+        : ProMaxTokens.textPrimary;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onTap(),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDanger
+                  ? const [Color(0x38FF6E76), Color(0x1B2A1216)]
+                  : const [Color(0x2D8ED0FF), Color(0x150D1A2C)],
+            ),
+            border: Border.all(
+              color: isDanger
+                  ? const Color(0x66FF6E76)
+                  : ProMaxTokens.inputBorderFocused.withValues(alpha: 0.70),
             ),
           ),
-        ],
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: iconColor, size: 18),
+              const SizedBox(height: 6),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
+                  fontSize: 11,
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.value,
-    required this.label,
-  });
+  const _StatTile({required this.value, required this.label});
 
   final String value;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ProMaxGlassCardWidget(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(10),
-      ),
       child: Column(
         children: [
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
+              color: ProMaxTokens.textPrimary,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: Colors.white.withValues(alpha: 0.92),
               fontSize: 8,
               letterSpacing: 1.0,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

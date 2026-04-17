@@ -800,7 +800,7 @@ class _ProfileContentArea extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Account Actions',
+                              'Another  Settings',
                               style: TextStyle(
                                 color: ProMaxTokens.iconPrimary,
                                 fontSize: 12,
@@ -825,7 +825,7 @@ class _ProfileContentArea extends StatelessWidget {
                                   child: _SettingsAccountActionButton(
                                     icon: Icons.switch_account_rounded,
                                     title: 'Switch Account',
-                                    subtitle: 'Sign in with another account',
+                                    subtitle: 'Switch back to original account',
                                     onTap: onSwitchAccount,
                                   ),
                                 ),

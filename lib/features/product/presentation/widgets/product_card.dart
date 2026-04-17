@@ -50,7 +50,7 @@ class ProductCard extends StatelessWidget {
                           productItem.mainImage,
                           width: double.infinity,
                           height: double.infinity,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
                               const Icon(Icons.image_not_supported),
                         ),

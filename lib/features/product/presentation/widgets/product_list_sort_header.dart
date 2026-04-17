@@ -75,7 +75,7 @@ class ProductSortHeader extends StatelessWidget {
           child: const Icon(
             Icons.keyboard_double_arrow_right,
             color: Colors.white70,
-            size: 13,
+            size: 14,
           ),
         ),
       ),

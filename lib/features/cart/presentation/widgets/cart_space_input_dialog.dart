@@ -61,21 +61,38 @@ class _CartSpaceInputDialogState extends State<_CartSpaceInputDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    return AlertDialog(
-      title: Text(l10n.cartSpaceDialogTitle),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          hintText: l10n.cartSpaceDialogHint,
-          errorText: _errorText.isEmpty ? null : _errorText,
+    final keyboardBottom = MediaQuery.viewInsetsOf(context).bottom;
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: keyboardBottom),
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOutCubic,
+      child: AlertDialog(
+        insetPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        title: Text(l10n.cartSpaceDialogTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _controller,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _onConfirm(),
+                decoration: InputDecoration(
+                  hintText: l10n.cartSpaceDialogHint,
+                  errorText: _errorText.isEmpty ? null : _errorText,
+                ),
+                onChanged: _onChanged,
+              ),
+            ],
+          ),
         ),
-        onChanged: _onChanged,
+        actions: [
+          TextButton(onPressed: _onCancel, child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: _onConfirm, child: Text(l10n.commonConfirm)),
+        ],
       ),
-      actions: [
-        TextButton(onPressed: _onCancel, child: Text(l10n.commonCancel)),
-        FilledButton(onPressed: _onConfirm, child: Text(l10n.commonConfirm)),
-      ],
     );
   }
 }

@@ -20,6 +20,7 @@ import 'package:groe_app_pad/features/product/presentation/widgets/product_list_
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 
 class ProductListPage extends ConsumerStatefulWidget {
   const ProductListPage({
@@ -48,6 +49,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   int _sidebarLayoutSwitchToken = 0;
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
+  final Set<int> _addToCartSubmitting = <int>{};
+  int _addToCartFlowEpoch = 0;
 
   @override
   void initState() {
@@ -91,12 +94,30 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   @override
   void dispose() {
+    _addToCartFlowEpoch++;
+    _addToCartSubmitting.clear();
     _sidebarLayoutSwitchToken++;
     _productsSubscription.close();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+
+  /// 用户进行其它列表操作时中断进行中的加购（详情请求 / 即将弹出的侧栏）。
+  void _cancelInFlightAddToCartFlow() {
+    _addToCartFlowEpoch++;
+    if (_addToCartSubmitting.isEmpty) return;
+    if (mounted) {
+      setState(() => _addToCartSubmitting.clear());
+    } else {
+      _addToCartSubmitting.clear();
+    }
+  }
+
+  Future<void> _onProductGridRefresh() async {
+    _cancelInFlightAddToCartFlow();
+    await ref.read(productsProvider.notifier).refresh();
   }
 
   @override
@@ -114,16 +135,16 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
     return Stack(
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isLandscape ? 52 : 10,
-            vertical: 30,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (isTabletUp)
-                AnimatedContainer(
+        HomeMainContentSlot(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isLandscape ? 34 : 0,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (isTabletUp)
+                  AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
                   curve: Curves.easeInOutCubic,
                   width: _controller.isFilterCollapsed ? 0 : 225,
@@ -173,12 +194,12 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                         scrollController: _scrollController,
                         collectOverrides: _collectOverrides,
                         collectSubmitting: _collectSubmitting,
+                        addToCartSubmitting: _addToCartSubmitting,
                         onCollectTap: _onCollectTapped,
                         onAddToCartTap: _onAddToCartTapped,
-                        onRetry: () =>
-                            ref.read(productsProvider.notifier).refresh(),
-                        onRefresh: () =>
-                            ref.read(productsProvider.notifier).refresh(),
+                        onBeforeNavigateToDetail: _cancelInFlightAddToCartFlow,
+                        onRetry: _onProductGridRefresh,
+                        onRefresh: _onProductGridRefresh,
                         onEnsureLoadMore: _ensureScrollableAndLoadMoreIfNeeded,
                       ),
                     ),
@@ -186,6 +207,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                 ),
               ),
             ],
+          ),
           ),
         ),
         Positioned.fill(
@@ -199,6 +221,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   void _onSortChanged(int value) {
+    _cancelInFlightAddToCartFlow();
     setState(() => _controller.setSortValue(value));
     widget.onSortChanged?.call(_controller.currentSortOption.text);
     final query = _controller.currentSortQuery;
@@ -208,6 +231,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   Future<void> _onScanQrTap() async {
+    _cancelInFlightAddToCartFlow();
     final session = ref.read(sessionControllerProvider).asData?.value;
     if (session?.isAuthenticated != true) {
       if (!mounted) return;
@@ -230,6 +254,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   /// 点击收藏。
   Future<void> _onCollectTapped(ProductItem product) async {
+    _cancelInFlightAddToCartFlow();
     final productId = product.id;
     if (_collectSubmitting.contains(productId)) return;
     final hasOverride = _collectOverrides.containsKey(productId);
@@ -275,20 +300,33 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   Future<void> _onAddToCartTapped(ProductItem product) async {
+    final productId = product.id;
+
     final session = ref.read(sessionControllerProvider).asData?.value;
     if (session?.isAuthenticated != true) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.cartAddRequireLogin)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.cartAddRequireLogin)));
       context.go(AppRoutes.login);
       return;
     }
+
+    _cancelInFlightAddToCartFlow();
+    final epoch = _addToCartFlowEpoch;
+    setState(() => _addToCartSubmitting.add(productId));
     try {
-      final detail = await ref.read(
-        productDetailProvider(product.id).future,
-      );
-      if (!mounted) return;
+      final detail = await ref.read(productDetailProvider(productId).future);
+      if (!mounted) {
+        _addToCartSubmitting.remove(productId);
+        return;
+      }
+      if (epoch != _addToCartFlowEpoch) {
+        setState(() => _addToCartSubmitting.remove(productId));
+        return;
+      }
+      setState(() => _addToCartSubmitting.remove(productId));
+
       final added = await presentProductSkuCartSideSheet(
         context: context,
         detail: detail,
@@ -297,7 +335,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         onSubmit: (payload) async {
           final space = await resolveSpaceForCartAdd(context);
           if (space == null) return false;
-          return ref.read(cartControllerProvider.notifier).createCartItem(
+          return ref
+              .read(cartControllerProvider.notifier)
+              .createCartItem(
                 productId: payload.apiProductId,
                 subIndex: payload.subIndex,
                 productNum: payload.productNum,
@@ -307,6 +347,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         },
       );
       if (!mounted) return;
+      if (epoch != _addToCartFlowEpoch) return;
       if (added) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -315,12 +356,14 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         );
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.productDetailLoadFailed('$e')),
-        ),
-      );
+      if (mounted) {
+        setState(() => _addToCartSubmitting.remove(productId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
+        );
+      } else {
+        _addToCartSubmitting.remove(productId);
+      }
     }
   }
 
@@ -403,6 +446,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   void _queryBySelectedCategory() {
+    _cancelInFlightAddToCartFlow();
     final query = _controller.currentSortQuery;
     ref
         .read(productsProvider.notifier)

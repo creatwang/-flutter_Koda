@@ -15,8 +15,10 @@ class ProductGridSection extends StatelessWidget {
     required this.scrollController,
     required this.collectOverrides,
     required this.collectSubmitting,
+    required this.addToCartSubmitting,
     required this.onCollectTap,
     required this.onAddToCartTap,
+    this.onBeforeNavigateToDetail,
     required this.onRetry,
     required this.onRefresh,
     required this.onEnsureLoadMore,
@@ -28,8 +30,10 @@ class ProductGridSection extends StatelessWidget {
   final ScrollController scrollController;
   final Map<int, bool> collectOverrides;
   final Set<int> collectSubmitting;
+  final Set<int> addToCartSubmitting;
   final ValueChanged<ProductItem> onCollectTap;
   final ValueChanged<ProductItem> onAddToCartTap;
+  final VoidCallback? onBeforeNavigateToDetail;
   final VoidCallback onRetry;
   final Future<void> Function() onRefresh;
   final VoidCallback onEnsureLoadMore;
@@ -54,27 +58,42 @@ class ProductGridSection extends StatelessWidget {
                     return GridView.builder(
                       controller: scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 8),
+                      padding: const EdgeInsets.only(
+                        top: 2,
+                        left: 2,
+                        right: 2,
+                        bottom: 8,
+                      ),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columns,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
                         childAspectRatio: 0.76,
                       ),
-                      itemCount: items.items.length + (items.isLoadingMore ? 1 : 0),
+                      itemCount:
+                          items.items.length + (items.isLoadingMore ? 1 : 0),
                       itemBuilder: (_, index) {
                         if (index >= items.items.length) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         final product = items.items[index];
-                        final isCollected = collectOverrides[product.id] ?? product.isCollect;
+                        final isCollected =
+                            collectOverrides[product.id] ?? product.isCollect;
                         return ProductCard(
                           key: ValueKey<int>(product.id),
                           productItem: product,
                           isCollected: isCollected,
-                          isCollectSubmitting: collectSubmitting.contains(product.id),
+                          isCollectSubmitting: collectSubmitting.contains(
+                            product.id,
+                          ),
+                          isAddToCartSubmitting: addToCartSubmitting.contains(
+                            product.id,
+                          ),
                           onCollectTap: () => onCollectTap(product),
                           onAddToCartTap: () => onAddToCartTap(product),
+                          onBeforeNavigateToDetail: onBeforeNavigateToDetail,
                         );
                       },
                     );

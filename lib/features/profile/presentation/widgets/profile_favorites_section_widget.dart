@@ -28,6 +28,8 @@ class _ProfileFavoritesSectionWidgetState
   final ScrollController _scrollController = ScrollController();
   final Map<int, bool> _collectOverrides = <int, bool>{};
   final Set<int> _collectSubmitting = <int>{};
+  final Set<int> _addToCartSubmitting = <int>{};
+  int _addToCartFlowEpoch = 0;
 
   @override
   void initState() {
@@ -37,10 +39,22 @@ class _ProfileFavoritesSectionWidgetState
 
   @override
   void dispose() {
+    _addToCartFlowEpoch++;
+    _addToCartSubmitting.clear();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+
+  void _cancelInFlightAddToCartFlow() {
+    _addToCartFlowEpoch++;
+    if (_addToCartSubmitting.isEmpty) return;
+    if (mounted) {
+      setState(() => _addToCartSubmitting.clear());
+    } else {
+      _addToCartSubmitting.clear();
+    }
   }
 
   void _onScroll() {
@@ -51,6 +65,7 @@ class _ProfileFavoritesSectionWidgetState
   }
 
   Future<void> _onCollectTap(ProductItem product) async {
+    _cancelInFlightAddToCartFlow();
     final productId = product.id;
     if (_collectSubmitting.contains(productId)) return;
 
@@ -89,20 +104,33 @@ class _ProfileFavoritesSectionWidgetState
   }
 
   Future<void> _onAddToCartTap(ProductItem product) async {
+    final productId = product.id;
+
     final session = ref.read(sessionControllerProvider).asData?.value;
     if (session?.isAuthenticated != true) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.cartAddRequireLogin)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.cartAddRequireLogin)));
       context.go(AppRoutes.login);
       return;
     }
+
+    _cancelInFlightAddToCartFlow();
+    final epoch = _addToCartFlowEpoch;
+    setState(() => _addToCartSubmitting.add(productId));
     try {
-      final detail = await ref.read(
-        productDetailProvider(product.id).future,
-      );
-      if (!mounted) return;
+      final detail = await ref.read(productDetailProvider(productId).future);
+      if (!mounted) {
+        _addToCartSubmitting.remove(productId);
+        return;
+      }
+      if (epoch != _addToCartFlowEpoch) {
+        setState(() => _addToCartSubmitting.remove(productId));
+        return;
+      }
+      setState(() => _addToCartSubmitting.remove(productId));
+
       final added = await presentProductSkuCartSideSheet(
         context: context,
         detail: detail,
@@ -111,7 +139,9 @@ class _ProfileFavoritesSectionWidgetState
         onSubmit: (payload) async {
           final space = await resolveSpaceForCartAdd(context);
           if (space == null) return false;
-          return ref.read(cartControllerProvider.notifier).createCartItem(
+          return ref
+              .read(cartControllerProvider.notifier)
+              .createCartItem(
                 productId: payload.apiProductId,
                 subIndex: payload.subIndex,
                 productNum: payload.productNum,
@@ -121,6 +151,7 @@ class _ProfileFavoritesSectionWidgetState
         },
       );
       if (!mounted) return;
+      if (epoch != _addToCartFlowEpoch) return;
       if (added) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -129,16 +160,19 @@ class _ProfileFavoritesSectionWidgetState
         );
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.productDetailLoadFailed('$e')),
-        ),
-      );
+      if (mounted) {
+        setState(() => _addToCartSubmitting.remove(productId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
+        );
+      } else {
+        _addToCartSubmitting.remove(productId);
+      }
     }
   }
 
   Future<void> _onRefreshFavorites() async {
+    _cancelInFlightAddToCartFlow();
     _clearCollectState();
     await ref.read(favoriteProductsProvider.notifier).refresh();
   }
@@ -148,6 +182,7 @@ class _ProfileFavoritesSectionWidgetState
     setState(() {
       _collectOverrides.clear();
       _collectSubmitting.clear();
+      _addToCartSubmitting.clear();
     });
   }
 
@@ -195,8 +230,12 @@ class _ProfileFavoritesSectionWidgetState
                 productItem: product,
                 isCollected: isCollected,
                 isCollectSubmitting: _collectSubmitting.contains(product.id),
+                isAddToCartSubmitting: _addToCartSubmitting.contains(
+                  product.id,
+                ),
                 onCollectTap: () => _onCollectTap(product),
                 onAddToCartTap: () => _onAddToCartTap(product),
+                onBeforeNavigateToDetail: _cancelInFlightAddToCartFlow,
               );
             },
           ),

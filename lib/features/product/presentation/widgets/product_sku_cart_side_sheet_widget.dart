@@ -510,13 +510,13 @@ class _ProductSkuCartSideSheetBodyState
                                 height: 1.25,
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            qtyRow,
                           ],
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  qtyRow,
                   if (variants.length > 1) ...[
                     const SizedBox(height: 28),
                     Text(
@@ -778,16 +778,26 @@ class _QtySquareButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
 
+  static const double _kSize = 48;
+
   @override
   Widget build(BuildContext context) {
+    final inner = SizedBox(
+      width: _kSize,
+      height: _kSize,
+      child: Center(child: child),
+    );
     return Material(
       color: background,
       borderRadius: BorderRadius.circular(10),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
-      ),
+      child: onTap == null
+          ? inner
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: inner,
+            ),
     );
   }
 }

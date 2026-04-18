@@ -7,6 +7,7 @@ import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
@@ -187,76 +188,59 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _fullNameController.text = userName;
       _hasHydratedName = true;
     }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final viewport = MediaQuery.sizeOf(context);
-        final fallbackHeight = viewport.height - 150;
-        final resolvedHeight = constraints.hasBoundedHeight
-            ? constraints.maxHeight - 20
-            : fallbackHeight;
-        final panelHeight = resolvedHeight > 0
-            ? resolvedHeight
-            : fallbackHeight;
-
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
-          child: SizedBox(
-            height: panelHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: double.infinity,
-                  child: _ProfileSidebar(
-                    avatarUrl: avatarUrl,
-                    profileName: userName,
-                    profileId: userId,
-                    favoriteCount: favoriteCount,
-                    currentSection: _currentSection,
-                    menus: _menus,
-                    onSectionChanged: (next) {
-                      setState(() => _currentSection = next);
-                      if (next == ProfileContentSection.favorites) {
-                        ref.read(favoriteProductsProvider.notifier).refresh();
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: SizedBox(
-                    height: double.infinity,
-                    child: _ProfileContentArea(
-                      currentSection: _currentSection,
-                      title: selectedMeta.label,
-                      fullNameController: _fullNameController,
-                      oldPasswordController: _oldPasswordController,
-                      newPasswordController: _newPasswordController,
-                      confirmPasswordController: _confirmPasswordController,
-                      showValidation: _showSettingsValidation,
-                      validationMessage: _settingsErrorMessage,
-                      onSaveSettings: _onSaveSettings,
-                      onRefreshSettings: _onRefreshSettings,
-                      onSignOut: _onSignOut,
-                      onSwitchAccount: _onSwitchAccount,
-                      isSavingSettings: _isSavingSettings,
-                      isLoadingUserInfo:
-                          _currentSection == ProfileContentSection.settings &&
-                          userInfoState.isLoading,
-                      canViewCustomerOrders: canViewCustomerOrders,
-                      currentOrderTab: _currentOrderTab,
-                      onOrderTabChanged: (nextTab) {
-                        if (_currentOrderTab == nextTab) return;
-                        setState(() => _currentOrderTab = nextTab);
-                      },
-                    ),
-                  ),
-                ),
-              ],
+    return HomeMainContentSlot(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: double.infinity,
+            child: _ProfileSidebar(
+              avatarUrl: avatarUrl,
+              profileName: userName,
+              profileId: userId,
+              favoriteCount: favoriteCount,
+              currentSection: _currentSection,
+              menus: _menus,
+              onSectionChanged: (next) {
+                setState(() => _currentSection = next);
+                if (next == ProfileContentSection.favorites) {
+                  ref.read(favoriteProductsProvider.notifier).refresh();
+                }
+              },
             ),
           ),
-        );
-      },
+          const SizedBox(width: 14),
+          Expanded(
+            child: SizedBox(
+              height: double.infinity,
+              child: _ProfileContentArea(
+                currentSection: _currentSection,
+                title: selectedMeta.label,
+                fullNameController: _fullNameController,
+                oldPasswordController: _oldPasswordController,
+                newPasswordController: _newPasswordController,
+                confirmPasswordController: _confirmPasswordController,
+                showValidation: _showSettingsValidation,
+                validationMessage: _settingsErrorMessage,
+                onSaveSettings: _onSaveSettings,
+                onRefreshSettings: _onRefreshSettings,
+                onSignOut: _onSignOut,
+                onSwitchAccount: _onSwitchAccount,
+                isSavingSettings: _isSavingSettings,
+                isLoadingUserInfo:
+                    _currentSection == ProfileContentSection.settings &&
+                    userInfoState.isLoading,
+                canViewCustomerOrders: canViewCustomerOrders,
+                currentOrderTab: _currentOrderTab,
+                onOrderTabChanged: (nextTab) {
+                  if (_currentOrderTab == nextTab) return;
+                  setState(() => _currentOrderTab = nextTab);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

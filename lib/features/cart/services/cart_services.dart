@@ -4,9 +4,13 @@ import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/cart/api/cart_requests.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
 
-Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService() async {
+Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
+  bool bypassMemoryCache = false,
+}) async {
   try {
-    final response = await requestCartListBySite();
+    final response = await requestCartListBySite(
+      bypassMemoryCache: bypassMemoryCache,
+    );
     final data = response.data;
     if (data is! List) {
       throw DioException(

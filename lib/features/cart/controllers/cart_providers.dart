@@ -68,7 +68,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       state = const AsyncData(<CartListDto>[]);
       return;
     }
-    final result = await fetchCartListBySiteService();
+    final result = await fetchCartListBySiteService(bypassMemoryCache: true);
     result.when(
       success: (data) {
         state = AsyncData(data);

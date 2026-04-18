@@ -9,6 +9,7 @@ import 'package:groe_app_pad/features/product/controllers/product_providers.dart
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
@@ -41,14 +42,23 @@ class _CartPageState extends ConsumerState<CartPage> {
     final canExportQuotation =
         ref.watch(canExportQuotationProvider).asData?.value ?? false;
     return cartState.when(
-      loading: () => const AppLoadingView(),
-      error: (error, _) =>
-          AppErrorView(message: l10n.cartLoadFailed(error.toString())),
+      loading: () => const HomeMainContentSlot(
+        child: AppLoadingView(),
+      ),
+      error: (error, _) => HomeMainContentSlot(
+        child: AppErrorView(
+          message: l10n.cartLoadFailed(error.toString()),
+        ),
+      ),
       data: (groups) {
         final sites = groups
             .expand((group) => group.items)
             .toList(growable: false);
-        if (sites.isEmpty) return AppEmptyView(message: l10n.cartEmpty);
+        if (sites.isEmpty) {
+          return HomeMainContentSlot(
+            child: AppEmptyView(message: l10n.cartEmpty),
+          );
+        }
 
         final isWide = MediaQuery.sizeOf(context).width >= 1120;
         final listPanel = _buildCuratedListPanel(context, sites);
@@ -60,31 +70,59 @@ class _CartPageState extends ConsumerState<CartPage> {
           canExportQuotation: canExportQuotation,
         );
 
-        if (isWide) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 7, child: listPanel),
-                const SizedBox(width: 18),
-                SizedBox(width: 330, child: summaryPanel),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            Expanded(child: listPanel),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                child: summaryPanel,
-              ),
-            ),
-          ],
+        return HomeMainContentSlot(
+          child: isWide
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 7, child: listPanel),
+                        const SizedBox(width: 18),
+                        SizedBox(
+                          width: 330,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight,
+                            ),
+                            child: SingleChildScrollView(
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              child: summaryPanel,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: listPanel,
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: SafeArea(
+                          top: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              16,
+                              10,
+                              16,
+                              16,
+                            ),
+                            child: summaryPanel,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         );
       },
     );
@@ -1118,6 +1156,11 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 child: TextField(
                                   controller: _remarkController,
                                   focusNode: _safeRemarkFocusNode,
+                                  scrollPadding: EdgeInsets.only(
+                                    bottom: 24 +
+                                        MediaQuery.viewInsetsOf(context)
+                                            .bottom,
+                                  ),
                                   onChanged: (value) => widget.onRemarkChanged(
                                     widget.item.id,
                                     value,
@@ -1160,27 +1203,6 @@ class _CartProductTileState extends State<_CartProductTile> {
                       TextButton.icon(
                         onPressed: widget.isBusy
                             ? null
-                            : () => widget.onChangeSpec(widget.item),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          minimumSize: const Size(0, 22),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          foregroundColor: Colors.white70,
-                          disabledForegroundColor: Colors.white30,
-                        ),
-                        icon: const Icon(Icons.tune, size: 14),
-                        label: Text(
-                          context.l10n.cartChangeSpec,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: widget.isBusy
-                            ? null
                             : () => widget.onDeleteItem(widget.item),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1199,17 +1221,21 @@ class _CartProductTileState extends State<_CartProductTile> {
                       TextButton.icon(
                         onPressed: widget.isBusy
                             ? null
-                            : () => _safeRemarkFocusNode.requestFocus(),
+                            : () => widget.onChangeSpec(widget.item),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           minimumSize: const Size(0, 22),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           foregroundColor: Colors.white70,
+                          disabledForegroundColor: Colors.white30,
                         ),
                         icon: const Icon(Icons.tune, size: 14),
-                        label: const Text(
+                        label: Text(
                           'EDIT',
-                          style: TextStyle(fontSize: 10, letterSpacing: 0.4),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ),
                     ],

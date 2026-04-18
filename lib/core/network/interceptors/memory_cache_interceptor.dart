@@ -4,7 +4,9 @@ import 'package:groe_app_pad/core/config/env.dart';
 
 /// 内存缓存拦截器（仅 GET）：
 /// - 请求阶段：命中缓存则直接返回，不再发网络请求
-/// - 响应阶段：成功响应写入缓存
+/// - 请求带 `extra['noCache'] == true` 时跳过读缓存，但仍发网络请求
+/// - 响应阶段：成功 GET 一律写入/覆盖缓存（含 noCache），避免「刷新/删购后」
+///   仍留下删改前的旧条目，导致后续默认可缓存请求读到脏数据
 /// - 通过 ttl 控制过期时间，避免脏数据长期驻留
 class MemoryCacheInterceptor extends Interceptor {
   MemoryCacheInterceptor({this.ttl = const Duration(minutes: 1)});
@@ -52,19 +54,25 @@ class MemoryCacheInterceptor extends Interceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final options = response.requestOptions;
     final requestId = '${options.extra['requestId'] ?? '-'}';
-    // 只缓存成功 GET 响应，避免错误响应污染缓存。
-    final canCache = options.method == 'GET' &&
-        options.extra['noCache'] != true &&
-        (response.statusCode ?? 500) < 400;
-    if (canCache) {
+    // 成功 GET 一律落盘：默认可缓存请求与带 noCache 的刷新请求共用同一 key，
+    // 刷新后必须覆盖旧缓存，否则删除/加购后再走未带 noCache 的 GET 会读到旧列表。
+    final isGet = options.method == 'GET';
+    final isSuccess = (response.statusCode ?? 500) < 400;
+    if (isGet && isSuccess) {
       final key = _cacheKey(options);
       _cache[key] = _CacheEntry(
         timestamp: DateTime.now(),
         data: response.data,
       );
-      _log('[NET][CACHE][$requestId] save key=$key');
+      final afterBypass = options.extra['noCache'] == true;
+      _log(
+        '[NET][CACHE][$requestId] save key=$key'
+        '${afterBypass ? ' (post-bypass)' : ''}',
+      );
     } else {
-      _log('[NET][CACHE][$requestId] skip save ${options.method} ${options.path}');
+      _log(
+        '[NET][CACHE][$requestId] skip save ${options.method} ${options.path}',
+      );
     }
     handler.next(response);
   }

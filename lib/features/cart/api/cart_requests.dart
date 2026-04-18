@@ -13,8 +13,16 @@ class CartRequests {
   static const String clearPath = '/store/cart/clear';
 }
 
-Future<Response<dynamic>> requestCartListBySite({DioClient? client}) {
-  return (client ?? protectedDioClient).get(CartRequests.listBySitePath);
+Future<Response<dynamic>> requestCartListBySite({
+  DioClient? client,
+  bool bypassMemoryCache = false,
+}) {
+  return (client ?? protectedDioClient).get(
+    CartRequests.listBySitePath,
+    options: bypassMemoryCache
+        ? Options(extra: <String, dynamic>{'noCache': true})
+        : null,
+  );
 }
 
 Future<Response<dynamic>> requestCartSelected({

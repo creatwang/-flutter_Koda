@@ -27,6 +27,8 @@ class CartPage extends ConsumerStatefulWidget {
 class _CartPageState extends ConsumerState<CartPage> {
   final Set<String> _collapsedSpaceKeys = <String>{};
   final Set<int> _pendingItemIds = <int>{};
+  final Set<int> _removeActionLoadingItemIds = <int>{};
+  final Set<int> _changeSpecLoadingItemIds = <int>{};
   final Set<int> _pendingSiteIds = <int>{};
   bool _isClearingAll = false;
   bool _isCheckingOut = false;
@@ -85,10 +87,19 @@ class _CartPageState extends ConsumerState<CartPage> {
                             constraints: BoxConstraints(
                               maxHeight: constraints.maxHeight,
                             ),
-                            child: SingleChildScrollView(
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              child: summaryPanel,
+                            child: LayoutBuilder(
+                              builder: (context, viewport) {
+                                return SingleChildScrollView(
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: viewport.maxHeight,
+                                    ),
+                                    child: summaryPanel,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -104,19 +115,29 @@ class _CartPageState extends ConsumerState<CartPage> {
                     ),
                     Expanded(
                       flex: 2,
-                      child: SingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        child: SafeArea(
-                          top: false,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              16,
-                              10,
-                              16,
-                              16,
-                            ),
-                            child: summaryPanel,
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            16,
+                            10,
+                            16,
+                            16,
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, viewport) {
+                              return SingleChildScrollView(
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior
+                                        .onDrag,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: viewport.maxHeight,
+                                  ),
+                                  child: summaryPanel,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -182,6 +203,10 @@ class _CartPageState extends ConsumerState<CartPage> {
                     isItemBusy: (itemId) =>
                         _pendingItemIds.contains(itemId) ||
                         _pendingSiteIds.contains(site.companyId),
+                    isRemoveActionLoading: (itemId) =>
+                        _removeActionLoadingItemIds.contains(itemId),
+                    isChangeSpecLoading: (itemId) =>
+                        _changeSpecLoadingItemIds.contains(itemId),
                   );
                 },
               ),
@@ -439,11 +464,16 @@ class _CartPageState extends ConsumerState<CartPage> {
     return _runItemAction(
       item.id,
       () => ref.read(cartControllerProvider.notifier).removeCartItem(item.id),
+      removeActionLoading: true,
     );
   }
 
   Future<void> _onChangeSpec(CartProductDto item) async {
     if (_pendingItemIds.contains(item.id)) return;
+    setState(() {
+      _pendingItemIds.add(item.id);
+      _changeSpecLoadingItemIds.add(item.id);
+    });
     try {
       final detail = await ref.read(
         productDetailProvider(item.productId).future,
@@ -474,6 +504,16 @@ class _CartPageState extends ConsumerState<CartPage> {
           content: Text(context.l10n.productDetailLoadFailed('$e')),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingItemIds.remove(item.id);
+          _changeSpecLoadingItemIds.remove(item.id);
+        });
+      } else {
+        _pendingItemIds.remove(item.id);
+        _changeSpecLoadingItemIds.remove(item.id);
+      }
     }
   }
 
@@ -505,14 +545,33 @@ class _CartPageState extends ConsumerState<CartPage> {
 
   Future<bool> _runItemAction(
     int itemId,
-    Future<bool> Function() action,
-  ) async {
+    Future<bool> Function() action, {
+    bool removeActionLoading = false,
+  }) async {
     if (_pendingItemIds.contains(itemId)) return false;
-    setState(() => _pendingItemIds.add(itemId));
-    final ok = await action();
-    if (!mounted) return ok;
-    setState(() => _pendingItemIds.remove(itemId));
-    return ok;
+    setState(() {
+      _pendingItemIds.add(itemId);
+      if (removeActionLoading) {
+        _removeActionLoadingItemIds.add(itemId);
+      }
+    });
+    try {
+      return await action();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingItemIds.remove(itemId);
+          if (removeActionLoading) {
+            _removeActionLoadingItemIds.remove(itemId);
+          }
+        });
+      } else {
+        _pendingItemIds.remove(itemId);
+        if (removeActionLoading) {
+          _removeActionLoadingItemIds.remove(itemId);
+        }
+      }
+    }
   }
 
   void _onRemarkChanged(int cartId, String remark) {
@@ -685,6 +744,8 @@ class _CartSiteSection extends StatelessWidget {
     required this.onChangeSpec,
     required this.isSiteBusy,
     required this.isItemBusy,
+    required this.isRemoveActionLoading,
+    required this.isChangeSpecLoading,
   });
 
   final CartSiteDto site;
@@ -699,6 +760,8 @@ class _CartSiteSection extends StatelessWidget {
   final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool isSiteBusy;
   final bool Function(int itemId) isItemBusy;
+  final bool Function(int itemId) isRemoveActionLoading;
+  final bool Function(int itemId) isChangeSpecLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -797,6 +860,8 @@ class _CartSiteSection extends StatelessWidget {
             onRemarkChanged: onRemarkChanged,
             onChangeSpec: onChangeSpec,
             isItemBusy: isItemBusy,
+            isRemoveActionLoading: isRemoveActionLoading,
+            isChangeSpecLoading: isChangeSpecLoading,
           ),
         ),
       ],
@@ -815,6 +880,8 @@ class _CartSpaceSection extends StatelessWidget {
     required this.onRemarkChanged,
     required this.onChangeSpec,
     required this.isItemBusy,
+    required this.isRemoveActionLoading,
+    required this.isChangeSpecLoading,
   });
 
   final CartSpaceDto space;
@@ -827,6 +894,8 @@ class _CartSpaceSection extends StatelessWidget {
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool Function(int itemId) isItemBusy;
+  final bool Function(int itemId) isRemoveActionLoading;
+  final bool Function(int itemId) isChangeSpecLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -887,6 +956,9 @@ class _CartSpaceSection extends StatelessWidget {
                         onRemarkChanged: onRemarkChanged,
                         onChangeSpec: onChangeSpec,
                         isBusy: isItemBusy(item.id),
+                        isRemoveActionLoading:
+                            isRemoveActionLoading(item.id),
+                        isChangeSpecLoading: isChangeSpecLoading(item.id),
                       ),
                     )
                     .toList(growable: false),
@@ -910,6 +982,8 @@ class _CartProductTile extends StatefulWidget {
     required this.onRemarkChanged,
     required this.onChangeSpec,
     required this.isBusy,
+    required this.isRemoveActionLoading,
+    required this.isChangeSpecLoading,
   });
 
   final CartProductDto item;
@@ -920,6 +994,8 @@ class _CartProductTile extends StatefulWidget {
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool isBusy;
+  final bool isRemoveActionLoading;
+  final bool isChangeSpecLoading;
 
   @override
   State<_CartProductTile> createState() => _CartProductTileState();
@@ -1211,7 +1287,18 @@ class _CartProductTileState extends State<_CartProductTile> {
                           foregroundColor: Colors.white70,
                           disabledForegroundColor: Colors.white30,
                         ),
-                        icon: const Icon(Icons.delete_outline, size: 14),
+                        icon: widget.isRemoveActionLoading
+                            ? SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white.withValues(
+                                    alpha: 0.75,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.delete_outline, size: 14),
                         label: const Text(
                           'REMOVE',
                           style: TextStyle(fontSize: 10, letterSpacing: 0.4),
@@ -1229,7 +1316,18 @@ class _CartProductTileState extends State<_CartProductTile> {
                           foregroundColor: Colors.white70,
                           disabledForegroundColor: Colors.white30,
                         ),
-                        icon: const Icon(Icons.tune, size: 14),
+                        icon: widget.isChangeSpecLoading
+                            ? SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white.withValues(
+                                    alpha: 0.75,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.tune, size: 14),
                         label: Text(
                           'EDIT',
                           style: const TextStyle(

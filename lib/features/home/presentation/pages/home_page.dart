@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/order/presentation/pages/order_page.dart';
 import 'package:groe_app_pad/features/profile/presentation/pages/profile_page.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -15,7 +15,7 @@ import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
 
 import '../../../product/presentation/pages/product_category_page.dart';
 
-enum HomeSection { products, cart, orders, productCategory, profile }
+enum HomeSection { products, cart, productCategory, profile }
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, this.initialTab});
@@ -38,7 +38,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   HomeSection _tabToSection(String? tab) {
     return switch (tab) {
       'cart' => HomeSection.cart,
-      'orders' => HomeSection.orders,
       'profile' => HomeSection.profile,
       _ => HomeSection.products,
     };
@@ -55,7 +54,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       HomeSection.products => const ProductListPage(),
       // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
-      HomeSection.orders => const OrderPage(),
       HomeSection.productCategory => const ProductCategoryPage(),
       HomeSection.profile => const ProfilePage(),
     };
@@ -83,12 +81,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           onTap: () => setState(() => _section = HomeSection.cart),
         ),
         HeaderMenuButton(
-          label: l10n.homeOrders,
-          icon: Icons.receipt_long_outlined,
-          selected: _section == HomeSection.orders,
-          onTap: () => setState(() => _section = HomeSection.orders),
-        ),
-        HeaderMenuButton(
           label: 'Profile',
           icon: Icons.person_outline,
           selected: _section == HomeSection.profile,
@@ -103,6 +95,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           icon: const Icon(Icons.logout),
         ),
       ],
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton.small(
+              tooltip: 'Secure Storage Debug',
+              onPressed: () => context.push(AppRoutes.secureStorageDebug),
+              child: const Icon(Icons.bug_report_outlined),
+            )
+          : null,
       body: SafeArea(bottom: false, child: body),
       bottomBarVisibility: AdaptiveBottomBarVisibility.always,
       bottomNavigationBar: FrostedBottomMenu(
@@ -124,12 +123,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             label: l10n.homeCart,
             selected: _section == HomeSection.cart,
             onTap: () => setState(() => _section = HomeSection.cart),
-          ),
-          FrostedBottomMenuItem(
-            icon: Icons.receipt_long_outlined,
-            label: l10n.homeOrders,
-            selected: _section == HomeSection.orders,
-            onTap: () => setState(() => _section = HomeSection.orders),
           ),
           FrostedBottomMenuItem(
             icon: Icons.person_outline,

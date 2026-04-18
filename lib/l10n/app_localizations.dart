@@ -170,12 +170,6 @@ abstract class AppLocalizations {
   /// **'Cart'**
   String get homeCart;
 
-  /// No description provided for @homeOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders'**
-  String get homeOrders;
-
   /// No description provided for @homeCartWithCount.
   ///
   /// In en, this message translates to:
@@ -391,48 +385,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total: ¥ {amount}'**
   String cartTotal(Object amount);
-
-  /// No description provided for @checkout.
-  ///
-  /// In en, this message translates to:
-  /// **'Checkout'**
-  String get checkout;
-
-  /// No description provided for @orderCreateSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Order placed successfully and added to list'**
-  String get orderCreateSuccess;
-
-  /// No description provided for @orderCreateFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Order placement failed, please try again later'**
-  String get orderCreateFailed;
-
-  /// No description provided for @orderLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load orders: {error}'**
-  String orderLoadFailed(Object error);
-
-  /// No description provided for @orderEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No orders yet'**
-  String get orderEmpty;
-
-  /// No description provided for @orderTitleWithId.
-  ///
-  /// In en, this message translates to:
-  /// **'Order #{id}'**
-  String orderTitleWithId(int id);
-
-  /// No description provided for @orderSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'User {userId} · Qty {totalQuantity} · {dateText}'**
-  String orderSubtitle(int userId, int totalQuantity, Object dateText);
 
   /// No description provided for @webMessageFromHtml.
   ///

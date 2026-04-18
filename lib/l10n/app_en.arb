@@ -12,7 +12,6 @@
   "homeCategory": "Categories",
   "homeProducts": "Products",
   "homeCart": "Cart",
-  "homeOrders": "Orders",
   "homeCartWithCount": "Cart({count})",
   "@homeCartWithCount": {
     "placeholders": {
@@ -84,36 +83,6 @@
   "@cartTotal": {
     "placeholders": {
       "amount": {}
-    }
-  },
-  "checkout": "Checkout",
-  "orderCreateSuccess": "Order placed successfully and added to list",
-  "orderCreateFailed": "Order placement failed, please try again later",
-  "orderLoadFailed": "Failed to load orders: {error}",
-  "@orderLoadFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
-  "orderEmpty": "No orders yet",
-  "orderTitleWithId": "Order #{id}",
-  "@orderTitleWithId": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
-  "orderSubtitle": "User {userId} · Qty {totalQuantity} · {dateText}",
-  "@orderSubtitle": {
-    "placeholders": {
-      "userId": {
-        "type": "int"
-      },
-      "totalQuantity": {
-        "type": "int"
-      },
-      "dateText": {}
     }
   },
   "webMessageFromHtml": "Message from Web: {message}",

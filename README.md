@@ -31,3 +31,5 @@ dart run build_runner build --delete-conflicting-outputs
 dart run build_runner build
 监听
 dart run build_runner watch --delete-conflicting-outputs
+#过滤日志
+-tag:MESA -tag:IMESA

@@ -45,9 +45,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeCart => '购物车';
 
   @override
-  String get homeOrders => '订单';
-
-  @override
   String homeCartWithCount(int count) {
     return '购物车($count)';
   }
@@ -167,33 +164,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String cartTotal(Object amount) {
     return '合计: ¥ $amount';
-  }
-
-  @override
-  String get checkout => '去结算';
-
-  @override
-  String get orderCreateSuccess => '下单成功，已加入订单列表';
-
-  @override
-  String get orderCreateFailed => '下单失败，请稍后重试';
-
-  @override
-  String orderLoadFailed(Object error) {
-    return '订单加载失败: $error';
-  }
-
-  @override
-  String get orderEmpty => '暂无订单';
-
-  @override
-  String orderTitleWithId(int id) {
-    return '订单 #$id';
-  }
-
-  @override
-  String orderSubtitle(int userId, int totalQuantity, Object dateText) {
-    return '用户 $userId · 商品数量 $totalQuantity · $dateText';
   }
 
   @override

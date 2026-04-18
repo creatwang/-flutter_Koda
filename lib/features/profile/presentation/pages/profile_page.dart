@@ -5,6 +5,7 @@ import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_input_field_widget.dart';
@@ -22,6 +23,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   ProfileContentSection _currentSection = ProfileContentSection.settings;
+  ProfileOrderTab _currentOrderTab = ProfileOrderTab.my;
   final TextEditingController _fullNameController = TextEditingController(
     text: 'Molin Chen',
   );
@@ -179,6 +181,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id?.toInt();
+    final canViewCustomerOrders =
+        userInfoState.asData?.value.isAuthAccount == true;
     if (!_hasHydratedName && userName.trim().isNotEmpty) {
       _fullNameController.text = userName;
       _hasHydratedName = true;
@@ -239,6 +243,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       isLoadingUserInfo:
                           _currentSection == ProfileContentSection.settings &&
                           userInfoState.isLoading,
+                      canViewCustomerOrders: canViewCustomerOrders,
+                      currentOrderTab: _currentOrderTab,
+                      onOrderTabChanged: (nextTab) {
+                        if (_currentOrderTab == nextTab) return;
+                        setState(() => _currentOrderTab = nextTab);
+                      },
                     ),
                   ),
                 ),
@@ -481,6 +491,9 @@ class _ProfileContentArea extends StatelessWidget {
     required this.onSwitchAccount,
     required this.isSavingSettings,
     required this.isLoadingUserInfo,
+    required this.canViewCustomerOrders,
+    required this.currentOrderTab,
+    required this.onOrderTabChanged,
   });
 
   final ProfileContentSection currentSection;
@@ -497,10 +510,14 @@ class _ProfileContentArea extends StatelessWidget {
   final Future<void> Function() onSwitchAccount;
   final bool isSavingSettings;
   final bool isLoadingUserInfo;
+  final bool canViewCustomerOrders;
+  final ProfileOrderTab currentOrderTab;
+  final ValueChanged<ProfileOrderTab> onOrderTabChanged;
 
   @override
   Widget build(BuildContext context) {
     final isSettings = currentSection == ProfileContentSection.settings;
+    final isOrderCenter = currentSection == ProfileContentSection.orderCenter;
     final viewInsetsBottom = MediaQuery.of(context).viewInsets.bottom;
     final isPasswordGroupRequired = _hasAnyPasswordInput(
       oldPassword: oldPasswordController.text,
@@ -577,6 +594,14 @@ class _ProfileContentArea extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isOrderCenter && canViewCustomerOrders)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: ProfileOrderTabSwitcherWidget(
+                      currentTab: currentOrderTab,
+                      onTabChanged: onOrderTabChanged,
+                    ),
+                  ),
                 if (isSettings)
                   Material(
                     color: ProMaxTokens.cardBackground,
@@ -850,13 +875,20 @@ class _ProfileContentArea extends StatelessWidget {
               ),
             ] else
               Expanded(
-                child: currentSection == ProfileContentSection.favorites
-                    ? const ProfileFavoritesSectionWidget()
-                    : AppEmptyView(
-                        message: '$title is empty',
-                        width: 130,
-                        height: 130,
-                      ),
+                child: switch (currentSection) {
+                  ProfileContentSection.favorites =>
+                    const ProfileFavoritesSectionWidget(),
+                  ProfileContentSection.orderCenter =>
+                    ProfileOrderCenterSectionWidget(
+                      canViewCustomerOrders: canViewCustomerOrders,
+                      currentTab: currentOrderTab,
+                    ),
+                  _ => AppEmptyView(
+                      message: '$title is empty',
+                      width: 130,
+                      height: 130,
+                    ),
+                },
               ),
           ],
         ),

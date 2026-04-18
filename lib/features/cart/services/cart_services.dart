@@ -85,6 +85,28 @@ Future<ApiResult<void>> removeCartItemsService({required List<int> ids}) async {
   }
 }
 
+Future<ApiResult<void>> createOrderBySitesService({
+  required List<int> companyIds,
+  required List<Map<String, dynamic>> cart,
+}) async {
+  try {
+    await requestCreateOrderBySites(
+      companyIds: companyIds,
+      cart: cart,
+    );
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Create order failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
 Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
   try {
     await requestCartClear(companyId: companyId);

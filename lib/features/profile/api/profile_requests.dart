@@ -4,6 +4,8 @@ import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 class ProfileRequests {
   static const String userInfoPath = '/store/user/info';
+  static const String orderListPath = '/store/order/lists';
+  static const String customerOrderListPath = '/store/account/customerOrderList';
 }
 
 Future<Response<dynamic>> requestUserInfo({
@@ -35,5 +37,49 @@ Future<Response<dynamic>> requestUpdateUserInfo({
   return (client ?? protectedDioClient).post(
     ProfileRequests.userInfoPath,
     data: payload,
+  );
+}
+
+Future<Response<dynamic>> requestOrderList({
+  int page = 1,
+  int pageSize = 20,
+  String status = '',
+  String keyword = '',
+  int withBatchOrder = 1,
+  int allShop = 1,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).get(
+    ProfileRequests.orderListPath,
+    queryParameters: {
+      'status': status,
+      'page': page,
+      'page_size': pageSize,
+      'keyword': keyword,
+      'with_batch_order': withBatchOrder,
+      'all_shop': allShop,
+    },
+  );
+}
+
+Future<Response<dynamic>> requestCustomerOrderList({
+  int page = 1,
+  int pageSize = 20,
+  String status = '',
+  String keyword = '',
+  int withBatchOrder = 1,
+  int allShop = 1,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).get(
+    ProfileRequests.customerOrderListPath,
+    queryParameters: {
+      'status': status,
+      'page': page,
+      'page_size': pageSize,
+      'keyword': keyword,
+      'with_batch_order': withBatchOrder,
+      'all_shop': allShop,
+    },
   );
 }

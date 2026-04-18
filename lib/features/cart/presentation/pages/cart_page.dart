@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/order/controllers/order_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
-import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
 import '../../models/cart_list_dto.dart';
@@ -135,6 +133,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                         _onToggleSiteSelected(site, selected),
                     onToggleItemSelected: (itemId, selected) =>
                         _onToggleItemSelected(itemId, selected),
+                    onChangeQuantity: _onChangeQuantity,
                     onDeleteItem: _onDeleteItem,
                     onRemarkChanged: _onRemarkChanged,
                     isSiteBusy: _pendingSiteIds.contains(site.companyId),
@@ -215,31 +214,25 @@ class _CartPageState extends ConsumerState<CartPage> {
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(46), // 保持高度 46
+                    minimumSize: const Size.fromHeight(46),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center, // 居中显示
+                    mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. 先放文字或加载动画
                       _isCheckingOut
                           ? const SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white, // 确保加载圈在黑色背景上可见
+                                color: Colors.white,
                               ),
                             )
                           : const Text('Go To Checkout'),
-
-                      // 2. 如果不在加载中，则在文字后显示图标
                       if (!_isCheckingOut) ...[
-                        const SizedBox(width: 8), // 文字和图标的间距
-                        const Icon(
-                          Icons.arrow_forward,
-                          size: 14,
-                        ), // 注意：通常 Go To 建议用 arrow_forward
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, size: 14),
                       ],
                     ],
                   ),
@@ -309,47 +302,46 @@ class _CartPageState extends ConsumerState<CartPage> {
 
   Future<void> _onClearAll() async {
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await _showClearConfirmDialog(
-      title: '确认清空购物车？',
-      message: '此操作会清空当前已加载站点的全部购物车内容。',
+    final current = ref.read(cartControllerProvider).asData?.value ??
+        const <CartListDto>[];
+    final selectedIds = current
+        .expand((group) => group.items)
+        .expand((site) => site.cart.items)
+        .expand((space) => space.list)
+        .where((item) => item.isSelected)
+        .map((item) => item.id)
+        .toSet()
+        .toList(growable: false);
+    final hasSelectedItems = selectedIds.isNotEmpty;
+
+    final confirmed = await _showProMaxConfirmDialog(
+      title: hasSelectedItems ? '确认删除选中商品？' : '确认清空购物车？',
+      message: hasSelectedItems
+          ? '当前已选中 ${selectedIds.length} 项商品，确认删除这些选中项吗？'
+          : '此操作会清空当前已加载站点的全部购物车内容。',
+      confirmLabel: hasSelectedItems ? '删除选中' : '确认清空',
+      icon: hasSelectedItems
+          ? Icons.delete_sweep_rounded
+          : Icons.cleaning_services_rounded,
+      accentColor: hasSelectedItems
+          ? const Color(0xFFFF6E76)
+          : const Color(0xFFFFB86B),
     );
-    if (!mounted || !confirmed) return;
+    if (!mounted || confirmed != true) return;
     setState(() => _isClearingAll = true);
-    final ok = await ref
-        .read(cartControllerProvider.notifier)
-        .clearAllSitesCart();
+    final ok = hasSelectedItems
+        ? await ref.read(cartControllerProvider.notifier).removeSelectedItems()
+        : await ref.read(cartControllerProvider.notifier).clearAllSitesCart();
     if (!mounted) return;
     setState(() => _isClearingAll = false);
     messenger.showSnackBar(
-      SnackBar(content: Text(ok ? '购物车已清空' : '清空失败，请稍后再试')),
-    );
-  }
-
-  Future<void> _onCheckout() async {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _isCheckingOut = true);
-    final payload = ref
-        .read(cartControllerProvider.notifier)
-        .buildCreateBySitesPayload();
-    if (payload.cart.isEmpty) {
-      if (mounted) {
-        setState(() => _isCheckingOut = false);
-      }
-      return;
-    }
-    final ok = await ref
-        .read(ordersProvider.notifier)
-        .createOrderBySites(companyIds: payload.companyIds, cart: payload.cart);
-    if (!mounted) return;
-    setState(() => _isCheckingOut = false);
-    if (ok) {
-      await ref.read(cartControllerProvider.notifier).refresh();
-      if (!mounted) return;
-      await _showOrderSuccessDialog();
-      return;
-    }
-    messenger.showSnackBar(
-      SnackBar(content: Text(context.l10n.orderCreateFailed)),
+      SnackBar(
+        content: Text(
+          ok
+              ? (hasSelectedItems ? '已删除选中商品' : '购物车已清空')
+              : (hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试'),
+        ),
+      ),
     );
   }
 
@@ -385,6 +377,19 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
+  Future<bool> _onChangeQuantity(CartProductDto item, int nextProductNum) {
+    if (nextProductNum < 1) return Future<bool>.value(false);
+    return _runItemAction(
+      item.id,
+      () => ref
+          .read(cartControllerProvider.notifier)
+          .changeProductQuantity(
+            cartId: item.id,
+            productNum: nextProductNum,
+          ),
+    );
+  }
+
   Future<bool> _onDeleteItem(CartProductDto item) async {
     if (_pendingItemIds.contains(item.id)) return false;
     final confirmed = await _showDeleteItemConfirmDialog(item);
@@ -392,6 +397,32 @@ class _CartPageState extends ConsumerState<CartPage> {
     return _runItemAction(
       item.id,
       () => ref.read(cartControllerProvider.notifier).removeCartItem(item.id),
+    );
+  }
+
+  Future<void> _onCheckout() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isCheckingOut = true);
+    final payload = ref
+        .read(cartControllerProvider.notifier)
+        .buildCreateBySitesPayload();
+    if (payload.cart.isEmpty) {
+      if (mounted) setState(() => _isCheckingOut = false);
+      return;
+    }
+    final ok = await ref
+        .read(cartControllerProvider.notifier)
+        .createOrderBySites(companyIds: payload.companyIds, cart: payload.cart);
+    if (!mounted) return;
+    setState(() => _isCheckingOut = false);
+    if (!ok) {
+      messenger.showSnackBar(const SnackBar(content: Text('Checkout failed')));
+      return;
+    }
+    await ref.read(cartControllerProvider.notifier).refresh();
+    if (!mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Order created successfully')),
     );
   }
 
@@ -415,144 +446,66 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
-  Future<bool> _showClearConfirmDialog({
+  Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
+    final result = await _showProMaxConfirmDialog(
+      title: '确认删除该商品？',
+      message: item.name,
+      confirmLabel: '删除',
+      icon: Icons.delete_forever_rounded,
+      accentColor: const Color(0xFFFF6E76),
+    );
+    return result == true;
+  }
+
+  Future<bool?> _showProMaxConfirmDialog({
     required String title,
     required String message,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: ProMaxGlassCardWidget(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: ProMaxTokens.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  style: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: const Text('取消'),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0x55FF6E76),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('确认清空'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    return result == true;
-  }
-
-  Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: ProMaxGlassCardWidget(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '确认删除该商品？',
-                  style: TextStyle(
-                    color: ProMaxTokens.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: const Text('取消'),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0x55FF6E76),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('删除'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    return result == true;
-  }
-
-  Future<void> _showOrderSuccessDialog() async {
-    await showDialog<void>(
+    required String confirmLabel,
+    required IconData icon,
+    required Color accentColor,
+  }) {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
+      builder: (dialogContext) {
+        return TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          tween: Tween<double>(begin: 0.92, end: 1),
+          builder: (context, value, child) {
+            final opacity = ((value - 0.92) / 0.08).clamp(0.0, 1.0);
+            return Opacity(
+              opacity: opacity,
+              child: Transform.scale(scale: value, child: child),
+            );
+          },
+          child: Dialog(
           backgroundColor: Colors.transparent,
-          child: ProMaxGlassCardWidget(
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1C2431).withValues(alpha: 0.96),
+                  const Color(0xFF131A24).withValues(alpha: 0.96),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.32),
+                  blurRadius: 28,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,58 +513,86 @@ class _CartPageState extends ConsumerState<CartPage> {
                 Row(
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
-                        color: const Color(0x3324F5A6),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xAA66FFD0)),
+                        color: accentColor.withValues(alpha: 0.20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.35),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        color: Color(0xFF9AF7D3),
-                      ),
+                      child: Icon(icon, size: 16, color: accentColor),
                     ),
-                    const SizedBox(width: 10),
-                    const Expanded(
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        '下单成功',
-                        style: TextStyle(
+                        title,
+                        style: const TextStyle(
                           color: ProMaxTokens.textPrimary,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Text(
-                  '订单创建完成，系统将按照站点分别处理你的下单项。',
+                  message,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: ProMaxTokens.textSecondary.withValues(alpha: 0.95),
-                    height: 1.4,
+                    height: 1.45,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ProMaxTokens.buttonPrimary,
-                      foregroundColor: ProMaxTokens.buttonOnPrimary,
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(38),
+                          foregroundColor: Colors.white70,
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.24),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('取消'),
+                      ),
                     ),
-                    child: const Text('知道了'),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(38),
+                          backgroundColor: accentColor.withValues(alpha: 0.86),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(confirmLabel),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
           ),
         );
       },
     );
   }
+
 }
 
 class _CartSiteSection extends StatelessWidget {
@@ -621,6 +602,7 @@ class _CartSiteSection extends StatelessWidget {
     required this.onToggleSpaceExpanded,
     required this.onToggleSiteSelected,
     required this.onToggleItemSelected,
+    required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
     required this.isSiteBusy,
@@ -632,6 +614,8 @@ class _CartSiteSection extends StatelessWidget {
   final void Function(CartSpaceDto space) onToggleSpaceExpanded;
   final Future<bool> Function(bool selected) onToggleSiteSelected;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
+  final Future<bool> Function(CartProductDto item, int nextProductNum)
+      onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final bool isSiteBusy;
@@ -729,6 +713,7 @@ class _CartSiteSection extends StatelessWidget {
             isExpanded: isSpaceExpanded(space),
             onToggleExpanded: () => onToggleSpaceExpanded(space),
             onToggleItemSelected: onToggleItemSelected,
+            onChangeQuantity: onChangeQuantity,
             onDeleteItem: onDeleteItem,
             onRemarkChanged: onRemarkChanged,
             isItemBusy: isItemBusy,
@@ -745,6 +730,7 @@ class _CartSpaceSection extends StatelessWidget {
     required this.isExpanded,
     required this.onToggleExpanded,
     required this.onToggleItemSelected,
+    required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
     required this.isItemBusy,
@@ -754,6 +740,8 @@ class _CartSpaceSection extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpanded;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
+  final Future<bool> Function(CartProductDto item, int nextProductNum)
+      onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final bool Function(int itemId) isItemBusy;
@@ -812,6 +800,7 @@ class _CartSpaceSection extends StatelessWidget {
                         key: ValueKey<int>(item.id),
                         item: item,
                         onToggleItemSelected: onToggleItemSelected,
+                        onChangeQuantity: onChangeQuantity,
                         onDeleteItem: onDeleteItem,
                         onRemarkChanged: onRemarkChanged,
                         isBusy: isItemBusy(item.id),
@@ -833,6 +822,7 @@ class _CartProductTile extends StatefulWidget {
     super.key,
     required this.item,
     required this.onToggleItemSelected,
+    required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
     required this.isBusy,
@@ -840,6 +830,8 @@ class _CartProductTile extends StatefulWidget {
 
   final CartProductDto item;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
+  final Future<bool> Function(CartProductDto item, int nextProductNum)
+      onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final bool isBusy;
@@ -851,6 +843,8 @@ class _CartProductTile extends StatefulWidget {
 class _CartProductTileState extends State<_CartProductTile> {
   late final TextEditingController _remarkController;
   FocusNode? _remarkFocusNode;
+  Timer? _quantityPressTimer;
+  bool _isAdjustingQuantity = false;
 
   FocusNode get _safeRemarkFocusNode {
     return _remarkFocusNode ??= FocusNode();
@@ -873,9 +867,35 @@ class _CartProductTileState extends State<_CartProductTile> {
 
   @override
   void dispose() {
+    _quantityPressTimer?.cancel();
     _remarkController.dispose();
     _remarkFocusNode?.dispose();
     super.dispose();
+  }
+
+  Future<void> _changeQuantityByDelta(int delta) async {
+    if (_isAdjustingQuantity || widget.isBusy) return;
+    final next = widget.item.productNum + delta;
+    if (next < 1) return;
+    _isAdjustingQuantity = true;
+    try {
+      await widget.onChangeQuantity(widget.item, next);
+    } finally {
+      _isAdjustingQuantity = false;
+    }
+  }
+
+  void _startContinuousAdjust(int delta) {
+    if (widget.isBusy) return;
+    _stopContinuousAdjust();
+    _quantityPressTimer = Timer.periodic(const Duration(milliseconds: 220), (_) {
+      unawaited(_changeQuantityByDelta(delta));
+    });
+  }
+
+  void _stopContinuousAdjust() {
+    _quantityPressTimer?.cancel();
+    _quantityPressTimer = null;
   }
 
   @override
@@ -986,6 +1006,54 @@ class _CartProductTileState extends State<_CartProductTile> {
                   ),
                   const SizedBox(height: 8),
                   Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.16),
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 5,
+                        ),
+                        child: Row(
+                          children: [
+                            _QuantityControlButton(
+                              icon: Icons.remove,
+                              enabled:
+                                  !widget.isBusy && widget.item.productNum > 1,
+                              onTap: () => _changeQuantityByDelta(-1),
+                              onLongPressStart: () =>
+                                  _startContinuousAdjust(-1),
+                              onLongPressEnd: _stopContinuousAdjust,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${widget.item.productNum} ${widget.item.unit}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            _QuantityControlButton(
+                              icon: Icons.add,
+                              enabled: !widget.isBusy,
+                              onTap: () => _changeQuantityByDelta(1),
+                              onLongPressStart: () => _startContinuousAdjust(1),
+                              onLongPressEnd: _stopContinuousAdjust,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
@@ -1082,6 +1150,58 @@ class _CartProductTileState extends State<_CartProductTile> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuantityControlButton extends StatelessWidget {
+  const _QuantityControlButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+    this.onLongPressStart,
+    this.onLongPressEnd,
+  });
+
+  final IconData icon;
+  final bool enabled;
+  final Future<void> Function() onTap;
+  final VoidCallback? onLongPressStart;
+  final VoidCallback? onLongPressEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? () => unawaited(onTap()) : null,
+      onLongPressStart: enabled && onLongPressStart != null
+          ? (_) => onLongPressStart!()
+          : null,
+      onLongPressEnd: enabled && onLongPressEnd != null
+          ? (_) => onLongPressEnd!()
+          : null,
+      onLongPressCancel:
+          enabled && onLongPressEnd != null ? onLongPressEnd : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: enabled
+              ? Colors.white.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: enabled
+                ? Colors.white.withValues(alpha: 0.28)
+                : Colors.white.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 14,
+          color: enabled ? Colors.white : Colors.white30,
         ),
       ),
     );

@@ -6,6 +6,7 @@ class CartRequests {
   static const String listBySitePath = '/store/cart/listsBySite';
   static const String selectedPath = '/store/cart/selected';
   static const String changePath = '/store/cart/change';
+  static const String createBySitesPath = '/store/order/createBySites';
   static const String deletePath = '/store/cart/del';
   static const String clearPath = '/store/cart/clear';
 }
@@ -46,6 +47,20 @@ Future<Response<dynamic>> requestCartDelete({
   return (client ?? protectedDioClient).post(
     CartRequests.deletePath,
     data: <String, dynamic>{'ids': ids},
+  );
+}
+
+Future<Response<dynamic>> requestCreateOrderBySites({
+  required List<int> companyIds,
+  required List<Map<String, dynamic>> cart,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.createBySitesPath,
+    data: <String, dynamic>{
+      'company_ids': companyIds,
+      'cart': cart,
+    },
   );
 }
 

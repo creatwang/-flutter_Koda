@@ -12,7 +12,6 @@
   "homeCategory": "产品分类",
   "homeProducts": "商品",
   "homeCart": "购物车",
-  "homeOrders": "订单",
   "homeCartWithCount": "购物车({count})",
   "@homeCartWithCount": {
     "placeholders": {
@@ -84,36 +83,6 @@
   "@cartTotal": {
     "placeholders": {
       "amount": {}
-    }
-  },
-  "checkout": "去结算",
-  "orderCreateSuccess": "下单成功，已加入订单列表",
-  "orderCreateFailed": "下单失败，请稍后重试",
-  "orderLoadFailed": "订单加载失败: {error}",
-  "@orderLoadFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
-  "orderEmpty": "暂无订单",
-  "orderTitleWithId": "订单 #{id}",
-  "@orderTitleWithId": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
-  "orderSubtitle": "用户 {userId} · 商品数量 {totalQuantity} · {dateText}",
-  "@orderSubtitle": {
-    "placeholders": {
-      "userId": {
-        "type": "int"
-      },
-      "totalQuantity": {
-        "type": "int"
-      },
-      "dateText": {}
     }
   },
   "webMessageFromHtml": "来自 Web 的消息: {message}",

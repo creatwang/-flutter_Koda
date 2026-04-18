@@ -79,7 +79,7 @@ class UserInfoBase {
     userMainId = json['user_main_id'];
     shopId = json['shop_id'];
     token = json['token'];
-    isAuthAccount = json['is_auth_account'];
+    isAuthAccount = _asBool(json['is_auth_account']);
   }
 
   Map<String, dynamic> toJson() {
@@ -111,4 +111,14 @@ class UserInfoBase {
     data['is_auth_account'] = isAuthAccount;
     return data;
   }
+}
+
+bool? _asBool(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final normalized = '$value'.trim().toLowerCase();
+  if (normalized == 'true' || normalized == '1') return true;
+  if (normalized == 'false' || normalized == '0') return false;
+  return null;
 }

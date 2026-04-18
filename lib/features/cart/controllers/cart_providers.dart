@@ -138,19 +138,32 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
 
   Future<bool> removeCartItem(int cartId) async {
     if (!_isAuthenticated()) return false;
-    final previous = state.asData?.value ?? const <CartListDto>[];
-    final next = _removeProductFromState(previous, cartId);
-    state = AsyncData(next);
     final result = await removeCartItemsService(ids: <int>[cartId]);
     return result.when(
-      success: (_) {
-        unawaited(saveCartListToLocal(items: next));
+      success: (_) async {
+        await refresh();
         return true;
       },
-      failure: (_) {
-        state = AsyncData(previous);
-        return false;
+      failure: (_) => false,
+    );
+  }
+
+  Future<bool> removeSelectedItems() async {
+    if (!_isAuthenticated()) return false;
+    final current = state.asData?.value ?? const <CartListDto>[];
+    final selectedIds = _allProducts(current)
+        .where((item) => item.isSelected)
+        .map((item) => item.id)
+        .toSet()
+        .toList(growable: false);
+    if (selectedIds.isEmpty) return false;
+    final result = await removeCartItemsService(ids: selectedIds);
+    return result.when(
+      success: (_) async {
+        await refresh();
+        return true;
       },
+      failure: (_) => false,
     );
   }
 
@@ -169,21 +182,18 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     return true;
   }
 
-  Future<bool> clearSiteCart(int companyId) async {
+  Future<bool> clearSiteCart(
+    int companyId, {
+    bool shouldRefresh = true,
+  }) async {
     if (!_isAuthenticated()) return false;
-    final previous = state.asData?.value ?? const <CartListDto>[];
-    final next = _clearSiteInState(previous, companyId);
-    state = AsyncData(next);
     final result = await clearCartBySiteService(companyId: companyId);
     return result.when(
-      success: (_) {
-        unawaited(saveCartListToLocal(items: next));
+      success: (_) async {
+        if (shouldRefresh) await refresh();
         return true;
       },
-      failure: (_) {
-        state = AsyncData(previous);
-        return false;
-      },
+      failure: (_) => false,
     );
   }
 
@@ -197,9 +207,10 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     if (siteIds.isEmpty) return false;
     var allSuccess = true;
     for (final siteId in siteIds) {
-      final ok = await clearSiteCart(siteId);
+      final ok = await clearSiteCart(siteId, shouldRefresh: false);
       if (!ok) allSuccess = false;
     }
+    await refresh();
     return allSuccess;
   }
 
@@ -223,6 +234,22 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
         .map((item) => <String, dynamic>{'id': item.id, 'remark': item.remark})
         .toList(growable: false);
     return CartCreateOrderBySitesPayload(companyIds: companyIds, cart: cart);
+  }
+
+  Future<bool> createOrderBySites({
+    required List<int> companyIds,
+    required List<Map<String, dynamic>> cart,
+  }) async {
+    if (!_isAuthenticated()) return false;
+    if (companyIds.isEmpty || cart.isEmpty) return false;
+    final result = await createOrderBySitesService(
+      companyIds: companyIds,
+      cart: cart,
+    );
+    return result.when(
+      success: (_) => true,
+      failure: (_) => false,
+    );
   }
 
   Future<void> _onSessionChanged(
@@ -340,73 +367,6 @@ List<CartListDto> _mapProducts(
         ),
       )
       .toList(growable: false);
-}
-
-List<CartListDto> _removeProductFromState(
-  List<CartListDto> source,
-  int cartId,
-) {
-  return source
-      .map(
-        (group) => CartListDto(
-          totalNum: group.totalNum,
-          totalAmount: group.totalAmount,
-          id: group.id,
-          name: group.name,
-          items: group.items
-              .map(
-                (site) => site.copyWith(
-                  cart: site.cart.copyWith(
-                    items: site.cart.items
-                        .map(
-                          (space) => space.copyWith(
-                            list: space.list
-                                .where((item) => item.id != cartId)
-                                .toList(growable: false),
-                          ),
-                        )
-                        .where((space) => space.list.isNotEmpty)
-                        .toList(growable: false),
-                  ),
-                ),
-              )
-              .where((site) => site.cart.items.isNotEmpty)
-              .toList(growable: false),
-        ),
-      )
-      .where((group) => group.items.isNotEmpty)
-      .toList(growable: false);
-}
-
-List<CartListDto> _clearSiteInState(List<CartListDto> source, int companyId) {
-  return source
-      .map(
-        (group) => group.copyWith(
-          items: group.items
-              .where((site) => site.companyId != companyId)
-              .toList(growable: false),
-        ),
-      )
-      .where((group) => group.items.isNotEmpty)
-      .toList(growable: false);
-}
-
-extension on CartListDto {
-  CartListDto copyWith({
-    int? totalNum,
-    double? totalAmount,
-    int? id,
-    String? name,
-    List<CartSiteDto>? items,
-  }) {
-    return CartListDto(
-      totalNum: totalNum ?? this.totalNum,
-      totalAmount: totalAmount ?? this.totalAmount,
-      id: id ?? this.id,
-      name: name ?? this.name,
-      items: items ?? this.items,
-    );
-  }
 }
 
 class CartCreateOrderBySitesPayload {

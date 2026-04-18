@@ -45,9 +45,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCart => 'Cart';
 
   @override
-  String get homeOrders => 'Orders';
-
-  @override
   String homeCartWithCount(int count) {
     return 'Cart($count)';
   }
@@ -168,35 +165,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cartTotal(Object amount) {
     return 'Total: ¥ $amount';
-  }
-
-  @override
-  String get checkout => 'Checkout';
-
-  @override
-  String get orderCreateSuccess =>
-      'Order placed successfully and added to list';
-
-  @override
-  String get orderCreateFailed =>
-      'Order placement failed, please try again later';
-
-  @override
-  String orderLoadFailed(Object error) {
-    return 'Failed to load orders: $error';
-  }
-
-  @override
-  String get orderEmpty => 'No orders yet';
-
-  @override
-  String orderTitleWithId(int id) {
-    return 'Order #$id';
-  }
-
-  @override
-  String orderSubtitle(int userId, int totalQuantity, Object dateText) {
-    return 'User $userId · Qty $totalQuantity · $dateText';
   }
 
   @override

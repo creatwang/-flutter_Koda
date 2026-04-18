@@ -146,6 +146,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonCancel => '取消';
 
   @override
+  String get commonConfirm => '确定';
+
+  @override
+  String get cartSpaceDialogTitle => '请输入 Space';
+
+  @override
+  String get cartSpaceDialogHint => '必填';
+
+  @override
+  String get cartAddRequireLogin => '请先登录后再加购';
+
+  @override
+  String get cartConfirmAdd => '确认加购';
+
+  @override
+  String get cartConfirmChangeSpec => '确认修改规格';
+
+  @override
+  String get cartNoMatchedSku => '未找到在售 SKU';
+
+  @override
+  String get cartQuantityLabel => '数量';
+
+  @override
+  String get cartChangeSpec => '改规格';
+
+  @override
+  String get cartSkuDrawerClose => '关闭';
+
+  @override
+  String get cartSkuDrawerProductLine => '产品';
+
+  @override
   String get addToCart => '加入购物车';
 
   @override
@@ -163,7 +196,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cartTotal(Object amount) {
-    return '合计: ¥ $amount';
+    return '合计: \$ $amount';
   }
 
   @override

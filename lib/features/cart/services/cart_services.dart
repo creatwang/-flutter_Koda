@@ -122,3 +122,59 @@ Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
     return ApiFailure(AppException(e.toString()));
   }
 }
+
+Future<ApiResult<void>> createCartItemService({
+  required int productId,
+  required String subIndex,
+  required int productNum,
+  required String space,
+  required String subName,
+}) async {
+  try {
+    await requestCartCreate(
+      productId: productId,
+      subIndex: subIndex,
+      productNum: productNum,
+      space: space,
+      subName: subName,
+    );
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Add to cart failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+Future<ApiResult<void>> changeCartItemSpecService({
+  required int id,
+  required int productId,
+  required String subIndex,
+  required String space,
+  required String subName,
+}) async {
+  try {
+    await requestCartChangeSpec(
+      id: id,
+      productId: productId,
+      subIndex: subIndex,
+      space: space,
+      subName: subName,
+    );
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Change cart spec failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}

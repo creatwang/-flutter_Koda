@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
+import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
@@ -136,6 +139,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     onChangeQuantity: _onChangeQuantity,
                     onDeleteItem: _onDeleteItem,
                     onRemarkChanged: _onRemarkChanged,
+                    onChangeSpec: _onChangeSpec,
                     isSiteBusy: _pendingSiteIds.contains(site.companyId),
                     isItemBusy: (itemId) =>
                         _pendingItemIds.contains(itemId) ||
@@ -197,7 +201,7 @@ class _CartPageState extends ConsumerState<CartPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '¥${_amountFormatter.format(selectedAmount)}',
+                '\$${_amountFormatter.format(selectedAmount)}',
                 style: const TextStyle(
                   color: ProMaxTokens.textPrimary,
                   fontSize: 36,
@@ -398,6 +402,41 @@ class _CartPageState extends ConsumerState<CartPage> {
       item.id,
       () => ref.read(cartControllerProvider.notifier).removeCartItem(item.id),
     );
+  }
+
+  Future<void> _onChangeSpec(CartProductDto item) async {
+    if (_pendingItemIds.contains(item.id)) return;
+    try {
+      final detail = await ref.read(
+        productDetailProvider(item.productId).future,
+      );
+      if (!mounted) return;
+      await presentProductSkuCartSideSheet(
+        context: context,
+        detail: detail,
+        showMainImage: true,
+        cartLine: item,
+        mode: ProductSkuCartSheetMode.changeSpec,
+        onSubmit: (payload) async {
+          final space = await resolveSpaceForCartAdd(context);
+          if (space == null) return false;
+          return ref.read(cartControllerProvider.notifier).changeCartItemSpec(
+                cartItemId: item.id,
+                productId: payload.apiProductId,
+                subIndex: payload.subIndex,
+                space: space,
+                subName: payload.subName,
+              );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.productDetailLoadFailed('$e')),
+        ),
+      );
+    }
   }
 
   Future<void> _onCheckout() async {
@@ -605,6 +644,7 @@ class _CartSiteSection extends StatelessWidget {
     required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
+    required this.onChangeSpec,
     required this.isSiteBusy,
     required this.isItemBusy,
   });
@@ -618,6 +658,7 @@ class _CartSiteSection extends StatelessWidget {
       onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
+  final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool isSiteBusy;
   final bool Function(int itemId) isItemBusy;
 
@@ -716,6 +757,7 @@ class _CartSiteSection extends StatelessWidget {
             onChangeQuantity: onChangeQuantity,
             onDeleteItem: onDeleteItem,
             onRemarkChanged: onRemarkChanged,
+            onChangeSpec: onChangeSpec,
             isItemBusy: isItemBusy,
           ),
         ),
@@ -733,6 +775,7 @@ class _CartSpaceSection extends StatelessWidget {
     required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
+    required this.onChangeSpec,
     required this.isItemBusy,
   });
 
@@ -744,6 +787,7 @@ class _CartSpaceSection extends StatelessWidget {
       onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
+  final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool Function(int itemId) isItemBusy;
 
   @override
@@ -803,6 +847,7 @@ class _CartSpaceSection extends StatelessWidget {
                         onChangeQuantity: onChangeQuantity,
                         onDeleteItem: onDeleteItem,
                         onRemarkChanged: onRemarkChanged,
+                        onChangeSpec: onChangeSpec,
                         isBusy: isItemBusy(item.id),
                       ),
                     )
@@ -825,6 +870,7 @@ class _CartProductTile extends StatefulWidget {
     required this.onChangeQuantity,
     required this.onDeleteItem,
     required this.onRemarkChanged,
+    required this.onChangeSpec,
     required this.isBusy,
   });
 
@@ -834,6 +880,7 @@ class _CartProductTile extends StatefulWidget {
       onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
+  final Future<void> Function(CartProductDto item) onChangeSpec;
   final bool isBusy;
 
   @override
@@ -995,7 +1042,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '¥${widget.item.price.toStringAsFixed(0)}',
+                        '\$${widget.item.price.toStringAsFixed(0)}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -1106,6 +1153,27 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 ),
                               ),
                             ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: widget.isBusy
+                            ? null
+                            : () => widget.onChangeSpec(widget.item),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          minimumSize: const Size(0, 22),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          foregroundColor: Colors.white70,
+                          disabledForegroundColor: Colors.white30,
+                        ),
+                        icon: const Icon(Icons.tune, size: 14),
+                        label: Text(
+                          context.l10n.cartChangeSpec,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ),

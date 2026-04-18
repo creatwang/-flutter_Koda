@@ -6,7 +6,7 @@ class CartItem {
   final ProductItem productItem;
   final int quantity;
 
-  CartItem c  opyWith({ProductItem? productItem, int? quantity}) {
+  CartItem copyWith({ProductItem? productItem, int? quantity}) {
     return CartItem(
       productItem: productItem ?? this.productItem,
       quantity: quantity ?? this.quantity,

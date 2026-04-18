@@ -6,6 +6,8 @@ class CartRequests {
   static const String listBySitePath = '/store/cart/listsBySite';
   static const String selectedPath = '/store/cart/selected';
   static const String changePath = '/store/cart/change';
+  static const String createPath = '/store/cart/create';
+  static const String changeSpecPath = '/store/cart/changeSpec';
   static const String createBySitesPath = '/store/order/createBySites';
   static const String deletePath = '/store/cart/del';
   static const String clearPath = '/store/cart/clear';
@@ -71,5 +73,45 @@ Future<Response<dynamic>> requestCartClear({
   return (client ?? protectedDioClient).post(
     CartRequests.clearPath,
     data: <String, dynamic>{'company_id': companyId},
+  );
+}
+
+Future<Response<dynamic>> requestCartCreate({
+  required int productId,
+  required String subIndex,
+  required int productNum,
+  required String space,
+  required String subName,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.createPath,
+    data: <String, dynamic>{
+      'product_id': productId,
+      'sub_index': subIndex,
+      'product_num': productNum,
+      'space': space,
+      'sub_name': subName,
+    },
+  );
+}
+
+Future<Response<dynamic>> requestCartChangeSpec({
+  required int id,
+  required int productId,
+  required String subIndex,
+  required String space,
+  required String subName,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.changeSpecPath,
+    data: <String, dynamic>{
+      'id': id,
+      'product_id': productId,
+      'sub_index': subIndex,
+      'space': space,
+      'sub_name': subName,
+    },
   );
 }

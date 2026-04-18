@@ -7,7 +7,6 @@ import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_services.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
 
 final cartControllerProvider =
     AsyncNotifierProvider<CartController, List<CartListDto>>(
@@ -64,12 +63,6 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     throw (result as ApiFailure<List<CartListDto>>).exception;
   }
 
-  /// 产品列表“加购成功后”触发刷新购物车。
-  void addProduct(ProductItem productItem) {
-    if (!_isAuthenticated()) return;
-    unawaited(refresh());
-  }
-
   Future<void> refresh() async {
     if (!_isAuthenticated()) {
       state = const AsyncData(<CartListDto>[]);
@@ -82,6 +75,55 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
         unawaited(saveCartListToLocal(items: data));
       },
       failure: (_) {},
+    );
+  }
+
+  Future<bool> createCartItem({
+    required int productId,
+    required String subIndex,
+    required int productNum,
+    required String space,
+    required String subName,
+  }) async {
+    if (!_isAuthenticated()) return false;
+    if (productNum < 1) return false;
+    final result = await createCartItemService(
+      productId: productId,
+      subIndex: subIndex,
+      productNum: productNum,
+      space: space,
+      subName: subName,
+    );
+    return result.when(
+      success: (_) {
+        unawaited(refresh());
+        return true;
+      },
+      failure: (_) => false,
+    );
+  }
+
+  Future<bool> changeCartItemSpec({
+    required int cartItemId,
+    required int productId,
+    required String subIndex,
+    required String space,
+    required String subName,
+  }) async {
+    if (!_isAuthenticated()) return false;
+    final result = await changeCartItemSpecService(
+      id: cartItemId,
+      productId: productId,
+      subIndex: subIndex,
+      space: space,
+      subName: subName,
+    );
+    return result.when(
+      success: (_) {
+        unawaited(refresh());
+        return true;
+      },
+      failure: (_) => false,
     );
   }
 

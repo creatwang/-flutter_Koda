@@ -133,7 +133,7 @@ class ProductCard extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        '¥${productItem.price.toStringAsFixed(0)}',
+                        '\$${productItem.price.toStringAsFixed(0)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(

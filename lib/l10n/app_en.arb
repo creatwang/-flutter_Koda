@@ -65,6 +65,17 @@
   },
   "productScanTitle": "Scan QR Code",
   "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
+  "cartSpaceDialogTitle": "Enter Space",
+  "cartSpaceDialogHint": "Required",
+  "cartAddRequireLogin": "Please sign in before adding to cart",
+  "cartConfirmAdd": "Add to cart",
+  "cartConfirmChangeSpec": "Save specification",
+  "cartNoMatchedSku": "No on-sale SKU matched",
+  "cartQuantityLabel": "Quantity",
+  "cartChangeSpec": "Change spec",
+  "cartSkuDrawerClose": "Close",
+  "cartSkuDrawerProductLine": "Product",
   "addToCart": "Add to cart",
   "productAddedToCart": "Added to cart: {title}",
   "@productAddedToCart": {
@@ -79,7 +90,7 @@
     }
   },
   "cartEmpty": "Your cart is empty",
-  "cartTotal": "Total: ¥ {amount}",
+  "cartTotal": "Total: $ {amount}",
   "@cartTotal": {
     "placeholders": {
       "amount": {}

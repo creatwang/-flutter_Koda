@@ -65,6 +65,17 @@
   },
   "productScanTitle": "扫描二维码",
   "commonCancel": "取消",
+  "commonConfirm": "确定",
+  "cartSpaceDialogTitle": "请输入 Space",
+  "cartSpaceDialogHint": "必填",
+  "cartAddRequireLogin": "请先登录后再加购",
+  "cartConfirmAdd": "确认加购",
+  "cartConfirmChangeSpec": "确认修改规格",
+  "cartNoMatchedSku": "未找到在售 SKU",
+  "cartQuantityLabel": "数量",
+  "cartChangeSpec": "改规格",
+  "cartSkuDrawerClose": "关闭",
+  "cartSkuDrawerProductLine": "产品",
   "addToCart": "加入购物车",
   "productAddedToCart": "已加入购物车: {title}",
   "@productAddedToCart": {
@@ -79,7 +90,7 @@
     }
   },
   "cartEmpty": "购物车为空",
-  "cartTotal": "合计: ¥ {amount}",
+  "cartTotal": "合计: $ {amount}",
   "@cartTotal": {
     "placeholders": {
       "amount": {}

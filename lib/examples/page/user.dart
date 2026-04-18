@@ -6,18 +6,18 @@ class UserPage extends StatelessWidget {
   static const _products = <_ProductItem>[
     _ProductItem(
       title: 'Camaleonda Sofa',
-      price: '¥42,800',
+      price: r'$42,800',
       tag: 'NEW COLLECTION',
       color: Color(0xFF1F6B60),
     ),
     _ProductItem(
       title: 'CH24 Wishbone Chair',
-      price: '¥8,200',
+      price: r'$8,200',
       color: Color(0xFF9B6A3A),
     ),
     _ProductItem(
       title: 'Brutalist Slate Coffee Table',
-      price: '¥15,600',
+      price: r'$15,600',
       color: Color(0xFF5E5A55),
     ),
   ];

@@ -15,7 +15,9 @@ import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.da
 import 'package:groe_app_pad/features/product/presentation/widgets/draggable_scan_fab.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_filter_panel.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_grid_section.dart';
+import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
@@ -272,12 +274,54 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     setState(() => _collectSubmitting.remove(productId));
   }
 
-  void _onAddToCartTapped(ProductItem product) {
-    ref.read(cartControllerProvider.notifier).addProduct(product);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.productAddedToCart(product.name))),
-    );
+  Future<void> _onAddToCartTapped(ProductItem product) async {
+    final session = ref.read(sessionControllerProvider).asData?.value;
+    if (session?.isAuthenticated != true) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.cartAddRequireLogin)),
+      );
+      context.go(AppRoutes.login);
+      return;
+    }
+    try {
+      final detail = await ref.read(
+        productDetailProvider(product.id).future,
+      );
+      if (!mounted) return;
+      final added = await presentProductSkuCartSideSheet(
+        context: context,
+        detail: detail,
+        showMainImage: true,
+        mode: ProductSkuCartSheetMode.addToCart,
+        onSubmit: (payload) async {
+          final space = await resolveSpaceForCartAdd(context);
+          if (space == null) return false;
+          return ref.read(cartControllerProvider.notifier).createCartItem(
+                productId: payload.apiProductId,
+                subIndex: payload.subIndex,
+                productNum: payload.productNum,
+                space: space,
+                subName: payload.subName,
+              );
+        },
+      );
+      if (!mounted) return;
+      if (added) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.productAddedToCart(product.name)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.productDetailLoadFailed('$e')),
+        ),
+      );
+    }
   }
 
   void _onCategoryTap(ProductCategoryTreeDto category) {

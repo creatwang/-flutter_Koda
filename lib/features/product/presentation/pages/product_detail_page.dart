@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
+import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
+import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
 import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_technical_data_panel.dart';
 import 'package:groe_app_pad/gen/assets.gen.dart';
@@ -370,7 +371,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  '€${totalMaxPrice.toStringAsFixed(2)}',
+                  '\$${totalMaxPrice.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     decoration: TextDecoration.lineThrough,
@@ -568,14 +569,16 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           width: double.infinity,
           child: FilledButton(
             onPressed: hasMatchedSku
-                ? () {
-                    _addProductToCart(
-                      selected,
-                      variants,
-                      _productNum,
-                      skuResolved.sub,
+                ? () async {
+                    final ok = await _submitCartCreate(
+                      qty: _productNum,
+                      resolvedSub: skuResolved.sub,
+                      skuRowSelection: skuRowSelection,
                     );
-                    context.go(AppRoutes.homeWithTab('cart'));
+                    if (!context.mounted) return;
+                    if (ok) {
+                      context.go(AppRoutes.homeWithTab('cart'));
+                    }
                   }
                 : null,
             style: FilledButton.styleFrom(
@@ -597,18 +600,22 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           width: double.infinity,
           child: FilledButton(
             onPressed: hasMatchedSku
-                ? () {
-                    _addProductToCart(
-                      selected,
-                      variants,
-                      _productNum,
-                      skuResolved.sub,
+                ? () async {
+                    final ok = await _submitCartCreate(
+                      qty: _productNum,
+                      resolvedSub: skuResolved.sub,
+                      skuRowSelection: skuRowSelection,
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(context.l10n.productAddedToCart(title)),
-                      ),
-                    );
+                    if (!context.mounted) return;
+                    if (ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            context.l10n.productAddedToCart(title),
+                          ),
+                        ),
+                      );
+                    }
                   }
                 : null,
             style: FilledButton.styleFrom(
@@ -720,25 +727,6 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     );
   }
 
-  ProductItem _toProductItem(Product product, {ProductSub? resolvedSub}) {
-    final price = resolvedSub != null
-        ? (resolvedSub.salesPrice ?? 0)
-        : (product.price ?? 0);
-    final id = resolvedSub?.pid ?? product.id ?? widget.productId;
-    return ProductItem(
-      id: id,
-      categoryName: product.categoryName ?? '',
-      categoryId: product.categoryId ?? 0,
-      name: product.name ?? '',
-      unit: product.unit ?? '',
-      maxPrice: product.maxPrice ?? 0,
-      price: price,
-      isHot: '${product.isHot ?? 0}',
-      mainImage: product.mainImage ?? '',
-      isCollect: product.isCollect ?? false,
-    );
-  }
-
   void _selectVariantProduct(int pid, List<Product> variants) {
     if (_selectedProductId == pid) return;
     final product = variants.firstWhereOrNull((e) => e.id == pid);
@@ -813,20 +801,28 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     return 0;
   }
 
-  void _addProductToCart(
-    Product selected,
-    List<Product> variants,
-    int qty,
-    ProductSub? resolvedSub,
-  ) {
-    final productForCart = resolvedSub?.pid != null
-        ? (variants.firstWhereOrNull((p) => p.id == resolvedSub!.pid) ??
-              selected)
-        : selected;
-    final cart = ref.read(cartControllerProvider.notifier);
-    for (var i = 0; i < qty; i++) {
-      cart.addProduct(_toProductItem(productForCart, resolvedSub: resolvedSub));
-    }
+  Future<bool> _submitCartCreate({
+    required int qty,
+    required ProductSub? resolvedSub,
+    required List<Options> skuRowSelection,
+  }) async {
+    final sub = resolvedSub;
+    if (sub == null || sub.pid == null) return false;
+    final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
+    if (subIndex.isEmpty) return false;
+    final subName = ProductSkuCartHelpers.buildCartSubName(
+      sub: sub,
+      skuRowSelection: skuRowSelection,
+    );
+    final space = await resolveSpaceForCartAdd(context);
+    if (space == null) return false;
+    return ref.read(cartControllerProvider.notifier).createCartItem(
+      productId: sub.pid!,
+      subIndex: subIndex,
+      productNum: qty,
+      space: space,
+      subName: subName,
+    );
   }
 
   List<String> _buildGalleryImages(

@@ -356,6 +356,72 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get commonCancel;
 
+  /// No description provided for @commonConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get commonConfirm;
+
+  /// No description provided for @cartSpaceDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Space'**
+  String get cartSpaceDialogTitle;
+
+  /// No description provided for @cartSpaceDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get cartSpaceDialogHint;
+
+  /// No description provided for @cartAddRequireLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in before adding to cart'**
+  String get cartAddRequireLogin;
+
+  /// No description provided for @cartConfirmAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get cartConfirmAdd;
+
+  /// No description provided for @cartConfirmChangeSpec.
+  ///
+  /// In en, this message translates to:
+  /// **'Save specification'**
+  String get cartConfirmChangeSpec;
+
+  /// No description provided for @cartNoMatchedSku.
+  ///
+  /// In en, this message translates to:
+  /// **'No on-sale SKU matched'**
+  String get cartNoMatchedSku;
+
+  /// No description provided for @cartQuantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get cartQuantityLabel;
+
+  /// No description provided for @cartChangeSpec.
+  ///
+  /// In en, this message translates to:
+  /// **'Change spec'**
+  String get cartChangeSpec;
+
+  /// No description provided for @cartSkuDrawerClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get cartSkuDrawerClose;
+
+  /// No description provided for @cartSkuDrawerProductLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get cartSkuDrawerProductLine;
+
   /// No description provided for @addToCart.
   ///
   /// In en, this message translates to:
@@ -383,7 +449,7 @@ abstract class AppLocalizations {
   /// No description provided for @cartTotal.
   ///
   /// In en, this message translates to:
-  /// **'Total: ¥ {amount}'**
+  /// **'Total: \$ {amount}'**
   String cartTotal(Object amount);
 
   /// No description provided for @webMessageFromHtml.

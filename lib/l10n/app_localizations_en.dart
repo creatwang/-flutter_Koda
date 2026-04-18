@@ -147,6 +147,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
+  String get commonConfirm => 'Confirm';
+
+  @override
+  String get cartSpaceDialogTitle => 'Enter Space';
+
+  @override
+  String get cartSpaceDialogHint => 'Required';
+
+  @override
+  String get cartAddRequireLogin => 'Please sign in before adding to cart';
+
+  @override
+  String get cartConfirmAdd => 'Add to cart';
+
+  @override
+  String get cartConfirmChangeSpec => 'Save specification';
+
+  @override
+  String get cartNoMatchedSku => 'No on-sale SKU matched';
+
+  @override
+  String get cartQuantityLabel => 'Quantity';
+
+  @override
+  String get cartChangeSpec => 'Change spec';
+
+  @override
+  String get cartSkuDrawerClose => 'Close';
+
+  @override
+  String get cartSkuDrawerProductLine => 'Product';
+
+  @override
   String get addToCart => 'Add to cart';
 
   @override
@@ -164,7 +197,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cartTotal(Object amount) {
-    return 'Total: ¥ $amount';
+    return 'Total: \$ $amount';
   }
 
   @override

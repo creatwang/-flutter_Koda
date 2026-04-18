@@ -1,0 +1,542 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
+import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
+import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
+import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+
+enum ProfileOrderTab { my, customer }
+
+class ProfileOrderCenterSectionWidget extends ConsumerWidget {
+  const ProfileOrderCenterSectionWidget({
+    required this.canViewCustomerOrders,
+    required this.currentTab,
+    super.key,
+  });
+
+  final bool canViewCustomerOrders;
+  final ProfileOrderTab currentTab;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canShowCustomerTab = canViewCustomerOrders;
+    final effectiveTab = canShowCustomerTab
+        ? currentTab
+        : ProfileOrderTab.my;
+    final state = effectiveTab == ProfileOrderTab.my
+        ? ref.watch(profileMyOrderListProvider)
+        : ref.watch(profileCustomerOrderListProvider);
+    Future<void> refreshCurrentTab() async {
+      if (effectiveTab == ProfileOrderTab.my) {
+        await ref.read(profileMyOrderListProvider.notifier).refresh();
+        return;
+      }
+      await ref.read(profileCustomerOrderListProvider.notifier).refresh();
+    }
+
+    void loadMoreCurrentTab() {
+      if (effectiveTab == ProfileOrderTab.my) {
+        ref.read(profileMyOrderListProvider.notifier).loadMore();
+        return;
+      }
+      ref.read(profileCustomerOrderListProvider.notifier).loadMore();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: state.when(
+            loading: () => const AppLoadingView(),
+            error: (error, _) => _OrderErrorView(
+              message: error.toString(),
+              onRetry: refreshCurrentTab,
+            ),
+            data: (data) {
+              if (data.items.isEmpty) {
+                return const AppEmptyView(
+                  message: 'No orders yet',
+                  width: 120,
+                  height: 120,
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: refreshCurrentTab,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.metrics.pixels >
+                        notification.metrics.maxScrollExtent - 320) {
+                      loadMoreCurrentTab();
+                    }
+                    return false;
+                  },
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    itemBuilder: (_, index) {
+                      if (index >= data.items.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      final item = data.items[index];
+                      return _OrderCard(
+                        item: item,
+                        showUserInfo: effectiveTab == ProfileOrderTab.customer,
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ProfileOrderTabSwitcherWidget extends StatelessWidget {
+  const ProfileOrderTabSwitcherWidget({
+    required this.currentTab,
+    required this.onTabChanged,
+    super.key,
+  });
+
+  final ProfileOrderTab currentTab;
+  final ValueChanged<ProfileOrderTab> onTabChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _OrderTabButton(
+            isSelected: currentTab == ProfileOrderTab.my,
+            label: 'My',
+            onTap: () => onTabChanged(ProfileOrderTab.my),
+          ),
+          const SizedBox(width: 4),
+          _OrderTabButton(
+            isSelected: currentTab == ProfileOrderTab.customer,
+            label: 'Customer',
+            onTap: () => onTabChanged(ProfileOrderTab.customer),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderTabButton extends StatelessWidget {
+  const _OrderTabButton({
+    required this.isSelected,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool isSelected;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white70,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OrderCard extends StatelessWidget {
+  const _OrderCard({
+    required this.item,
+    required this.showUserInfo,
+  });
+
+  final OrderItemDto item;
+  final bool showUserInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPiSuccess = item.piStatus == 1;
+    final piColor = isPiSuccess ? const Color(0xFF6CE596) : const Color(
+      0xFFFF8C92,
+    );
+    final piText = isPiSuccess ? 'Successful' : 'Fail';
+    final erpText = item.status == 1 ? 'Send to ERP' : 'Not sent to ERP';
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showUserInfo && item.user != null) ...[
+            Text(
+              item.user?.name ?? item.user?.username ?? '--',
+              style: const TextStyle(
+                color: ProMaxTokens.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Wrap(
+            spacing: 14,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'OrderNo: ${item.orderNo ?? '--'}',
+                style: const TextStyle(
+                  color: ProMaxTokens.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'Time: ${item.createdAt ?? '--'}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+              Text(
+                erpText,
+                style: const TextStyle(
+                  color: Color(0xFF84CCFF),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.circle,
+                    size: 8,
+                    color: piColor,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    piText,
+                    style: TextStyle(
+                      color: piColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...item.product.map(
+            (department) => _DepartmentBlock(department: department),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DepartmentBlock extends StatelessWidget {
+  const _DepartmentBlock({required this.department});
+
+  final OrderDepartmentDto department;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+        iconColor: Colors.white70,
+        collapsedIconColor: Colors.white60,
+        title: Text(
+          department.name ?? 'Unknown Department',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+        children: department.list
+            .map((space) => _SpaceBlock(space: space))
+            .toList(growable: false),
+      ),
+    );
+  }
+}
+
+class _SpaceBlock extends StatelessWidget {
+  const _SpaceBlock({required this.space});
+
+  final OrderSpaceDto space;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+          iconColor: Colors.white70,
+          collapsedIconColor: Colors.white60,
+          title: Text(
+            space.name ?? 'default',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          children: [
+            const _ProductTableHeader(),
+            ...space.list.map((line) => _ProductLineTile(line: line)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductTableHeader extends StatelessWidget {
+  const _ProductTableHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Row(
+        children: const [
+          Expanded(
+            flex: 6,
+            child: Text(
+              'Products',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Num',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Price',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductLineTile extends StatelessWidget {
+  const _ProductLineTile({required this.line});
+
+  final OrderProductLineDto line;
+
+  @override
+  Widget build(BuildContext context) {
+    final quantityText = '${line.quantity ?? 0}${line.unit ?? ''}';
+    final priceText = '\$${line.totalPrice ?? line.price ?? '--'}';
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 6,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: line.mainImage == null || line.mainImage!.isEmpty
+                        ? const ColoredBox(
+                            color: Colors.black26,
+                            child: Icon(Icons.image_not_supported_outlined),
+                          )
+                        : Image.network(
+                            line.mainImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return const ColoredBox(
+                                color: Colors.black26,
+                                child: Icon(Icons.broken_image_outlined),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        line.name ?? '--',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: ProMaxTokens.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        line.subName ?? '--',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              quantityText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProMaxTokens.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              priceText,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: ProMaxTokens.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderErrorView extends StatelessWidget {
+  const _OrderErrorView({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SelectableText.rich(
+              TextSpan(
+                text: message,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white70,
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

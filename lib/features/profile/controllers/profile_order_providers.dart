@@ -1,0 +1,188 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
+import 'package:groe_app_pad/features/profile/services/profile_services.dart';
+
+class ProfileOrderListState {
+  const ProfileOrderListState({
+    required this.items,
+    required this.page,
+    required this.hasMore,
+    required this.isLoadingMore,
+    required this.total,
+  });
+
+  final List<OrderItemDto> items;
+  final int page;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final int total;
+
+  ProfileOrderListState copyWith({
+    List<OrderItemDto>? items,
+    int? page,
+    bool? hasMore,
+    bool? isLoadingMore,
+    int? total,
+  }) {
+    return ProfileOrderListState(
+      items: items ?? this.items,
+      page: page ?? this.page,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      total: total ?? this.total,
+    );
+  }
+}
+
+final profileMyOrderListProvider = AsyncNotifierProvider<
+  ProfileMyOrderListNotifier,
+  ProfileOrderListState
+>(ProfileMyOrderListNotifier.new);
+
+final profileCustomerOrderListProvider = AsyncNotifierProvider<
+  ProfileCustomerOrderListNotifier,
+  ProfileOrderListState
+>(ProfileCustomerOrderListNotifier.new);
+
+class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
+  static const int _pageSize = 20;
+
+  @override
+  FutureOr<ProfileOrderListState> build() async {
+    final result = await fetchProfileOrderListService(
+      page: 1,
+      pageSize: _pageSize,
+    );
+    return result.when(
+      success: (data) => ProfileOrderListState(
+        items: data.items,
+        page: 1,
+        hasMore: data.items.length < data.total,
+        isLoadingMore: false,
+        total: data.total,
+      ),
+      failure: (exception) => throw exception,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final result = await fetchProfileOrderListService(
+        page: 1,
+        pageSize: _pageSize,
+      );
+      return result.when(
+        success: (data) => ProfileOrderListState(
+          items: data.items,
+          page: 1,
+          hasMore: data.items.length < data.total,
+          isLoadingMore: false,
+          total: data.total,
+        ),
+        failure: (exception) => throw exception,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.page + 1;
+    final result = await fetchProfileOrderListService(
+      page: nextPage,
+      pageSize: _pageSize,
+    );
+    state = result.when(
+      success: (data) {
+        final oldIds = current.items.map((e) => e.id).toSet();
+        final delta = data.items.where((e) => !oldIds.contains(e.id)).toList();
+        final merged = [...current.items, ...delta];
+        return AsyncData(
+          current.copyWith(
+            items: merged,
+            page: nextPage,
+            hasMore: merged.length < data.total && delta.isNotEmpty,
+            isLoadingMore: false,
+            total: data.total,
+          ),
+        );
+      },
+      failure: (exception) => AsyncError(exception, StackTrace.current),
+    );
+  }
+}
+
+class ProfileCustomerOrderListNotifier
+    extends AsyncNotifier<ProfileOrderListState> {
+  static const int _pageSize = 20;
+
+  @override
+  FutureOr<ProfileOrderListState> build() async {
+    final result = await fetchProfileCustomerOrderListService(
+      page: 1,
+      pageSize: _pageSize,
+    );
+    return result.when(
+      success: (data) => ProfileOrderListState(
+        items: data.items,
+        page: 1,
+        hasMore: data.items.length < data.total,
+        isLoadingMore: false,
+        total: data.total,
+      ),
+      failure: (exception) => throw exception,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final result = await fetchProfileCustomerOrderListService(
+        page: 1,
+        pageSize: _pageSize,
+      );
+      return result.when(
+        success: (data) => ProfileOrderListState(
+          items: data.items,
+          page: 1,
+          hasMore: data.items.length < data.total,
+          isLoadingMore: false,
+          total: data.total,
+        ),
+        failure: (exception) => throw exception,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.page + 1;
+    final result = await fetchProfileCustomerOrderListService(
+      page: nextPage,
+      pageSize: _pageSize,
+    );
+    state = result.when(
+      success: (data) {
+        final oldIds = current.items.map((e) => e.id).toSet();
+        final delta = data.items.where((e) => !oldIds.contains(e.id)).toList();
+        final merged = [...current.items, ...delta];
+        return AsyncData(
+          current.copyWith(
+            items: merged,
+            page: nextPage,
+            hasMore: merged.length < data.total && delta.isNotEmpty,
+            isLoadingMore: false,
+            total: data.total,
+          ),
+        );
+      },
+      failure: (exception) => AsyncError(exception, StackTrace.current),
+    );
+  }
+}

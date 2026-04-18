@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/order/controllers/order_providers.dart';
 import 'package:intl/intl.dart';
@@ -36,6 +37,8 @@ class _CartPageState extends ConsumerState<CartPage> {
     final totalCount = ref.watch(cartBadgeCountProvider);
     final selectedCount = ref.watch(cartSelectedCountProvider);
     final selectedAmount = ref.watch(cartSelectedAmountProvider);
+    final canExportQuotation =
+        ref.watch(canExportQuotationProvider).asData?.value ?? false;
     return cartState.when(
       loading: () => const AppLoadingView(),
       error: (error, _) =>
@@ -53,6 +56,7 @@ class _CartPageState extends ConsumerState<CartPage> {
           selectedCount: selectedCount,
           selectedAmount: selectedAmount,
           totalCount: totalCount,
+          canExportQuotation: canExportQuotation,
         );
 
         if (isWide) {
@@ -86,59 +90,63 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 
   Widget _buildCuratedListPanel(BuildContext context, List<CartSiteDto> sites) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Curated Shortlist',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: ProMaxTokens.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 30,
+    return RefreshIndicator(
+      onRefresh: () => ref.read(cartControllerProvider.notifier).refresh(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Curated Shortlist',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: ProMaxTokens.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 30,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${sites.length} EXCLUSIVE SECTIONS SELECTED',
-            style: TextStyle(
-              color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-              letterSpacing: 1.1,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 4),
+            Text(
+              '${sites.length} EXCLUSIVE SECTIONS SELECTED',
+              style: TextStyle(
+                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
+                letterSpacing: 1.1,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView.separated(
-              itemCount: sites.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
-              itemBuilder: (_, index) {
-                final site = sites[index];
-                return _CartSiteSection(
-                  site: site,
-                  isSpaceExpanded: (space) => _isSpaceExpanded(site, space),
-                  onToggleSpaceExpanded: (space) => _toggleSpace(site, space),
-                  onToggleSiteSelected: (selected) =>
-                      _onToggleSiteSelected(site, selected),
-                  onToggleItemSelected: (itemId, selected) =>
-                      _onToggleItemSelected(itemId, selected),
-                  onDeleteItem: _onDeleteItem,
-                  onRemarkChanged: _onRemarkChanged,
-                  isSiteBusy: _pendingSiteIds.contains(site.companyId),
-                  isItemBusy: (itemId) =>
-                      _pendingItemIds.contains(itemId) ||
-                      _pendingSiteIds.contains(site.companyId),
-                );
-              },
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: sites.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 14),
+                itemBuilder: (_, index) {
+                  final site = sites[index];
+                  return _CartSiteSection(
+                    site: site,
+                    isSpaceExpanded: (space) => _isSpaceExpanded(site, space),
+                    onToggleSpaceExpanded: (space) => _toggleSpace(site, space),
+                    onToggleSiteSelected: (selected) =>
+                        _onToggleSiteSelected(site, selected),
+                    onToggleItemSelected: (itemId, selected) =>
+                        _onToggleItemSelected(itemId, selected),
+                    onDeleteItem: _onDeleteItem,
+                    onRemarkChanged: _onRemarkChanged,
+                    isSiteBusy: _pendingSiteIds.contains(site.companyId),
+                    isItemBusy: (itemId) =>
+                        _pendingItemIds.contains(itemId) ||
+                        _pendingSiteIds.contains(site.companyId),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -148,6 +156,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     required int selectedCount,
     required double selectedAmount,
     required int totalCount,
+    required bool canExportQuotation,
   }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -215,19 +224,22 @@ class _CartPageState extends ConsumerState<CartPage> {
                       // 1. 先放文字或加载动画
                       _isCheckingOut
                           ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white, // 确保加载圈在黑色背景上可见
-                        ),
-                      )
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white, // 确保加载圈在黑色背景上可见
+                              ),
+                            )
                           : const Text('Go To Checkout'),
 
                       // 2. 如果不在加载中，则在文字后显示图标
                       if (!_isCheckingOut) ...[
                         const SizedBox(width: 8), // 文字和图标的间距
-                        const Icon(Icons.arrow_forward, size: 14), // 注意：通常 Go To 建议用 arrow_forward
+                        const Icon(
+                          Icons.arrow_forward,
+                          size: 14,
+                        ), // 注意：通常 Go To 建议用 arrow_forward
                       ],
                     ],
                   ),
@@ -257,19 +269,21 @@ class _CartPageState extends ConsumerState<CartPage> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white70,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+        if (canExportQuotation) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white70,
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+              ),
+              icon: const Icon(Icons.ios_share_outlined, size: 16),
+              label: const Text('Export'),
             ),
-            icon: const Icon(Icons.ios_share_outlined, size: 16),
-            label: const Text('Export'),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -643,22 +657,25 @@ class _CartSiteSection extends StatelessWidget {
                   child: SizedBox(
                     width: 20,
                     height: 20,
-                    child: Transform.scale(scale: 0.8, child: Checkbox(
-                      value: allSelected,
-                      onChanged: hasItems && !isSiteBusy
-                          ? (value) => onToggleSiteSelected(value ?? false)
-                          : null,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: const VisualDensity(
-                        horizontal: -4,
-                        vertical: -4,
+                    child: Transform.scale(
+                      scale: 0.8,
+                      child: Checkbox(
+                        value: allSelected,
+                        onChanged: hasItems && !isSiteBusy
+                            ? (value) => onToggleSiteSelected(value ?? false)
+                            : null,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: const VisualDensity(
+                          horizontal: -4,
+                          vertical: -4,
+                        ),
                       ),
-                    ),),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child:Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
@@ -668,12 +685,13 @@ class _CartSiteSection extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
-                            color: ProMaxTokens.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 20,
-                            height: 1.2,
-                            leadingDistribution: TextLeadingDistribution.even,
-                          ),
+                                color: ProMaxTokens.textPrimary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                                height: 1.2,
+                                leadingDistribution:
+                                    TextLeadingDistribution.even,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -687,7 +705,7 @@ class _CartSiteSection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${allProducts.length} ITEMS',
+                          '${site.cart.totalNum} ITEMS',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 11,
@@ -884,7 +902,10 @@ class _CartProductTileState extends State<_CartProductTile> {
                         value ?? false,
                       ),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                visualDensity: const VisualDensity(
+                  horizontal: -4,
+                  vertical: -4,
+                ),
               ),
             ),
             SizedBox(width: 10),
@@ -900,7 +921,10 @@ class _CartProductTileState extends State<_CartProductTile> {
                   child: SizedBox(
                     width: 88,
                     height: 88,
-                    child: Icon(Icons.image_not_supported, color: Colors.white70),
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white70,
+                    ),
                   ),
                 ),
               ),
@@ -1027,21 +1051,13 @@ class _CartProductTileState extends State<_CartProductTile> {
                           minimumSize: const Size(0, 22),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           foregroundColor: Colors.white70,
+                          disabledForegroundColor: Colors.white30,
                         ),
                         icon: const Icon(Icons.delete_outline, size: 14),
-                        label: widget.isBusy
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text(
-                                'REMOVE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
+                        label: const Text(
+                          'REMOVE',
+                          style: TextStyle(fontSize: 10, letterSpacing: 0.4),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       TextButton.icon(

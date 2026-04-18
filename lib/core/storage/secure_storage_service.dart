@@ -10,7 +10,6 @@ class SecureStorageService {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _userInfoBase = 'user_info_base';
-  static const _userProfileInfo = 'user_profile_info';
   static const _tokenMap = 'token_map';
   static const _companyId = 'company_id';
 
@@ -69,23 +68,6 @@ class SecureStorageService {
     return tokenMap[key]?.toString();
   }
 
-  Future<void> saveUserProfileInfo(Map<String, dynamic> profileJson) async {
-    final jsonString = jsonEncode(profileJson);
-    await _storage.write(key: _userProfileInfo, value: jsonString);
-  }
-
-  Future<Map<String, dynamic>?> readUserProfileInfo() async {
-    final jsonString = await _storage.read(key: _userProfileInfo);
-    if (jsonString == null || jsonString.isEmpty) return null;
-    try {
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map<String, dynamic>) return null;
-      return decoded;
-    } catch (_) {
-      return null;
-    }
-  }
-
   /// 保存站点 id。
   Future<void> saveCompanyId(int companyId) async {
     await _storage.write(key: _companyId, value: companyId.toString());
@@ -102,7 +84,6 @@ class SecureStorageService {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userInfoBase);
-    await _storage.delete(key: _userProfileInfo);
     await _storage.delete(key: _tokenMap);
     await _storage.delete(key: _companyId);
   }

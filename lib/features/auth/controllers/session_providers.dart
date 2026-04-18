@@ -1,15 +1,28 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
+import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
+import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
+import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
+import 'package:groe_app_pad/features/profile/services/profile_services.dart';
 
 import '../../../core/platform_services/network_clients.dart';
 
 final sessionControllerProvider =
     AsyncNotifierProvider<SessionController, Session>(SessionController.new);
+
+final canExportQuotationProvider = FutureProvider<bool>((ref) async {
+  return readExportQuotationCapabilityFromLocal();
+});
+
+final sessionSyncProvider = AsyncNotifierProvider<SessionSyncController, void>(
+  SessionSyncController.new,
+);
 
 class SessionController extends AsyncNotifier<Session> {
   @override
@@ -37,6 +50,7 @@ class SessionController extends AsyncNotifier<Session> {
             companyId: pair.companyId,
           ),
         );
+        ref.invalidate(canExportQuotationProvider);
         return true;
       },
       failure: (exception) {
@@ -51,12 +65,14 @@ class SessionController extends AsyncNotifier<Session> {
     if (previousSession?.isAuthenticated == true) {
       try {
         await clearCartListFromLocal();
+        await clearSiteInfoFromLocal();
       } catch (_) {
         // SharedPreferences 在部分测试环境未初始化，允许安全降级。
       }
     }
     await ref.read(authClearTokenServiceProvider)();
     state = const AsyncData(Session(isAuthenticated: false));
+    ref.invalidate(canExportQuotationProvider);
   }
 
   FutureOr<Session> _toSession(int? companyId) async {
@@ -68,5 +84,31 @@ class SessionController extends AsyncNotifier<Session> {
       return const Session(isAuthenticated: false);
     }
     return Session(isAuthenticated: true, companyId: companyId, token: token);
+  }
+}
+
+class SessionSyncController extends AsyncNotifier<void> {
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> refreshOnResume() async {
+    final session = ref.read(sessionControllerProvider).asData?.value;
+    if (session?.isAuthenticated != true) return;
+    final companyId = session?.companyId;
+    if (companyId == null) return;
+
+    await Future.wait<void>([
+      _refreshUserInfoCache(),
+      syncSiteInfoToLocal(companyId: companyId),
+    ]);
+    ref.invalidate(canExportQuotationProvider);
+    ref.invalidate(profileUserInfoProvider);
+  }
+
+  Future<void> _refreshUserInfoCache() async {
+    final result = await fetchUserInfoService();
+    if (result is ApiSuccess<UserInfoBase>) {
+      await secureStorageService.saveUserInfoBase(result.data);
+    }
   }
 }

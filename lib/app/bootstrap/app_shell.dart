@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -15,16 +16,71 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../gen/assets.gen.dart';
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
-  static const String _darkBackgroundImageUrl =
-      'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=2200&q=80';
-  static const String _lightBackgroundImageUrl =
-      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=80';
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
+  // 前台回归同步最小间隔，避免频繁切前后台导致重复请求。
+  static const Duration _resumeSyncMinInterval = Duration(seconds: 60);
+  DateTime? _lastResumeSyncAt;
+  // 并发保护：同一时刻只允许一个同步任务执行。
+  bool _isResumedSyncing = false;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    // 注册生命周期监听，接收前后台切换事件。
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // 页面销毁时移除监听，避免内存泄漏与重复回调。
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Flutter 生命周期回调：
+    // resumed/inactive/paused/detached 均会进入这里。
+    // 仅在 resumed（重新可交互）时做数据同步。
+    if (state != AppLifecycleState.resumed) return;
+    unawaited(_handleAppResumed());
+  }
+
+  Future<void> _handleAppResumed() async {
+    // 并发保护：上一次前台同步未完成时直接跳过。
+    if (_isResumedSyncing) return;
+    final session = ref.read(sessionControllerProvider).asData?.value;
+    // 未登录不需要同步用户/站点信息。
+    if (session?.isAuthenticated != true) return;
+
+    final now = DateTime.now();
+    final lastSyncAt = _lastResumeSyncAt;
+    // 节流：短时间频繁切前后台只执行一次同步。
+    if (lastSyncAt != null &&
+        now.difference(lastSyncAt) < _resumeSyncMinInterval) {
+      return;
+    }
+
+    _isResumedSyncing = true;
+    try {
+      await ref.read(sessionSyncProvider.notifier).refreshOnResume();
+      _lastResumeSyncAt = DateTime.now();
+    } finally {
+      _isResumedSyncing = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 全局会话过期处理：由网络层回调后统一清会话并回登录态。
     registerSessionExpiredHandler(
       () => ref.read(sessionControllerProvider.notifier).signOut(),
     );
@@ -33,6 +89,7 @@ class AppShell extends ConsumerWidget {
     final isDark = appThemeMode == AppThemeMode.dark;
     final localeMode = ref.watch(appLocaleModeProvider);
     final sessionState = ref.watch(sessionControllerProvider);
+    // 路由是否放行取决于会话状态，保证登录态变化后自动重定向。
     final router = buildAppRouter(
       isLoading: sessionState.isLoading,
       isLoggedIn: sessionState.asData?.value.isAuthenticated ?? false,
@@ -55,12 +112,10 @@ class AppShell extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       // 应用支持的语言列表（系统语言会在这里做匹配与回退）。
-      supportedLocales: const [
-        Locale('en'),
-        Locale('zh'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('zh')],
       routerConfig: router,
       builder: (context, child) {
+        // iPad/桌面保持固定最大宽度，小屏按 1024 设计稿等比缩放。
         final content = ResponsiveBreakpoints.builder(
           child: Builder(
             builder: (context) {
@@ -89,11 +144,11 @@ class AppShell extends ConsumerWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
+            // 分层背景：底图 + 毛玻璃 + 细节图 + 渐变遮罩。
             Assets.images.mainBgc.image(
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const ColoredBox(
-                color: Color(0xFFE8ECEF),
-              ),
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Color(0xFFE8ECEF)),
             ),
             // 全局毛玻璃层：对背景图做轻度模糊，增强前景内容可读性。
             ClipRect(
@@ -108,9 +163,8 @@ class AppShell extends ConsumerWidget {
             ),
             Assets.images.detailBgc.image(
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const ColoredBox(
-                color: Color(0xFFE8ECEF),
-              ),
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Color(0xFFE8ECEF)),
             ),
             // Image.network(
             //   isDark ? _darkBackgroundImageUrl : _lightBackgroundImageUrl,
@@ -136,7 +190,7 @@ class AppShell extends ConsumerWidget {
               ),
             ),
             content,
-       /*     Positioned(
+            /*     Positioned(
               right: 14,
               bottom: 14,
               child: SafeArea(

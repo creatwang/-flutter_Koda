@@ -47,7 +47,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final cartCount = ref.watch(cartBadgeCountProvider);
+    final cartCount = _section == HomeSection.cart
+        ? ref.watch(cartBadgeCountProvider)
+        : 0;
 
     final Widget body = switch (_section) {
       HomeSection.products => const ProductListPage(),

@@ -1,38 +1,39 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/features/profile/models/user_profile_info_dto.dart';
 import 'package:groe_app_pad/features/profile/services/profile_services.dart';
 
 final profileUserInfoProvider =
-    AsyncNotifierProvider<ProfileUserInfoNotifier, UserProfileInfoDto>(
+    AsyncNotifierProvider<ProfileUserInfoNotifier, UserInfoBase>(
       ProfileUserInfoNotifier.new,
     );
 
-class ProfileUserInfoNotifier extends AsyncNotifier<UserProfileInfoDto> {
+class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
   @override
-  FutureOr<UserProfileInfoDto> build() async {
+  FutureOr<UserInfoBase> build() async {
     final cached = await _readCachedProfile();
+    if (cached != null) return cached;
+
     final result = await fetchUserInfoService();
-    if (result is ApiSuccess<UserProfileInfoDto>) {
+    if (result is ApiSuccess<UserInfoBase>) {
       await _cacheProfile(result.data);
       return result.data;
     }
-    if (cached != null) return cached;
-    throw (result as ApiFailure<UserProfileInfoDto>).exception;
+    throw (result as ApiFailure<UserInfoBase>).exception;
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final result = await fetchUserInfoService();
-      if (result is ApiSuccess<UserProfileInfoDto>) {
+      if (result is ApiSuccess<UserInfoBase>) {
         await _cacheProfile(result.data);
         return result.data;
       }
-      throw (result as ApiFailure<UserProfileInfoDto>).exception;
+      throw (result as ApiFailure<UserInfoBase>).exception;
     });
   }
 
@@ -52,17 +53,11 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserProfileInfoDto> {
     return result;
   }
 
-  Future<UserProfileInfoDto?> _readCachedProfile() async {
-    final cachedMap = await secureStorageService.readUserProfileInfo();
-    if (cachedMap == null) return null;
-    try {
-      return UserProfileInfoDto.fromJson(cachedMap);
-    } catch (_) {
-      return null;
-    }
+  Future<UserInfoBase?> _readCachedProfile() async {
+    return secureStorageService.readUserInfoBase();
   }
 
-  Future<void> _cacheProfile(UserProfileInfoDto profile) async {
-    await secureStorageService.saveUserProfileInfo(profile.toJson());
+  Future<void> _cacheProfile(UserInfoBase profile) async {
+    await secureStorageService.saveUserInfoBase(profile);
   }
 }

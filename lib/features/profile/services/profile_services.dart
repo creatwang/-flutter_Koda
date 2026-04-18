@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
+import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
 import 'package:groe_app_pad/features/profile/api/profile_requests.dart';
-import 'package:groe_app_pad/features/profile/models/user_profile_info_dto.dart';
 
-Future<ApiResult<UserProfileInfoDto>> fetchUserInfoService() async {
+Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
   try {
     final response = await requestUserInfo();
     final payload = _resolveResultMap(response.data);
@@ -14,7 +14,7 @@ Future<ApiResult<UserProfileInfoDto>> fetchUserInfoService() async {
         error: 'Invalid user info response format',
       );
     }
-    return ApiSuccess(UserProfileInfoDto.fromJson(payload));
+    return ApiSuccess(UserInfoBase.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(

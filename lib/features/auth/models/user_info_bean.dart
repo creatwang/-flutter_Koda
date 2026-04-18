@@ -23,34 +23,36 @@ class UserInfoBase {
   num? userMainId;
   num? shopId;
   String? token;
+  // 是否是业务员
   bool? isAuthAccount;
 
-  UserInfoBase(
-      {this.id,
-        this.accountId,
-        this.name,
-        this.username,
-        this.companyId,
-        this.avatar,
-        this.telephone,
-        this.description,
-        this.status,
-        this.type,
-        this.updatedAt,
-        this.createdAt,
-        this.deletedAt,
-        this.registerFrom,
-        this.languageId,
-        this.tourist,
-        this.email,
-        this.nickname,
-        this.wechat,
-        this.customerId,
-        this.lastOrderTime,
-        this.userMainId,
-        this.shopId,
-        this.token,
-        this.isAuthAccount});
+  UserInfoBase({
+    this.id,
+    this.accountId,
+    this.name,
+    this.username,
+    this.companyId,
+    this.avatar,
+    this.telephone,
+    this.description,
+    this.status,
+    this.type,
+    this.updatedAt,
+    this.createdAt,
+    this.deletedAt,
+    this.registerFrom,
+    this.languageId,
+    this.tourist,
+    this.email,
+    this.nickname,
+    this.wechat,
+    this.customerId,
+    this.lastOrderTime,
+    this.userMainId,
+    this.shopId,
+    this.token,
+    this.isAuthAccount,
+  });
 
   UserInfoBase.fromJson(Map<String, dynamic> json) {
     id = json['id'];

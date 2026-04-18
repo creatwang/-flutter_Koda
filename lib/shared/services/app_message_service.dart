@@ -27,8 +27,6 @@ void showGlobalErrorMessage(String message) {
 Future<void> showSessionExpiredDialog(String message) async {
   if (_sessionExpiredDialogShowing) return;
   _sessionExpiredDialogShowing = true;
-
-  await _sessionExpiredHandler?.call();
   final messenger = appScaffoldMessengerKey.currentState;
   final rootContext =
       appNavigatorKey.currentContext ?? appScaffoldMessengerKey.currentContext;
@@ -65,9 +63,12 @@ Future<void> showSessionExpiredDialog(String message) async {
           ),
           actions: [
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                GoRouter.of(rootContext).go(AppRoutes.login);
+                await _sessionExpiredHandler?.call();
+                if (rootContext.mounted) {
+                  GoRouter.of(rootContext).go(AppRoutes.login);
+                }
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,

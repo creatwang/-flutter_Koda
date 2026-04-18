@@ -178,7 +178,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         favoriteData?.totalCount ?? favoriteData?.items.length ?? 0;
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
-    final userId = userInfoState.asData?.value.id;
+    final userId = userInfoState.asData?.value.id?.toInt();
     if (!_hasHydratedName && userName.trim().isNotEmpty) {
       _fullNameController.text = userName;
       _hasHydratedName = true;
@@ -585,7 +585,7 @@ class _ProfileContentArea extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       onTap: isLoadingUserInfo
                           ? null
-                          : () => onRefreshSettings(),
+                          : () async => onRefreshSettings(),
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(

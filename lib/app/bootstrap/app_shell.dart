@@ -139,7 +139,7 @@ class _AppShellState extends ConsumerState<AppShell>
           breakpoints: const [
             Breakpoint(start: 0, end: 599, name: MOBILE),
             // 评判区间
-            Breakpoint(start: 600, end: 1023, name: TABLET),
+            Breakpoint(start: 750, end: 1023, name: TABLET),
             Breakpoint(start: 1024, end: 3000, name: DESKTOP),
           ],
         );

@@ -10,42 +10,88 @@ import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 enum StoreCustomerSheetMode { create, edit }
 
 /// 底部表单：新增或编辑客户账号（Username / Password 必填且不少于 6 位）。
+///
+/// 外壳样式与切换站点底部弹层一致：透明底、可拖拽高度、`#1A1D24` 面板、
+/// 顶边线、拖动手柄与标题区。
 Future<void> showStoreCustomerFormBottomSheet({
   required BuildContext context,
   required WidgetRef ref,
   required StoreCustomerSheetMode mode,
   StoreCustomerItemDto? editing,
 }) {
+  final title = mode == StoreCustomerSheetMode.create
+      ? 'New customer'
+      : 'Edit customer';
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: ProMaxTokens.panelBackground,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (ctx) => Container(
-      decoration: BoxDecoration(
-        border: Border.all()
-      ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-      child: DismissKeyboardOnTap(
-        child: _StoreCustomerFormSheetBody(
-          parentRef: ref,
-          mode: mode,
-          editing: editing,
-        ),
-      ),
-    ),
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext sheetContext) {
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.58,
+        minChildSize: 0.36,
+        maxChildSize: 0.92,
+        builder: (BuildContext context, ScrollController scrollController) {
+          return DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A1D24),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+              border: Border(
+                top: BorderSide(color: Color(0x44FFFFFF)),
+              ),
+            ),
+            child: Column(
+              children: <Widget>[
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: ProMaxTokens.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _StoreCustomerFormSheetBody(
+                    scrollController: scrollController,
+                    parentRef: ref,
+                    mode: mode,
+                    editing: editing,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
   );
 }
 
 class _StoreCustomerFormSheetBody extends StatefulWidget {
   const _StoreCustomerFormSheetBody({
+    required this.scrollController,
     required this.parentRef,
     required this.mode,
     this.editing,
   });
 
+  final ScrollController scrollController;
   final WidgetRef parentRef;
   final StoreCustomerSheetMode mode;
   final StoreCustomerItemDto? editing;
@@ -148,35 +194,16 @@ class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.mode == StoreCustomerSheetMode.create
-        ? 'New customer'
-        : 'Edit customer';
-    return SafeArea(
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
+    return DismissKeyboardOnTap(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        controller: widget.scrollController,
+        padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + bottom + viewInsetsBottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: ProMaxTokens.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: ProMaxTokens.textPrimary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+          children: <Widget>[
             ProMaxInputFieldWidget(
               label: 'USERNAME OR EMAIL',
               controller: _usernameController,
@@ -261,7 +288,10 @@ class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFFF4C77A),
+                      ),
                     )
                   : const Text('Done'),
             ),

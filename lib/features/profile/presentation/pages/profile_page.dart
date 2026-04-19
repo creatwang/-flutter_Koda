@@ -845,8 +845,7 @@ class _ProfileContentArea extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       ProMaxGlassCardWidget(
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                         child: Column(
@@ -872,13 +871,13 @@ class _ProfileContentArea extends StatelessWidget {
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () => onOpenSwitchSiteSheet(),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(4),
                                       child: Ink(
-                                        width: 40,
-                                        height: 40,
+                                        width: 24,
+                                        height: 24,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
-                                            12,
+                                            4,
                                           ),
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
@@ -901,9 +900,9 @@ class _ProfileContentArea extends StatelessWidget {
                                         ),
                                         child: const Center(
                                           child: Icon(
-                                            Icons.store_mall_directory_rounded,
+                                            Icons.swap_horiz_rounded,
                                             color: Color(0xFFF4E6C8),
-                                            size: 21,
+                                            size: 14,
                                           ),
                                         ),
                                       ),

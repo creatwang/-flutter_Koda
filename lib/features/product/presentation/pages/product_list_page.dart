@@ -14,8 +14,8 @@ import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/draggable_scan_fab.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_filter_panel.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_grid_section.dart';
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/product_grid_section.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
@@ -332,8 +332,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
         detail: detail,
         showMainImage: true,
         mode: ProductSkuCartSheetMode.addToCart,
-        onSubmit: (payload) async {
-          final space = await resolveSpaceForCartAdd(context);
+        onSubmit: (sheetContext, payload) async {
+          final space = await resolveSpaceForCartAdd(sheetContext);
           if (space == null) return false;
           return ref
               .read(cartControllerProvider.notifier)

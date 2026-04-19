@@ -13,6 +13,16 @@ const Color _kSkuDrawerQtyPlus = Color(0xFFFFD233);
 /// 侧滑 SKU 加购 / 改规格：与详情页一致的解析与 [sub_name] 组装。
 enum ProductSkuCartSheetMode { addToCart, changeSpec }
 
+/// 侧滑内提交加购/改规格。
+///
+/// [sheetContext]：侧滑路由上的 [BuildContext]，用于再叠 `showDialog`。
+/// 勿用外层列表页 context，否则易出现「只有遮罩、面板不显示」。
+typedef ProductSkuCartSubmitCallback =
+    Future<bool> Function(
+      BuildContext sheetContext,
+      ProductSkuCartSubmitPayload payload,
+    );
+
 class ProductSkuCartSubmitPayload {
   const ProductSkuCartSubmitPayload({
     required this.apiProductId,
@@ -36,7 +46,7 @@ Future<bool> presentProductSkuCartSideSheet({
   bool showMainImage = false,
   CartProductDto? cartLine,
   required ProductSkuCartSheetMode mode,
-  required Future<bool> Function(ProductSkuCartSubmitPayload payload) onSubmit,
+  required ProductSkuCartSubmitCallback onSubmit,
 }) async {
   final rootNav = Navigator.of(context, rootNavigator: true);
   final barrierLabel = MaterialLocalizations.of(
@@ -85,7 +95,7 @@ class _ProductSkuCartSideSheetScaffold extends StatelessWidget {
   final bool showMainImage;
   final CartProductDto? cartLine;
   final ProductSkuCartSheetMode mode;
-  final Future<bool> Function(ProductSkuCartSubmitPayload payload) onSubmit;
+  final ProductSkuCartSubmitCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +163,7 @@ class _ProductSkuCartSideSheetBody extends StatefulWidget {
   final bool showMainImage;
   final CartProductDto? cartLine;
   final ProductSkuCartSheetMode mode;
-  final Future<bool> Function(ProductSkuCartSubmitPayload payload) onSubmit;
+  final ProductSkuCartSubmitCallback onSubmit;
 
   @override
   State<_ProductSkuCartSideSheetBody> createState() =>
@@ -337,6 +347,7 @@ class _ProductSkuCartSideSheetBodyState
       _errorMessage = null;
     });
     final ok = await widget.onSubmit(
+      context,
       ProductSkuCartSubmitPayload(
         apiProductId: sub.pid!,
         subIndex: subIndex,
@@ -697,12 +708,12 @@ class _ProductSkuCartSideSheetBodyState
                     onPressed: !hasMatchedSku || _isSubmitting
                         ? null
                         : () => _onPrimaryPressed(
-                            context,
-                            selected,
-                            variants,
-                            skuRowSelection,
-                            skuResolved,
-                          ),
+                              context,
+                              selected,
+                              variants,
+                              skuRowSelection,
+                              skuResolved,
+                            ),
                     child: _isSubmitting
                         ? const SizedBox(
                             height: 22,

@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:groe_app_pad/shared/widgets/dialog/show_mall_confirm_dialog.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
@@ -381,17 +382,21 @@ class _CartPageState extends ConsumerState<CartPage> {
         .toList(growable: false);
     final hasSelectedItems = selectedIds.isNotEmpty;
 
-    final confirmed = await _showProMaxConfirmDialog(
-      title: hasSelectedItems ? '确认删除选中商品？' : '确认清空购物车？',
+    final confirmed = await showMallConfirmDialog(
+      context: context,
+      title: hasSelectedItems
+          ? 'Remove selected lines?'
+          : 'Clear entire shortlist?',
       message: hasSelectedItems
-          ? '当前已选中 ${selectedIds.length} 项商品，确认删除这些选中项吗？'
-          : '此操作会清空当前已加载站点的全部购物车内容。',
-      confirmLabel: hasSelectedItems ? '删除选中' : '确认清空',
+          ? '${selectedIds.length} selected lines will be removed from '
+              'your shortlist.'
+          : 'This clears all cart lines currently loaded for your sites.',
+      confirmLabel: hasSelectedItems ? 'Remove' : 'Clear all',
       icon: hasSelectedItems
           ? Icons.delete_sweep_rounded
           : Icons.cleaning_services_rounded,
       accentColor: hasSelectedItems
-          ? const Color(0xFFFF6E76)
+          ? const Color(0xFFFF7B6B)
           : const Color(0xFFFFB86B),
     );
     if (!mounted || confirmed != true) return;
@@ -485,8 +490,8 @@ class _CartPageState extends ConsumerState<CartPage> {
         showMainImage: true,
         cartLine: item,
         mode: ProductSkuCartSheetMode.changeSpec,
-        onSubmit: (payload) async {
-          final space = await resolveSpaceForCartAdd(context);
+        onSubmit: (sheetContext, payload) async {
+          final space = await resolveSpaceForCartAdd(sheetContext);
           if (space == null) return false;
           return ref.read(cartControllerProvider.notifier).changeCartItemSpec(
                 cartItemId: item.id,
@@ -583,150 +588,15 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 
   Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
-    final result = await _showProMaxConfirmDialog(
-      title: '确认删除该商品？',
+    final result = await showMallConfirmDialog(
+      context: context,
+      title: 'Remove this line?',
       message: item.name,
-      confirmLabel: '删除',
+      confirmLabel: 'Remove',
       icon: Icons.delete_forever_rounded,
-      accentColor: const Color(0xFFFF6E76),
+      accentColor: const Color(0xFFFF7B6B),
     );
     return result == true;
-  }
-
-  Future<bool?> _showProMaxConfirmDialog({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    required IconData icon,
-    required Color accentColor,
-  }) {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          tween: Tween<double>(begin: 0.92, end: 1),
-          builder: (context, value, child) {
-            final opacity = ((value - 0.92) / 0.08).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: opacity,
-              child: Transform.scale(scale: value, child: child),
-            );
-          },
-          child: Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF1C2431).withValues(alpha: 0.96),
-                  const Color(0xFF131A24).withValues(alpha: 0.96),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 28,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.20),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: accentColor.withValues(alpha: 0.35),
-                        ),
-                      ),
-                      child: Icon(icon, size: 16, color: accentColor),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: ProMaxTokens.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  message,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.95),
-                    height: 1.45,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(38),
-                          foregroundColor: Colors.white70,
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.24),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('取消'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(38),
-                          backgroundColor: accentColor.withValues(alpha: 0.86),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(confirmLabel),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ),
-        );
-      },
-    );
   }
 
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
+import 'package:groe_app_pad/shared/widgets/dialog/show_mall_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -36,49 +37,19 @@ Future<void> showSessionExpiredDialog(String message) async {
   }
   messenger?.hideCurrentSnackBar();
 
-  await showDialog<void>(
+  await showMallSessionExpiredDialog(
     context: rootContext,
     useRootNavigator: true,
-    barrierDismissible: false,
-    builder: (dialogContext) {
-      return PopScope(
-        canPop: false,
-        child: AlertDialog(
-          backgroundColor: Colors.black.withValues(alpha: 0.78),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.white.withValues(alpha: 0.16),
-            ),
-          ),
-          title: const Text(
-            'Session Expired',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Text(
-            'Login expired, please log in again.',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                await _sessionExpiredHandler?.call();
-                if (rootContext.mounted) {
-                  GoRouter.of(rootContext).go(AppRoutes.login);
-                }
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('Go to Login'),
-            ),
-          ],
-        ),
-      );
+    title: 'Session ended',
+    message: message.trim().isEmpty
+        ? 'Please sign in again to continue shopping.'
+        : message.trim(),
+    actionLabel: 'Sign in again',
+    onAction: () async {
+      await _sessionExpiredHandler?.call();
+      if (rootContext.mounted) {
+        GoRouter.of(rootContext).go(AppRoutes.login);
+      }
     },
   );
 

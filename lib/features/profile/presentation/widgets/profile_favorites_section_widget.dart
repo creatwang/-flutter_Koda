@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
@@ -136,8 +136,8 @@ class _ProfileFavoritesSectionWidgetState
         detail: detail,
         showMainImage: true,
         mode: ProductSkuCartSheetMode.addToCart,
-        onSubmit: (payload) async {
-          final space = await resolveSpaceForCartAdd(context);
+        onSubmit: (sheetContext, payload) async {
+          final space = await resolveSpaceForCartAdd(sheetContext);
           if (space == null) return false;
           return ref
               .read(cartControllerProvider.notifier)

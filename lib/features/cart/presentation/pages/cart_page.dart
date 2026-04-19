@@ -39,7 +39,7 @@ class _CartPageState extends ConsumerState<CartPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cartState = ref.watch(cartControllerProvider);
-    final totalCount = ref.watch(cartBadgeCountProvider);
+    final totalCount = ref.watch(cartListBadgeCountProvider);
     final selectedCount = ref.watch(cartSelectedCountProvider);
     final selectedAmount = ref.watch(cartSelectedAmountProvider);
     final canExportQuotation =

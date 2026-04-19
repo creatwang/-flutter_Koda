@@ -75,7 +75,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cartCount = _section == HomeSection.cart
-        ? ref.watch(cartBadgeCountProvider)
+        ? ref.watch(cartListBadgeCountProvider)
         : 0;
 
     final Widget body = switch (_section) {

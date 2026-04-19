@@ -20,32 +20,47 @@ bool _isAuthenticatedBySession(Session? session) {
   return session?.isAuthenticated == true;
 }
 
-/// 服务端购物车总件数（`GET /store/cart/num`），与会话联动。
-final cartServerTotalNumProvider = FutureProvider.autoDispose<int>((
-  ref,
-) async {
-  final session = ref.watch(sessionControllerProvider).asData?.value;
-  if (!_isAuthenticatedBySession(session)) return 0;
-  final result = await fetchCartTotalNumService();
-  return result.when(
-    success: (n) => n,
-    failure: (e) => throw e,
+/// 角标与购物车页总件数：由当前购物车列表汇总，**不**请求 `/store/cart/num`。
+final cartListBadgeCountProvider = Provider<int>((ref) {
+  return _badgeSumFromCartList(
+    ref.watch(cartControllerProvider).asData?.value,
   );
 });
 
-/// 购物车商品总件数（角标 / Profile CART NUM）：优先服务端 [cartServerTotalNumProvider]，
-/// 加载或失败时回退为当前列表汇总。
-final cartBadgeCountProvider = Provider<int>((ref) {
-  final listSum = _badgeSumFromCartList(
-    ref.watch(cartControllerProvider).asData?.value,
-  );
-  final asyncNum = ref.watch(cartServerTotalNumProvider);
-  return asyncNum.when(
-    data: (serverTotal) => serverTotal,
-    loading: () => listSum,
-    error: (_, __) => listSum,
-  );
-});
+/// 个人中心侧栏 CART NUM：仅在打开 Profile 时请求 `/store/cart/num` 写入快照；
+/// 离开 Profile 或未拉取成功前用 [cartListBadgeCountProvider]。
+final profileCartServerNumProvider =
+    NotifierProvider<ProfileCartServerNumNotifier, int?>(
+      ProfileCartServerNumNotifier.new,
+    );
+
+/// 仅在 [ProfilePage] 打开时调用 [ProfileCartServerNumNotifier.fetchOnProfileOpen]。
+class ProfileCartServerNumNotifier extends Notifier<int?> {
+  @override
+  int? build() {
+    ref.listen(sessionControllerProvider, (_, next) {
+      if (next.asData?.value.isAuthenticated != true) {
+        state = null;
+      }
+    });
+    return null;
+  }
+
+  Future<void> fetchOnProfileOpen() async {
+    final session = ref.read(sessionControllerProvider).asData?.value;
+    if (!_isAuthenticatedBySession(session)) {
+      state = null;
+      return;
+    }
+    final result = await fetchCartTotalNumService();
+    result.when(
+      success: (n) => state = n,
+      failure: (_) => state = null,
+    );
+  }
+
+  void clearSnapshot() => state = null;
+}
 
 /// 当前选中行数量之和。
 final cartSelectedCountProvider = Provider<int>((ref) {
@@ -97,7 +112,6 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       success: (data) {
         state = AsyncData(data);
         unawaited(saveCartListToLocal(items: data));
-        ref.invalidate(cartServerTotalNumProvider);
       },
       failure: (_) {},
     );
@@ -194,7 +208,6 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     return result.when(
       success: (_) {
         unawaited(saveCartListToLocal(items: next));
-        ref.invalidate(cartServerTotalNumProvider);
         return true;
       },
       failure: (_) {

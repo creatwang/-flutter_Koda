@@ -29,6 +29,11 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
     throw (result as ApiFailure<UserInfoBase>).exception;
   }
 
+  /// 登出后由会话层调用：清空内存态（登出路径不 invalidate 本 provider）。
+  void resetAfterLogout() {
+    state = AsyncData(UserInfoBase());
+  }
+
   /// 强制从接口拉取并覆盖缓存。
   Future<void> refresh() async {
     state = const AsyncLoading();

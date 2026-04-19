@@ -17,6 +17,35 @@
     - Settings 右上角手动刷新成功后覆盖写回
   - 恢复时机：`profileUserInfoProvider.build()` 直接读取本地 `user_info_base`
   - 说明：进入 Settings 不强制立即请求；优先展示本地缓存，再按策略同步
+  - 与 `main_user_info` 的分工见下节「主账号快照」：后者不替代本键，仅用于
+    代客态下切回主账号。
+
+- 主账号快照（`main_user_info`，仅业务员代客场景）
+  - 持久化介质：`FlutterSecureStorage`
+  - 存储键：`main_user_info`
+  - 内容形态：与 `user_info_base` 相同，整份 `UserInfoBase` JSON（含当时主账号的
+    `token`、`company_id`、`is_auth_account` 等）。
+  - 写入时机：
+    - 在调用 `POST /store/account/customerLogin` **之前**，从当前
+      `user_info_base` 读出业务员快照并写入；
+    - 若本地**已有** `main_user_info`（已在代客态），则**不再覆盖**，避免把
+      当前客户资料误写成主快照。
+  - 读取与消费：
+    - `mainUserInfoProvider` 异步读取该键；
+    - Profile → Settings：存在快照时展示 **Switch Account**，否则仅展示
+      **Sign Out**。
+  - 清除时机：
+    - **切回主账号**（Switch Account）：用快照写回当前会话（`user_info_base`
+      / `company_id` / `token_map` 等与登录落盘一致）后**删除**该键；
+    - **代客登录失败**：若本轮曾新写入过 `main_user_info`，则回滚删除；
+    - **整包登出**：`secureStorageService.clear()` 会一并删除（与
+      `user_info_base` 等同级别清理）。
+  - 与当前用户资料的关系：
+    - 代客成功后，接口返回的客户 `UserInfoBase` 写入 `user_info_base` 并更新
+      会话；此时 `is_auth_account` 等以接口为准（通常客户为 `false`，侧栏
+      「My Customers」等业务员入口随之隐藏）。
+    - `main_user_info` 与 `user_info_base` 分工：**前者**只用于「能否切回
+      主账号」；**后者**始终表示**当前登录身份**。
 
 - 站点信息（`SiteInfoDto`）
   - 持久化介质：`SharedPreferences`
@@ -63,5 +92,16 @@
 
 - 用户登出时清空购物车缓存。
 - 用户登出时清空站点信息缓存（`site_info_v1`），导出权限随之失效。
-- 用户登出时清空登录态存储（包含 `user_info_base`、`company_id`、`token_map` 等）。
+- 用户登出时清空登录态存储（包含 `user_info_base`、`company_id`、`token_map`、
+  `main_user_info` 等，以 `secureStorageService.clear()` 为准）。
+- 登出路径的 Riverpod 约定（避免登出后再打业务接口）：
+  - **不** `invalidate` 商品列表、收藏、分类树、订单列表等会触发 `build` 拉
+    网的 provider；
+  - `profileUserInfoProvider` 使用 `resetAfterLogout()` 仅清空**内存态**，不
+    `invalidate` 该 provider（避免再走 `build → /store/user/info`）；
+  - 可 `invalidate(mainUserInfoProvider)`：其 `build` 仅**重读安全存储**，无
+    网络请求，用于登出后主账号快照 UI 立即与本地一致。
 - 登录后按需刷新 `/store/cart/listsBySite`，确保跨站点购物车最终以服务端为准。
+- 登录成功、切店、代客登录、切回主账号等会话仍有效且需刷新列表数据时，通过
+  `_invalidateAfterStoreContextChanged()` 统一失效相关 provider（含
+  `profileUserInfoProvider` 等），与「登出仅清存储」区分。

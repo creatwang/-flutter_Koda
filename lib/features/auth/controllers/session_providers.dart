@@ -140,9 +140,10 @@ class SessionController extends AsyncNotifier<Session> {
     }
     await ref.read(authClearTokenServiceProvider)();
     state = const AsyncData(Session(isAuthenticated: false));
-    ref.invalidate(canExportQuotationProvider);
+    // 登出：不调其它业务接口；仅清本地 + 同步内存态。
+    // 勿 invalidate 商品/订单等（会触发 build 拉网）。
     ref.invalidate(mainUserInfoProvider);
-    _invalidateAfterStoreContextChanged();
+    ref.read(profileUserInfoProvider.notifier).resetAfterLogout();
   }
 
   /// 业务员代客登录：先缓存主账号，再写入客户会话并刷新依赖数据。
@@ -153,24 +154,36 @@ class SessionController extends AsyncNotifier<Session> {
     if (snapshot == null) {
       return ApiFailure<void>(AppException('User info missing'));
     }
-    await secureStorageService.saveMainUserInfo(snapshot);
+    // 仅业务员上下文写入主账号快照；已在代客态时勿用当前客户信息覆盖
+    // `main_user_info`。
+    final existingMain = await secureStorageService.readMainUserInfo();
+    final wroteMainThisCall = existingMain == null;
+    if (wroteMainThisCall) {
+      await secureStorageService.saveMainUserInfo(snapshot);
+    }
 
     final loginResult = await loginStoreCustomerService(id: customerRowId);
     if (loginResult is ApiFailure<UserInfoBase>) {
-      await secureStorageService.clearMainUserInfo();
+      if (wroteMainThisCall) {
+        await secureStorageService.clearMainUserInfo();
+      }
       return ApiFailure<void>(loginResult.exception);
     }
     final next = (loginResult as ApiSuccess<UserInfoBase>).data;
     try {
       await persistAuthenticatedUserSnapshot(next);
     } catch (e) {
-      await secureStorageService.clearMainUserInfo();
+      if (wroteMainThisCall) {
+        await secureStorageService.clearMainUserInfo();
+      }
       return ApiFailure<void>(AppException(e.toString()));
     }
     final cid = next.companyId?.toInt();
     final token = next.token?.toString();
     if (cid == null || token == null || token.isEmpty) {
-      await secureStorageService.clearMainUserInfo();
+      if (wroteMainThisCall) {
+        await secureStorageService.clearMainUserInfo();
+      }
       return ApiFailure<void>(AppException('Invalid customer session'));
     }
     state = AsyncData(

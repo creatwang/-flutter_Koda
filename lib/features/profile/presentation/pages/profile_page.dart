@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,10 +52,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   String? _settingsErrorMessage;
   bool _isSavingSettings = false;
   bool _isSigningOut = false;
+  bool _isSwitchingAccount = false;
   bool _hasHydratedName = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        ref.read(profileCartServerNumProvider.notifier).fetchOnProfileOpen(),
+      );
+    });
+  }
+
+  @override
   void dispose() {
+    ref.read(profileCartServerNumProvider.notifier).clearSnapshot();
     _fullNameController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
@@ -168,23 +183,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _onSwitchAccount() async {
-    final result = await ref
-        .read(sessionControllerProvider.notifier)
-        .switchBackToMainUser();
-    if (!mounted) return;
-    result.when(
-      success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Switched to main account.')),
-        );
-        context.go(AppRoutes.home);
-      },
-      failure: (exception) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(exception.message)));
-      },
-    );
+    setState(() => _isSwitchingAccount = true);
+    try {
+      final result = await ref
+          .read(sessionControllerProvider.notifier)
+          .switchBackToMainUser();
+      if (!mounted) return;
+      result.when(
+        success: (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Switched to main account.')),
+          );
+          context.go(AppRoutes.home);
+        },
+        failure: (exception) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(exception.message)));
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _isSwitchingAccount = false);
+    }
   }
 
   Future<void> _onOpenSwitchSiteSheet() async {
@@ -198,7 +218,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final favoriteData = favoriteState.asData?.value;
     final favoriteCount =
         favoriteData?.totalCount ?? favoriteData?.items.length ?? 0;
-    final cartBadgeCount = ref.watch(cartBadgeCountProvider);
+    final listCartBadge = ref.watch(cartListBadgeCountProvider);
+    final profileServerCartNum = ref.watch(profileCartServerNumProvider);
+    final cartBadgeCount = profileServerCartNum ?? listCartBadge;
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id?.toInt();
@@ -277,6 +299,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 showSwitchSiteEntry: widget.showSwitchSiteEntry,
                 hasMainAccountSnapshot: hasMainAccountSnapshot,
                 isSigningOut: _isSigningOut,
+                isSwitchingAccount: _isSwitchingAccount,
                 isSavingSettings: _isSavingSettings,
                 isLoadingUserInfo:
                     contentSection == ProfileContentSection.settings &&
@@ -548,6 +571,7 @@ class _ProfileContentArea extends StatelessWidget {
     required this.showSwitchSiteEntry,
     required this.hasMainAccountSnapshot,
     required this.isSigningOut,
+    required this.isSwitchingAccount,
     required this.isSavingSettings,
     required this.isLoadingUserInfo,
     required this.canViewCustomerOrders,
@@ -573,6 +597,7 @@ class _ProfileContentArea extends StatelessWidget {
   final bool showSwitchSiteEntry;
   final bool hasMainAccountSnapshot;
   final bool isSigningOut;
+  final bool isSwitchingAccount;
   final bool isSavingSettings;
   final bool isLoadingUserInfo;
   final bool canViewCustomerOrders;
@@ -629,7 +654,9 @@ class _ProfileContentArea extends StatelessWidget {
       );
     } else if (isSettings) {
       sectionHeaderTrailing = ProfileSectionHeaderRefreshButton(
-        isEnabled: !isLoadingUserInfo && !isSigningOut,
+        isEnabled: !isLoadingUserInfo &&
+            !isSigningOut &&
+            !isSwitchingAccount,
         onPressed: () async => onRefreshSettings(),
       );
     } else {
@@ -957,6 +984,7 @@ class _ProfileContentArea extends StatelessWidget {
                                           subtitle:
                                               'Switch back to original account',
                                           onTap: onSwitchAccount,
+                                          isLoading: isSwitchingAccount,
                                           isEnabled: !isSigningOut,
                                         ),
                                       ),
@@ -969,6 +997,7 @@ class _ProfileContentArea extends StatelessWidget {
                                           isDanger: true,
                                           onTap: onSignOut,
                                           isLoading: isSigningOut,
+                                          isEnabled: !isSwitchingAccount,
                                         ),
                                       ),
                                     ],
@@ -984,6 +1013,7 @@ class _ProfileContentArea extends StatelessWidget {
                                           isDanger: true,
                                           onTap: onSignOut,
                                           isLoading: isSigningOut,
+                                          isEnabled: !isSwitchingAccount,
                                         ),
                                       ),
                                     ],

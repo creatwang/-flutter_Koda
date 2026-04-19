@@ -21,6 +21,9 @@ class ProfileMyCustomersSectionWidget extends ConsumerStatefulWidget {
 
 class _ProfileMyCustomersSectionWidgetState
     extends ConsumerState<ProfileMyCustomersSectionWidget> {
+  /// 正在代客登录的客户行 `id`；非空时禁止重复点击。
+  int? _loggingInCustomerId;
+
   Future<void> _refresh() async {
     await ref.read(storeCustomersProvider.notifier).refresh();
   }
@@ -30,23 +33,29 @@ class _ProfileMyCustomersSectionWidgetState
   }
 
   Future<void> _onLogin(StoreCustomerItemDto item) async {
-    final result = await ref
-        .read(sessionControllerProvider.notifier)
-        .loginAsStoreCustomer(customerRowId: item.id);
-    if (!mounted) return;
-    result.when(
-      success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Logged in as customer.')));
-        context.go(AppRoutes.home);
-      },
-      failure: (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      },
-    );
+    if (_loggingInCustomerId != null) return;
+    setState(() => _loggingInCustomerId = item.id);
+    try {
+      final result = await ref
+          .read(sessionControllerProvider.notifier)
+          .loginAsStoreCustomer(customerRowId: item.id);
+      if (!mounted) return;
+      result.when(
+        success: (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logged in as customer.')),
+          );
+          context.go(AppRoutes.home);
+        },
+        failure: (e) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.message)));
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _loggingInCustomerId = null);
+    }
   }
 
   Future<void> _confirmDelete(StoreCustomerItemDto item) async {
@@ -154,10 +163,15 @@ class _ProfileMyCustomersSectionWidgetState
                         );
                       }
                       final item = data.items[rowIndex];
+                      final bool loginBusy = _loggingInCustomerId != null;
+                      final bool rowLoginLoading =
+                          _loggingInCustomerId == item.id;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: _CustomerRowCard(
                           item: item,
+                          loginBusy: loginBusy,
+                          rowLoginLoading: rowLoginLoading,
                           onEdit: () => showStoreCustomerFormBottomSheet(
                             context: context,
                             ref: ref,
@@ -252,12 +266,16 @@ class _MyCustomersTableHeader extends StatelessWidget {
 class _CustomerRowCard extends StatelessWidget {
   const _CustomerRowCard({
     required this.item,
+    required this.loginBusy,
+    required this.rowLoginLoading,
     required this.onEdit,
     required this.onDelete,
     required this.onLogin,
   });
 
   final StoreCustomerItemDto item;
+  final bool loginBusy;
+  final bool rowLoginLoading;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onLogin;
@@ -277,7 +295,7 @@ class _CustomerRowCard extends StatelessWidget {
         color: Color.fromRGBO(0, 0, 0, 0.2),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: onLogin,
+          onTap: loginBusy ? null : onLogin,
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
@@ -361,7 +379,7 @@ class _CustomerRowCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         TextButton(
-                          onPressed: onEdit,
+                          onPressed: loginBusy ? null : onEdit,
                           style: TextButton.styleFrom(
                             foregroundColor: ProMaxTokens.textPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -380,7 +398,7 @@ class _CustomerRowCard extends StatelessWidget {
                           ),
                         ),
                         TextButton(
-                          onPressed: onDelete,
+                          onPressed: loginBusy ? null : onDelete,
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.redAccent,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -398,14 +416,22 @@ class _CustomerRowCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed: onLogin,
+                          onPressed: loginBusy ? null : onLogin,
                           style: TextButton.styleFrom(
                             foregroundColor: ProMaxTokens.textPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('Login'),
+                          child: rowLoginLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Login'),
                         ),
                         Icon(
                           Icons.chevron_right_rounded,

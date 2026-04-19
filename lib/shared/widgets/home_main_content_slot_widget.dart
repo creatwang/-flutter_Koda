@@ -24,7 +24,7 @@ class HomeMainContentSlot extends StatelessWidget {
         final panelHeight =
             resolvedHeight > 0 ? resolvedHeight : fallbackHeight;
 
-        return Padding(
+        return Container(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
           child: SizedBox(
             height: panelHeight,

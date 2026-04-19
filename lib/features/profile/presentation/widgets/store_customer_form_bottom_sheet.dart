@@ -23,7 +23,10 @@ Future<void> showStoreCustomerFormBottomSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (ctx) => Padding(
+    builder: (ctx) => Container(
+      decoration: BoxDecoration(
+        border: Border.all()
+      ),
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: DismissKeyboardOnTap(
         child: _StoreCustomerFormSheetBody(

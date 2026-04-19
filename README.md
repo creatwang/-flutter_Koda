@@ -20,10 +20,7 @@ flutter build apk --release
 
 
 清理缓存
-flutter clean
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-
+ 
 
 添加静态资源
 单次

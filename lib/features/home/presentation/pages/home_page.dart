@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,11 +31,36 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   HomeSection _section = HomeSection.products;
   bool _isLogoutLoading = false;
+  bool _showSwitchSiteEntry = false;
+  Timer? _profileSwitchSiteHoldTimer;
 
   @override
   void initState() {
     super.initState();
     _section = _tabToSection(widget.initialTab);
+  }
+
+  @override
+  void dispose() {
+    _profileSwitchSiteHoldTimer?.cancel();
+    super.dispose();
+  }
+
+  static const Duration _kProfileSwitchSiteHoldDuration =
+      Duration(seconds: 10);
+
+  void _beginProfileSwitchSiteHold() {
+    _profileSwitchSiteHoldTimer?.cancel();
+    _profileSwitchSiteHoldTimer = Timer(_kProfileSwitchSiteHoldDuration, () {
+      _profileSwitchSiteHoldTimer = null;
+      if (!mounted) return;
+      setState(() => _showSwitchSiteEntry = !_showSwitchSiteEntry);
+    });
+  }
+
+  void _cancelProfileSwitchSiteHold() {
+    _profileSwitchSiteHoldTimer?.cancel();
+    _profileSwitchSiteHoldTimer = null;
   }
 
   HomeSection _tabToSection(String? tab) {
@@ -56,7 +83,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
       HomeSection.productCategory => const ProductCategoryPage(),
-      HomeSection.profile => const ProfilePage(),
+      HomeSection.profile =>
+          ProfilePage(showSwitchSiteEntry: _showSwitchSiteEntry),
     };
 
     return AdaptiveScaffold(
@@ -81,11 +109,16 @@ class _HomePageState extends ConsumerState<HomePage> {
           selected: _section == HomeSection.cart,
           onTap: () => setState(() => _section = HomeSection.cart),
         ),
-        HeaderMenuButton(
-          label: 'Profile',
-          icon: Icons.person_outline,
-          selected: _section == HomeSection.profile,
-          onTap: () => setState(() => _section = HomeSection.profile),
+        Listener(
+          onPointerDown: (_) => _beginProfileSwitchSiteHold(),
+          onPointerUp: (_) => _cancelProfileSwitchSiteHold(),
+          onPointerCancel: (_) => _cancelProfileSwitchSiteHold(),
+          child: HeaderMenuButton(
+            label: 'Profile',
+            icon: Icons.person_outline,
+            selected: _section == HomeSection.profile,
+            onTap: () => setState(() => _section = HomeSection.profile),
+          ),
         ),
         IconButton(
           tooltip: l10n.commonLogout,
@@ -160,6 +193,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             label: 'Profile',
             selected: _section == HomeSection.profile,
             onTap: () => setState(() => _section = HomeSection.profile),
+            onPointerDown: (_) => _beginProfileSwitchSiteHold(),
+            onPointerUp: (_) => _cancelProfileSwitchSiteHold(),
+            onPointerCancel: (_) => _cancelProfileSwitchSiteHold(),
           ),
         ],
       ),

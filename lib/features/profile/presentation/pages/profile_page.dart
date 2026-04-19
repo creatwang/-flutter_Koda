@@ -20,7 +20,13 @@ import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 enum ProfileContentSection { settings, myCustomers, orderCenter, favorites }
 
 class ProfilePage extends ConsumerStatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({
+    super.key,
+    this.showSwitchSiteEntry = false,
+  });
+
+  /// 由首页「Profile」入口长按 10s 切换；为 `true` 时在设置中展示切换站点按钮。
+  final bool showSwitchSiteEntry;
 
   @override
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
@@ -262,6 +268,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 onSignOut: _onSignOut,
                 onSwitchAccount: _onSwitchAccount,
                 onOpenSwitchSiteSheet: _onOpenSwitchSiteSheet,
+                showSwitchSiteEntry: widget.showSwitchSiteEntry,
                 hasMainAccountSnapshot: hasMainAccountSnapshot,
                 isSigningOut: _isSigningOut,
                 isSavingSettings: _isSavingSettings,
@@ -512,6 +519,7 @@ class _ProfileContentArea extends StatelessWidget {
     required this.onSignOut,
     required this.onSwitchAccount,
     required this.onOpenSwitchSiteSheet,
+    required this.showSwitchSiteEntry,
     required this.hasMainAccountSnapshot,
     required this.isSigningOut,
     required this.isSavingSettings,
@@ -534,6 +542,7 @@ class _ProfileContentArea extends StatelessWidget {
   final Future<void> Function() onSignOut;
   final Future<void> Function() onSwitchAccount;
   final Future<void> Function() onOpenSwitchSiteSheet;
+  final bool showSwitchSiteEntry;
   final bool hasMainAccountSnapshot;
   final bool isSigningOut;
   final bool isSavingSettings;
@@ -653,151 +662,159 @@ class _ProfileContentArea extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             if (isSettings) ...[
-              if (isLoadingUserInfo)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 10),
-                  child: LinearProgressIndicator(minHeight: 2),
-                ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(bottom: viewInsetsBottom),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Account Settings',
-                        style: TextStyle(
-                          color: ProMaxTokens.iconPrimary,
-                          fontSize: 12,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const SizedBox(height: 10),
-                      ProMaxGlassCardWidget(
-                        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  'Personal Information',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    letterSpacing: 0.6,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
+                child: Stack(
+                  fit: StackFit.expand,
+                  clipBehavior: Clip.hardEdge,
+                  children: <Widget>[
+                    SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: viewInsetsBottom),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Account Settings',
+                            style: TextStyle(
+                              color: ProMaxTokens.iconPrimary,
+                              fontSize: 12,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const SizedBox(height: 14),
-                            Row(
+                          ),
+                          const SizedBox(height: 10),
+                          const SizedBox(height: 10),
+                          ProMaxGlassCardWidget(
+                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: ProMaxInputFieldWidget(
-                                    label: 'FULL NAME',
-                                    controller: fullNameController,
-                                    obscureText: false,
-                                    onTap: ensureFieldVisible,
-                                    errorText:
-                                        showValidation &&
-                                            fullNameController.text
-                                                .trim()
-                                                .isEmpty
-                                        ? 'Required'
-                                        : null,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Text(
+                                      'Personal Information',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        letterSpacing: 0.6,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: ProMaxInputFieldWidget(
-                                    label: 'OLD PASSWORD',
-                                    controller: oldPasswordController,
-                                    obscureText: true,
-                                    onTap: ensureFieldVisible,
-                                    errorText: oldPasswordError,
-                                  ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: 'FULL NAME',
+                                        controller: fullNameController,
+                                        obscureText: false,
+                                        onTap: ensureFieldVisible,
+                                        errorText:
+                                            showValidation &&
+                                                fullNameController.text
+                                                    .trim()
+                                                    .isEmpty
+                                            ? 'Required'
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: 'OLD PASSWORD',
+                                        controller: oldPasswordController,
+                                        obscureText: true,
+                                        onTap: ensureFieldVisible,
+                                        errorText: oldPasswordError,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ProMaxInputFieldWidget(
-                                    label: 'NEW PASSWORD',
-                                    controller: newPasswordController,
-                                    obscureText: true,
-                                    onTap: ensureFieldVisible,
-                                    errorText: newPasswordError,
-                                  ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: 'NEW PASSWORD',
+                                        controller: newPasswordController,
+                                        obscureText: true,
+                                        onTap: ensureFieldVisible,
+                                        errorText: newPasswordError,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: 'CONFIRM PASSWORD',
+                                        controller: confirmPasswordController,
+                                        obscureText: true,
+                                        onTap: ensureFieldVisible,
+                                        errorText: confirmPasswordError,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: ProMaxInputFieldWidget(
-                                    label: 'CONFIRM PASSWORD',
-                                    controller: confirmPasswordController,
-                                    obscureText: true,
-                                    onTap: ensureFieldVisible,
-                                    errorText: confirmPasswordError,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            const SizedBox(height: 2),
-                            SizedBox(
-                              height: 44,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: SizedBox(
-                                      height: 44,
-                                      child: validationMessage == null
-                                          ? const SizedBox.shrink()
-                                          : DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0x26FF6E76),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: const Color(
-                                                    0x55FF7F86,
+                                const SizedBox(height: 14),
+                                const SizedBox(height: 2),
+                                SizedBox(
+                                  height: 44,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: 44,
+                                          child: validationMessage == null
+                                              ? const SizedBox.shrink()
+                                              : DecoratedBox(
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0x26FF6E76,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: const Color(
+                                                        0x55FF7F86,
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                    ),
-                                                child: Row(
-                                                  children: [
-                                                    const Icon(
-                                                      Icons
-                                                          .error_outline_rounded,
-                                                      size: 14,
-                                                      color: Color(0xFFFFA9AD),
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    Expanded(
-                                                      child: SelectableText.rich(
-                                                        TextSpan(
-                                                          text:
-                                                              validationMessage!,
-                                                          style:
-                                                              const TextStyle(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons
+                                                              .error_outline_rounded,
+                                                          size: 14,
+                                                          color: Color(
+                                                            0xFFFFA9AD,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 6,
+                                                        ),
+                                                        Expanded(
+                                                          child: SelectableText.rich(
+                                                            TextSpan(
+                                                              text:
+                                                                  validationMessage!,
+                                                              style: const TextStyle(
                                                                 color: Color(
                                                                   0xFFFFC8CB,
                                                                 ),
@@ -806,168 +823,186 @@ class _ProfileContentArea extends StatelessWidget {
                                                                     FontWeight
                                                                         .w600,
                                                               ),
+                                                            ),
+                                                            maxLines: 1,
+                                                          ),
                                                         ),
-                                                        maxLines: 1,
-                                                      ),
+                                                      ],
                                                     ),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  FilledButton(
-                                    onPressed: isSavingSettings || isSigningOut
-                                        ? null
-                                        : () => onSaveSettings(),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      minimumSize: const Size(120, 44),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                    ),
-                                    child: isSavingSettings
-                                        ? const SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Text('Save Changes'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ProMaxGlassCardWidget(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                const Expanded(
-                                  child: Text(
-                                    'Another  Settings',
-                                    style: TextStyle(
-                                      color: ProMaxTokens.iconPrimary,
-                                      fontSize: 12,
-                                      letterSpacing: 1.2,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                Tooltip(
-                                  message: 'Switch site',
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () => onOpenSwitchSiteSheet(),
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: Ink(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: <Color>[
-                                              const Color(0x55F4C77A),
-                                              const Color(0x28FFC9A8),
-                                            ],
-                                          ),
-                                          border: Border.all(
-                                            color: const Color(0x88F4C77A),
-                                          ),
-                                          boxShadow: <BoxShadow>[
-                                            BoxShadow(
-                                              color: const Color(0x33F4C77A),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.swap_horiz_rounded,
-                                            color: Color(0xFFF4E6C8),
-                                            size: 14,
-                                          ),
                                         ),
                                       ),
-                                    ),
+                                      const SizedBox(width: 10),
+                                      FilledButton(
+                                        onPressed:
+                                            isSavingSettings || isSigningOut
+                                            ? null
+                                            : () => onSaveSettings(),
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          minimumSize: const Size(120, 44),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                        ),
+                                        child: isSavingSettings
+                                            ? const SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : const Text('Save Changes'),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Manage your active session and sign-in account.',
-                              style: TextStyle(
-                                color: ProMaxTokens.textSecondary.withValues(
-                                  alpha: 0.92,
+                          ),
+                          const SizedBox(height: 16),
+                          ProMaxGlassCardWidget(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: <Widget>[
+                                    const Expanded(
+                                      child: Text(
+                                        'Another  Settings',
+                                        style: TextStyle(
+                                          color: ProMaxTokens.iconPrimary,
+                                          fontSize: 12,
+                                          letterSpacing: 1.2,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    if (showSwitchSiteEntry)
+                                      Tooltip(
+                                        message: 'Switch site',
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: () =>
+                                                onOpenSwitchSiteSheet(),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            child: Ink(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: <Color>[
+                                                    const Color(0x55F4C77A),
+                                                    const Color(0x28FFC9A8),
+                                                  ],
+                                                ),
+                                                border: Border.all(
+                                                  color: const Color(
+                                                    0x88F4C77A,
+                                                  ),
+                                                ),
+                                                boxShadow: <BoxShadow>[
+                                                  BoxShadow(
+                                                    color: const Color(
+                                                      0x33F4C77A,
+                                                    ),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.swap_horiz_rounded,
+                                                  color: Color(0xFFF4E6C8),
+                                                  size: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                                fontSize: 12,
-                              ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Manage your active session and sign-in account.',
+                                  style: TextStyle(
+                                    color: ProMaxTokens.textSecondary
+                                        .withValues(alpha: 0.92),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                if (hasMainAccountSnapshot)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _SettingsAccountActionButton(
+                                          icon: Icons.switch_account_rounded,
+                                          title: 'Switch Account',
+                                          subtitle:
+                                              'Switch back to original account',
+                                          onTap: onSwitchAccount,
+                                          isEnabled: !isSigningOut,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _SettingsAccountActionButton(
+                                          icon: Icons.logout_rounded,
+                                          title: 'Sign Out',
+                                          subtitle: 'Exit current account',
+                                          isDanger: true,
+                                          onTap: onSignOut,
+                                          isLoading: isSigningOut,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _SettingsAccountActionButton(
+                                          icon: Icons.logout_rounded,
+                                          title: 'Sign Out',
+                                          subtitle: 'Exit current account',
+                                          isDanger: true,
+                                          onTap: onSignOut,
+                                          isLoading: isSigningOut,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
                             ),
-                            const SizedBox(height: 14),
-                            if (hasMainAccountSnapshot)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _SettingsAccountActionButton(
-                                      icon: Icons.switch_account_rounded,
-                                      title: 'Switch Account',
-                                      subtitle:
-                                          'Switch back to original account',
-                                      onTap: onSwitchAccount,
-                                      isEnabled: !isSigningOut,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: _SettingsAccountActionButton(
-                                      icon: Icons.logout_rounded,
-                                      title: 'Sign Out',
-                                      subtitle: 'Exit current account',
-                                      isDanger: true,
-                                      onTap: onSignOut,
-                                      isLoading: isSigningOut,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _SettingsAccountActionButton(
-                                      icon: Icons.logout_rounded,
-                                      title: 'Sign Out',
-                                      subtitle: 'Exit current account',
-                                      isDanger: true,
-                                      onTap: onSignOut,
-                                      isLoading: isSigningOut,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    if (isLoadingUserInfo)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(minHeight: 2),
+                      ),
+                  ],
                 ),
               ),
             ] else

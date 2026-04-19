@@ -35,11 +35,8 @@ Future<Response<dynamic>> requestAuthLogin({
   );
 }
 
-/// 用户登出（开放接口，无需 token）。
-///
-/// [client]：可选，默认 [publicDioClient]。
 Future<Response<dynamic>> requestAuthLogout({DioClient? client}) {
-  return (client ?? publicDioClient).post(AuthRequests.logoutPath);
+  return (client ?? protectedDioClient).post(AuthRequests.logoutPath);
 }
 
 /// 拉取站点配置（需鉴权）。

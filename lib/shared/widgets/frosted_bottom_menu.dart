@@ -8,12 +8,20 @@ class FrostedBottomMenuItem {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onPointerDown,
+    this.onPointerUp,
+    this.onPointerCancel,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// 可选：用于长按检测等，不拦截 [onTap]。
+  final void Function(PointerDownEvent event)? onPointerDown;
+  final void Function(PointerUpEvent event)? onPointerUp;
+  final void Function(PointerCancelEvent event)? onPointerCancel;
 }
 
 class FrostedBottomMenu extends StatelessWidget {
@@ -56,6 +64,9 @@ class FrostedBottomMenu extends StatelessWidget {
                         label: item.label,
                         selected: item.selected,
                         onTap: item.onTap,
+                        onPointerDown: item.onPointerDown,
+                        onPointerUp: item.onPointerUp,
+                        onPointerCancel: item.onPointerCancel,
                       ),
                     )
                     .toList(growable: false),
@@ -74,12 +85,18 @@ class _BottomMenuTile extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onPointerDown,
+    this.onPointerUp,
+    this.onPointerCancel,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final void Function(PointerDownEvent event)? onPointerDown;
+  final void Function(PointerUpEvent event)? onPointerUp;
+  final void Function(PointerCancelEvent event)? onPointerCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +109,7 @@ class _BottomMenuTile extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.68)
         : Colors.black.withValues(alpha: 0.72);
 
-    return SizedBox(
+    final Widget tile = SizedBox(
       width: 92,
       height: 50,
       child: Material(
@@ -136,5 +153,16 @@ class _BottomMenuTile extends StatelessWidget {
         ),
       ),
     );
+    if (onPointerDown != null ||
+        onPointerUp != null ||
+        onPointerCancel != null) {
+      return Listener(
+        onPointerDown: onPointerDown,
+        onPointerUp: onPointerUp,
+        onPointerCancel: onPointerCancel,
+        child: tile,
+      );
+    }
+    return tile;
   }
 }

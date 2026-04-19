@@ -7,7 +7,8 @@ import 'package:groe_app_pad/features/profile/models/paginated_store_customers_s
 import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
 
 /// 拉取客户列表第一页（含筛选参数）。
-Future<ApiResult<PaginatedStoreCustomersState>> fetchStoreCustomersFirstPageService({
+Future<ApiResult<PaginatedStoreCustomersState>>
+fetchStoreCustomersFirstPageService({
   required int companyId,
   String status = '',
   String keyword = '',
@@ -153,14 +154,36 @@ Future<ApiResult<void>> updateStoreCustomerService({
   }
 }
 
-/// 删除客户账号。
-Future<ApiResult<void>> deleteStoreCustomerService({
-  required int id,
+/// 设置客户公共密码（`POST /store/account/customerResetPwd`）。
+Future<ApiResult<void>> resetStoreCustomerCommonPasswordService({
+  required String password,
 }) async {
   try {
-    final response = await requestStoreCustomerDelete(
-      id: id,
+    final response = await requestStoreCustomerResetPwd(password: password);
+    if (_isMutationSuccess(response.data)) {
+      return const ApiSuccess(null);
+    }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      message:
+          _messageFromBody(response.data) ?? 'Reset common password failed',
     );
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Reset common password failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+/// 删除客户账号。
+Future<ApiResult<void>> deleteStoreCustomerService({required int id}) async {
+  try {
+    final response = await requestStoreCustomerDelete(id: id);
     if (_isMutationSuccess(response.data)) {
       return const ApiSuccess(null);
     }
@@ -227,9 +250,7 @@ PaginatedStoreCustomersState? _parseCustomerListPage(
     if (e is Map<String, dynamic>) {
       items.add(StoreCustomerItemDto.fromJson(e));
     } else if (e is Map) {
-      items.add(
-        StoreCustomerItemDto.fromJson(Map<String, dynamic>.from(e)),
-      );
+      items.add(StoreCustomerItemDto.fromJson(Map<String, dynamic>.from(e)));
     }
   }
   final total = _readInt(root['total']) ?? items.length;
@@ -250,34 +271,45 @@ int? _readInt(dynamic value) {
   return int.tryParse(value.toString());
 }
 
+/// 标准成功包：
+/// `{ "code": 0, "message": "ok", "type": "success", "result": true }`
 bool _isMutationSuccess(dynamic data) {
   if (data == true || data == 1 || data == '1' || data == 'true') {
     return true;
   }
-  if (data is Map<String, dynamic>) {
-    final code = data['code'];
-    if (code is num && code != 0) return false;
-    if (code is String &&
-        code != '0' &&
-        code.toLowerCase() != 'success') {
+  if (data is! Map) return false;
+  final map = Map<String, dynamic>.from(data);
+  final code = map['code'];
+  if (code is num && code != 0) return false;
+  if (code is String) {
+    final cs = code.trim().toLowerCase();
+    if (cs != '0' && cs != 'success') return false;
+  }
+
+  final dynamic result = map['result'];
+  if (map.containsKey('result')) {
+    if (result == false ||
+        result == 0 ||
+        result?.toString().toLowerCase() == 'false' ||
+        result?.toString() == '0') {
       return false;
     }
-    final type = data['type']?.toString().toLowerCase();
-    if (type == 'success') return true;
-    if (code is num && code == 0) return true;
-    if (code is String && code == '0') return true;
-    final result = data['result'];
-    return result == true ||
-        result == 1 ||
-        result?.toString() == '1' ||
-        result?.toString().toLowerCase() == 'true';
   }
-  return false;
+
+  final type = map['type']?.toString().toLowerCase();
+  if (type == 'success') return true;
+  if (code is num && code == 0) return true;
+  if (code is String && code.trim() == '0') return true;
+
+  return result == true ||
+      result == 1 ||
+      result?.toString() == '1' ||
+      result?.toString().toLowerCase() == 'true';
 }
 
 String? _messageFromBody(dynamic data) {
-  if (data is Map<String, dynamic>) {
-    return data['message']?.toString();
+  if (data is Map) {
+    return Map<String, dynamic>.from(data)['message']?.toString();
   }
   return null;
 }

@@ -16,13 +16,35 @@ final cartControllerProvider =
       CartController.new,
     );
 
-/// 购物车商品总件数（用于角标）。
+bool _isAuthenticatedBySession(Session? session) {
+  return session?.isAuthenticated == true;
+}
+
+/// 服务端购物车总件数（`GET /store/cart/num`），与会话联动。
+final cartServerTotalNumProvider = FutureProvider.autoDispose<int>((
+  ref,
+) async {
+  final session = ref.watch(sessionControllerProvider).asData?.value;
+  if (!_isAuthenticatedBySession(session)) return 0;
+  final result = await fetchCartTotalNumService();
+  return result.when(
+    success: (n) => n,
+    failure: (e) => throw e,
+  );
+});
+
+/// 购物车商品总件数（角标 / Profile CART NUM）：优先服务端 [cartServerTotalNumProvider]，
+/// 加载或失败时回退为当前列表汇总。
 final cartBadgeCountProvider = Provider<int>((ref) {
-  final cartData = ref.watch(cartControllerProvider).asData?.value;
-  if (cartData == null) return 0;
-  return _allProducts(
-    cartData,
-  ).fold<int>(0, (sum, item) => sum + item.productNum);
+  final listSum = _badgeSumFromCartList(
+    ref.watch(cartControllerProvider).asData?.value,
+  );
+  final asyncNum = ref.watch(cartServerTotalNumProvider);
+  return asyncNum.when(
+    data: (serverTotal) => serverTotal,
+    loading: () => listSum,
+    error: (_, __) => listSum,
+  );
 });
 
 /// 当前选中行数量之和。
@@ -75,6 +97,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       success: (data) {
         state = AsyncData(data);
         unawaited(saveCartListToLocal(items: data));
+        ref.invalidate(cartServerTotalNumProvider);
       },
       failure: (_) {},
     );
@@ -171,6 +194,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     return result.when(
       success: (_) {
         unawaited(saveCartListToLocal(items: next));
+        ref.invalidate(cartServerTotalNumProvider);
         return true;
       },
       failure: (_) {
@@ -330,10 +354,12 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     final session = ref.read(sessionControllerProvider).asData?.value;
     return _isAuthenticatedBySession(session);
   }
+}
 
-  bool _isAuthenticatedBySession(Session? session) {
-    return session?.isAuthenticated == true;
-  }
+int _badgeSumFromCartList(List<CartListDto>? cartData) {
+  if (cartData == null) return 0;
+  return _allProducts(cartData)
+      .fold<int>(0, (sum, item) => sum + item.productNum);
 }
 
 List<CartProductDto> _allProducts(List<CartListDto> source) {

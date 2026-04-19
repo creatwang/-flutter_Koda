@@ -5,6 +5,57 @@ import 'package:groe_app_pad/features/cart/api/cart_requests.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
 
 /// 购物车网络结果解析与 [AppException] 映射（调用 `cart_requests`）。
+
+/// `GET /store/cart/num` → `result.total_num`。
+Future<ApiResult<int>> fetchCartTotalNumService() async {
+  try {
+    final response = await requestCartNum();
+    final dynamic data = response.data;
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid cart num response format',
+      );
+    }
+    final map = Map<String, dynamic>.from(data);
+    final code = map['code'];
+    if (code is num && code != 0) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: map['message']?.toString() ?? 'Cart num request failed',
+      );
+    }
+    if (code is String && code != '0' && code.trim() != '0') {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: map['message']?.toString() ?? 'Cart num request failed',
+      );
+    }
+    final dynamic resultNode = map['result'];
+    if (resultNode is! Map) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Missing result in cart num response',
+      );
+    }
+    final resultMap = Map<String, dynamic>.from(resultNode);
+    final dynamic raw = resultMap['total_num'];
+    final int total = raw is int
+        ? raw
+        : (raw is num ? raw.toInt() : int.tryParse(raw?.toString() ?? '') ?? 0);
+    return ApiSuccess(total);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Fetch cart num failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
 Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
   bool bypassMemoryCache = false,
 }) async {

@@ -7,6 +7,7 @@ class CartRequests {
   CartRequests._();
 
   static const String listBySitePath = '/store/cart/listsBySite';
+  static const String numPath = '/store/cart/num';
   static const String selectedPath = '/store/cart/selected';
   static const String changePath = '/store/cart/change';
   static const String createPath = '/store/cart/create';
@@ -14,6 +15,16 @@ class CartRequests {
   static const String createBySitesPath = '/store/order/createBySites';
   static const String deletePath = '/store/cart/del';
   static const String clearPath = '/store/cart/clear';
+}
+
+/// 购物车商品总件数（需鉴权）。
+///
+/// [client]：可选，默认 [protectedDioClient]。
+Future<Response<dynamic>> requestCartNum({DioClient? client}) {
+  return (client ?? protectedDioClient).get(
+    CartRequests.numPath,
+    options: Options(extra: <String, dynamic>{'noCache': true}),
+  );
 }
 
 /// 按站点拉取购物车列表（需鉴权）。

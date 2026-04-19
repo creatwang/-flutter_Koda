@@ -10,6 +10,7 @@ import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favor
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
+import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
@@ -194,6 +195,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final favoriteData = favoriteState.asData?.value;
     final favoriteCount =
         favoriteData?.totalCount ?? favoriteData?.items.length ?? 0;
+    final cartBadgeCount = ref.watch(cartBadgeCountProvider);
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id?.toInt();
@@ -237,6 +239,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               profileName: userName,
               profileId: userId,
               favoriteCount: favoriteCount,
+              cartBadgeCount: cartBadgeCount,
               currentSection: contentSection,
               menus: visibleMenus,
               onSectionChanged: (next) {
@@ -296,6 +299,7 @@ class _ProfileSidebar extends StatelessWidget {
     required this.profileName,
     required this.profileId,
     required this.favoriteCount,
+    required this.cartBadgeCount,
     required this.currentSection,
     required this.menus,
     required this.onSectionChanged,
@@ -305,6 +309,7 @@ class _ProfileSidebar extends StatelessWidget {
   final String profileName;
   final int? profileId;
   final int favoriteCount;
+  final int cartBadgeCount;
   final ProfileContentSection currentSection;
   final List<_ProfileSectionMeta> menus;
   final ValueChanged<ProfileContentSection> onSectionChanged;
@@ -418,8 +423,11 @@ class _ProfileSidebar extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Expanded(
-                            child: _StatTile(value: '24', label: 'CART NUM'),
+                          Expanded(
+                            child: _StatTile(
+                              value: '$cartBadgeCount',
+                              label: 'CART NUM',
+                            ),
                           ),
                         ],
                       ),
@@ -611,56 +619,59 @@ class _ProfileContentArea extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: ProMaxTokens.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.0,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x55000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (isOrderCenter && canViewCustomerOrders)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: ProfileOrderTabSwitcherWidget(
-                      currentTab: currentOrderTab,
-                      onTabChanged: onOrderTabChanged,
-                    ),
-                  ),
-                if (isSettings)
-                  Material(
-                    color: ProMaxTokens.cardBackground,
-                    borderRadius: BorderRadius.circular(10),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: isLoadingUserInfo || isSigningOut
-                          ? null
-                          : () async => onRefreshSettings(),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.refresh,
-                          color: Colors.white,
-                          size: 19,
-                        ),
+            // 各分区大标题；My customers 在列表内自带顶栏，此处省略避免重复。
+            if (currentSection != ProfileContentSection.myCustomers) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: ProMaxTokens.textPrimary,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.0,
+                        shadows: [
+                          Shadow(
+                            color: Color(0x55000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                  if (isOrderCenter && canViewCustomerOrders)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ProfileOrderTabSwitcherWidget(
+                        currentTab: currentOrderTab,
+                        onTabChanged: onOrderTabChanged,
+                      ),
+                    ),
+                  if (isSettings)
+                    Material(
+                      color: ProMaxTokens.cardBackground,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: isLoadingUserInfo || isSigningOut
+                            ? null
+                            : () async => onRefreshSettings(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.refresh,
+                            color: Colors.white,
+                            size: 19,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+            ],
             if (isSettings) ...[
               Expanded(
                 child: Stack(

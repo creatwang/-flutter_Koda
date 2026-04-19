@@ -11,6 +11,7 @@ class CustomerAccountRequests {
   static const String customerCreatePath = '/store/account/customerCreate';
   static const String customerLoginPath = '/store/account/customerLogin';
   static const String customerDeletePath = '/store/account/customerDelete';
+  static const String customerResetPwdPath = '/store/account/customerResetPwd';
 
   /// 平板端与门店切换等接口一致。
   static const int padTerminal = 5;
@@ -34,6 +35,8 @@ Future<Response<dynamic>> requestStoreCustomerList({
       'keyword': keyword,
       'company_id': companyId,
     },
+    // 列表结果随当前登录用户/token 变化；缓存键不含鉴权信息，故禁用 GET 缓存。
+    options: Options(extra: <String, dynamic>{'noCache': true}),
   );
 }
 
@@ -89,10 +92,7 @@ Future<Response<dynamic>> requestStoreCustomerLogin({
 }) {
   return (client ?? protectedDioClient).post(
     CustomerAccountRequests.customerLoginPath,
-    data: <String, dynamic>{
-      'id': id,
-      'terminal': terminal,
-    },
+    data: <String, dynamic>{'id': id, 'terminal': terminal},
   );
 }
 
@@ -103,8 +103,17 @@ Future<Response<dynamic>> requestStoreCustomerDelete({
 }) {
   return (client ?? protectedDioClient).post(
     CustomerAccountRequests.customerDeletePath,
-    data: <String, dynamic>{
-      'id': id,
-    },
+    data: <String, dynamic>{'id': id},
+  );
+}
+
+/// 设置客户公共密码（需鉴权）。
+Future<Response<dynamic>> requestStoreCustomerResetPwd({
+  required String password,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CustomerAccountRequests.customerResetPwdPath,
+    data: <String, dynamic>{'password': password},
   );
 }

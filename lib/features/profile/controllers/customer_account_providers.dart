@@ -5,11 +5,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/profile/models/paginated_store_customers_state.dart';
 import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
 import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
 
-/// 客户列表（下拉刷新、滚动加载；依赖当前会话 `company_id`）。
+/// 客户列表（下拉刷新、滚动加载；依赖当前会话 `companyId` + `token`）。
 final storeCustomersProvider =
     AsyncNotifierProvider<StoreCustomersNotifier, PaginatedStoreCustomersState>(
       StoreCustomersNotifier.new,
@@ -24,9 +25,15 @@ class StoreCustomersNotifier
 
   @override
   FutureOr<PaginatedStoreCustomersState> build() async {
-    ref.watch(sessionControllerProvider);
-    final companyId = ref.read(sessionControllerProvider).asData?.value.companyId;
-    if (companyId == null) {
+    // 同时依赖 companyId 与 token，避免仅 token 变化时仍沿用旧列表。
+    final session = ref.watch(
+      sessionControllerProvider.select(
+        (AsyncValue<Session> async) => async.asData?.value,
+      ),
+    );
+    final companyId = session?.companyId;
+    final String? token = session?.token;
+    if (companyId == null || token == null || token.isEmpty) {
       return const PaginatedStoreCustomersState(
         items: [],
         page: 1,
@@ -55,8 +62,11 @@ class StoreCustomersNotifier
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final companyId =
-          ref.read(sessionControllerProvider).asData?.value.companyId;
+      final companyId = ref
+          .read(sessionControllerProvider)
+          .asData
+          ?.value
+          .companyId;
       if (companyId == null) {
         return const PaginatedStoreCustomersState(
           items: [],
@@ -79,7 +89,11 @@ class StoreCustomersNotifier
 
   Future<void> loadMore() async {
     final current = state.asData?.value;
-    final companyId = ref.read(sessionControllerProvider).asData?.value.companyId;
+    final companyId = ref
+        .read(sessionControllerProvider)
+        .asData
+        ?.value
+        .companyId;
     if (current == null ||
         companyId == null ||
         !current.hasMore ||
@@ -100,7 +114,9 @@ class StoreCustomersNotifier
     state = result.when(
       success: (pageData) {
         final oldIds = current.items.map((e) => e.id).toSet();
-        final delta = pageData.items.where((e) => !oldIds.contains(e.id)).toList();
+        final delta = pageData.items
+            .where((e) => !oldIds.contains(e.id))
+            .toList();
         final merged = [...current.items, ...delta];
         return AsyncData(
           current.copyWith(
@@ -154,10 +170,13 @@ class StoreCustomersNotifier
     return result;
   }
 
+  /// `POST /store/account/customerResetPwd`，与列表状态无耦合。
+  Future<ApiResult<void>> resetCommonPassword({required String password}) {
+    return resetStoreCustomerCommonPasswordService(password: password);
+  }
+
   Future<ApiResult<void>> deleteCustomer(StoreCustomerItemDto item) async {
-    final result = await deleteStoreCustomerService(
-      id: item.id,
-    );
+    final result = await deleteStoreCustomerService(id: item.id);
     if (result is ApiSuccess<void>) {
       await refresh();
     }

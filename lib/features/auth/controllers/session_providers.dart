@@ -14,7 +14,6 @@ import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
 import 'package:groe_app_pad/features/auth/services/store_company_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
-import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
 import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
 import 'package:groe_app_pad/features/profile/services/profile_services.dart';
@@ -63,7 +62,7 @@ class SessionController extends AsyncNotifier<Session> {
             companyId: pair.companyId,
           ),
         );
-        ref.invalidate(canExportQuotationProvider);
+        _invalidateAfterStoreContextChanged();
         return true;
       },
       failure: (exception) {
@@ -214,7 +213,7 @@ class SessionController extends AsyncNotifier<Session> {
     ref.invalidate(favoriteProductsProvider);
     ref.invalidate(categoryTreeProvider);
     ref.invalidate(storeCompanyListProvider);
-    ref.invalidate(storeCustomersProvider);
+    // 客户列表已在 build 内 watch 会话，勿再 invalidate（会循环 import）。
   }
 
   FutureOr<Session> _toSession(int? companyId) async {

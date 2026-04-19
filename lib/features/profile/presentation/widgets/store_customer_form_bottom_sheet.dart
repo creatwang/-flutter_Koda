@@ -20,64 +20,68 @@ Future<void> showStoreCustomerFormBottomSheet({
   StoreCustomerItemDto? editing,
 }) {
   final title = mode == StoreCustomerSheetMode.create
-      ? 'New customer'
-      : 'Edit customer';
+      ? 'New Customer'
+      : 'Edit Customer';
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (BuildContext sheetContext) {
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.58,
-        minChildSize: 0.36,
-        maxChildSize: 0.92,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return DecoratedBox(
-            decoration: const BoxDecoration(
-              color: Color(0xFF1A1D24),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-              border: Border(
-                top: BorderSide(color: Color(0x44FFFFFF)),
+      final keyboardBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(bottom: keyboardBottom),
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.58,
+          minChildSize: 0.36,
+          maxChildSize: 0.92,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A1D24),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                border: Border(top: BorderSide(color: Color(0x44FFFFFF))),
               ),
-            ),
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 10),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(99),
+              child: Column(
+                children: <Widget>[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: ProMaxTokens.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: ProMaxTokens.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: _StoreCustomerFormSheetBody(
-                    scrollController: scrollController,
-                    parentRef: ref,
-                    mode: mode,
-                    editing: editing,
+                  Expanded(
+                    child: _StoreCustomerFormSheetBody(
+                      scrollController: scrollController,
+                      parentRef: ref,
+                      mode: mode,
+                      editing: editing,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       );
     },
   );
@@ -101,11 +105,21 @@ class _StoreCustomerFormSheetBody extends StatefulWidget {
       _StoreCustomerFormSheetBodyState();
 }
 
-class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody> {
+class _StoreCustomerFormSheetBodyState
+    extends State<_StoreCustomerFormSheetBody> {
+  static const int _kFieldBlockCount = 4;
+
+  final List<GlobalKey> _fieldBlockKeys = List<GlobalKey>.generate(
+    _kFieldBlockCount,
+    (_) => GlobalKey(),
+  );
+
   late final TextEditingController _usernameController;
   late final TextEditingController _passwordController;
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  late final List<FocusNode> _fieldFocusNodes;
+
   bool _showValidation = false;
   String? _errorMessage;
   bool _submitting = false;
@@ -118,15 +132,45 @@ class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody
     _passwordController = TextEditingController();
     _nameController = TextEditingController(text: e?.name ?? '');
     _phoneController = TextEditingController(text: e?.telephone ?? '');
+    _fieldFocusNodes = List<FocusNode>.generate(_kFieldBlockCount, (int i) {
+      final GlobalKey blockKey = _fieldBlockKeys[i];
+      final FocusNode node = FocusNode();
+      node.addListener(() {
+        if (node.hasFocus) {
+          _scheduleScrollBlockIntoView(blockKey);
+        }
+      });
+      return node;
+    });
   }
 
   @override
   void dispose() {
+    for (final FocusNode n in _fieldFocusNodes) {
+      n.dispose();
+    }
     _usernameController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _scheduleScrollBlockIntoView(GlobalKey blockKey) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(milliseconds: 120), () async {
+        if (!mounted) return;
+        final BuildContext? target = blockKey.currentContext;
+        if (target == null || !target.mounted) return;
+        await Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          alignment: 0.12,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        );
+      });
+    });
   }
 
   bool _validate() {
@@ -181,9 +225,9 @@ class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody
     setState(() => _submitting = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Success')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Success')));
         Navigator.of(context).pop();
       },
       failure: (exception) {
@@ -195,72 +239,113 @@ class _StoreCustomerFormSheetBodyState extends State<_StoreCustomerFormSheetBody
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
-    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
     return DismissKeyboardOnTap(
       child: SingleChildScrollView(
         controller: widget.scrollController,
-        padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + bottom + viewInsetsBottom),
+        padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            ProMaxInputFieldWidget(
-              label: 'USERNAME OR EMAIL',
-              controller: _usernameController,
-              obscureText: false,
-              errorText: _showValidation &&
-                      _usernameController.text.trim().length < 6
-                  ? 'Min 6 characters'
-                  : null,
-            ),
-            Text(
-              'Login identifier for this customer account.',
-              style: TextStyle(
-                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-                fontSize: 11,
+            KeyedSubtree(
+              key: _fieldBlockKeys[0],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ProMaxInputFieldWidget(
+                    label: 'USERNAME OR EMAIL',
+                    controller: _usernameController,
+                    focusNode: _fieldFocusNodes[0],
+                    obscureText: false,
+                    errorText:
+                        _showValidation &&
+                            _usernameController.text.trim().length < 6
+                        ? 'Min 6 characters'
+                        : null,
+                  ),
+                  Text(
+                    'Login identifier for this customer account.',
+                    style: TextStyle(
+                      color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
-            ProMaxInputFieldWidget(
-              label: 'PASSWORD',
-              controller: _passwordController,
-              obscureText: true,
-              errorText: _showValidation &&
-                      _passwordController.text.trim().length < 6
-                  ? 'Min 6 characters'
-                  : null,
-            ),
-            Text(
-              'Required for create and update (min 6 characters).',
-              style: TextStyle(
-                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-                fontSize: 11,
+            KeyedSubtree(
+              key: _fieldBlockKeys[1],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ProMaxInputFieldWidget(
+                    label: 'PASSWORD',
+                    controller: _passwordController,
+                    focusNode: _fieldFocusNodes[1],
+                    obscureText: true,
+                    errorText:
+                        _showValidation &&
+                            _passwordController.text.trim().length < 6
+                        ? 'Min 6 characters'
+                        : null,
+                  ),
+                  Text(
+                    'Required for create and update (min 6 characters).',
+                    style: TextStyle(
+                      color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
-            ProMaxInputFieldWidget(
-              label: 'NAME',
-              controller: _nameController,
-              obscureText: false,
-            ),
-            Text(
-              'Display name.',
-              style: TextStyle(
-                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-                fontSize: 11,
+            KeyedSubtree(
+              key: _fieldBlockKeys[2],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ProMaxInputFieldWidget(
+                    label: 'NAME',
+                    controller: _nameController,
+                    focusNode: _fieldFocusNodes[2],
+                    obscureText: false,
+                  ),
+                  Text(
+                    'Display name.',
+                    style: TextStyle(
+                      color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
-            ProMaxInputFieldWidget(
-              label: 'PHONE',
-              controller: _phoneController,
-              obscureText: false,
-            ),
-            Text(
-              'Contact telephone.',
-              style: TextStyle(
-                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-                fontSize: 11,
+            KeyedSubtree(
+              key: _fieldBlockKeys[3],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ProMaxInputFieldWidget(
+                    label: 'PHONE',
+                    controller: _phoneController,
+                    focusNode: _fieldFocusNodes[3],
+                    obscureText: false,
+                  ),
+                  Text(
+                    'Contact telephone.',
+                    style: TextStyle(
+                      color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (_errorMessage != null) ...[

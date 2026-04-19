@@ -9,6 +9,7 @@ class ProMaxInputFieldWidget extends StatelessWidget {
     this.obscureText = false,
     this.errorText,
     this.onTap,
+    this.focusNode,
     this.labelColor,
     this.leadingIconColor,
     this.fillColor,
@@ -20,6 +21,7 @@ class ProMaxInputFieldWidget extends StatelessWidget {
   final bool obscureText;
   final String? errorText;
   final VoidCallback? onTap;
+  final FocusNode? focusNode;
   final Color? labelColor;
   final Color? leadingIconColor;
   final Color? fillColor;
@@ -54,6 +56,7 @@ class ProMaxInputFieldWidget extends StatelessWidget {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
           onTap: onTap,
           style: const TextStyle(color: ProMaxTokens.textPrimary),

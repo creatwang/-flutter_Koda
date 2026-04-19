@@ -7,12 +7,16 @@ import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
+import 'package:groe_app_pad/features/auth/controllers/main_user_providers.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
+import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
 import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
 import 'package:groe_app_pad/features/auth/services/store_company_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
+import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
+import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
 import 'package:groe_app_pad/features/profile/services/profile_services.dart';
 
 import 'store_company_providers.dart';
@@ -93,26 +97,39 @@ class SessionController extends AsyncNotifier<Session> {
           );
         }
         state = AsyncData(
-          Session(
-            isAuthenticated: true,
-            companyId: cid,
-            token: token,
-          ),
+          Session(isAuthenticated: true, companyId: cid, token: token),
         );
-        ref.invalidate(canExportQuotationProvider);
-        ref.invalidate(profileUserInfoProvider);
-        ref.invalidate(productsProvider);
-        ref.invalidate(favoriteProductsProvider);
-        ref.invalidate(categoryTreeProvider);
-        ref.invalidate(storeCompanyListProvider);
+        _invalidateAfterStoreContextChanged();
         return const ApiSuccess<void>(null);
       },
       failure: (exception) => ApiFailure<void>(exception),
     );
   }
 
-  /// 清除令牌与本地购物车/站点缓存，会话置为未登录。
+  /// 清除令牌与本地购物车/站点缓存，会话置为未登录（不请求服务端）。
+  ///
+  /// 用于 token 失效、拦截器回调等场景。
   Future<void> signOut() async {
+    await _clearLocalSessionAfterLogout();
+  }
+
+  /// 先请求 `POST /store/user/logout`，成功后再清理本地会话并失效相关
+  /// provider；失败则保留本地登录态并返回 [ApiFailure]。
+  Future<ApiResult<void>> signOutWithRemoteLogout() async {
+    final previousSession = state.asData?.value;
+    if (previousSession?.isAuthenticated != true) {
+      await _clearLocalSessionAfterLogout();
+      return const ApiSuccess<void>(null);
+    }
+    final remote = await logoutStoreUserService();
+    if (remote is ApiFailure<void>) {
+      return remote;
+    }
+    await _clearLocalSessionAfterLogout();
+    return const ApiSuccess<void>(null);
+  }
+
+  Future<void> _clearLocalSessionAfterLogout() async {
     final previousSession = state.asData?.value;
     if (previousSession?.isAuthenticated == true) {
       try {
@@ -125,6 +142,79 @@ class SessionController extends AsyncNotifier<Session> {
     await ref.read(authClearTokenServiceProvider)();
     state = const AsyncData(Session(isAuthenticated: false));
     ref.invalidate(canExportQuotationProvider);
+    ref.invalidate(mainUserInfoProvider);
+    _invalidateAfterStoreContextChanged();
+  }
+
+  /// 业务员代客登录：先缓存主账号，再写入客户会话并刷新依赖数据。
+  Future<ApiResult<void>> loginAsStoreCustomer({
+    required int customerRowId,
+  }) async {
+    final snapshot = await secureStorageService.readUserInfoBase();
+    if (snapshot == null) {
+      return ApiFailure<void>(AppException('User info missing'));
+    }
+    await secureStorageService.saveMainUserInfo(snapshot);
+
+    final loginResult = await loginStoreCustomerService(id: customerRowId);
+    if (loginResult is ApiFailure<UserInfoBase>) {
+      await secureStorageService.clearMainUserInfo();
+      return ApiFailure<void>(loginResult.exception);
+    }
+    final next = (loginResult as ApiSuccess<UserInfoBase>).data;
+    try {
+      await persistAuthenticatedUserSnapshot(next);
+    } catch (e) {
+      await secureStorageService.clearMainUserInfo();
+      return ApiFailure<void>(AppException(e.toString()));
+    }
+    final cid = next.companyId?.toInt();
+    final token = next.token?.toString();
+    if (cid == null || token == null || token.isEmpty) {
+      await secureStorageService.clearMainUserInfo();
+      return ApiFailure<void>(AppException('Invalid customer session'));
+    }
+    state = AsyncData(
+      Session(isAuthenticated: true, companyId: cid, token: token),
+    );
+    _invalidateAfterStoreContextChanged();
+    ref.invalidate(mainUserInfoProvider);
+    return const ApiSuccess<void>(null);
+  }
+
+  /// 从代客会话切回主账号，并清除主账号缓存。
+  Future<ApiResult<void>> switchBackToMainUser() async {
+    final main = await secureStorageService.readMainUserInfo();
+    if (main == null) {
+      return ApiFailure<void>(AppException('No main account to switch'));
+    }
+    try {
+      await persistAuthenticatedUserSnapshot(main);
+    } catch (e) {
+      return ApiFailure<void>(AppException(e.toString()));
+    }
+    final cid = main.companyId?.toInt();
+    final token = main.token?.toString();
+    if (cid == null || token == null || token.isEmpty) {
+      return ApiFailure<void>(AppException('Invalid main account snapshot'));
+    }
+    await secureStorageService.clearMainUserInfo();
+    state = AsyncData(
+      Session(isAuthenticated: true, companyId: cid, token: token),
+    );
+    _invalidateAfterStoreContextChanged();
+    ref.invalidate(mainUserInfoProvider);
+    return const ApiSuccess<void>(null);
+  }
+
+  void _invalidateAfterStoreContextChanged() {
+    ref.invalidate(canExportQuotationProvider);
+    ref.invalidate(profileUserInfoProvider);
+    ref.invalidate(productsProvider);
+    ref.invalidate(favoriteProductsProvider);
+    ref.invalidate(categoryTreeProvider);
+    ref.invalidate(storeCompanyListProvider);
+    ref.invalidate(storeCustomersProvider);
   }
 
   FutureOr<Session> _toSession(int? companyId) async {

@@ -20,6 +20,7 @@ import 'package:groe_app_pad/features/product/presentation/widgets/product_list_
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 
 class ProductListPage extends ConsumerStatefulWidget {
@@ -275,7 +276,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
     result.when(
       success: (_) {
-        ref.read(favoritesRevisionProvider.notifier).bump();
+        ref.invalidate(favoriteProductsProvider);
         debugPrint(
           '[product_list] trigger=collect_changed, productId=$productId, isCollect=$target',
         );
@@ -422,22 +423,24 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       context: context,
       isScrollControlled: true,
       builder: (_) => StatefulBuilder(
-        builder: (context, setModalState) => SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: ProductFilterPanel(
-              categories: categories,
-              selectedCategoryId: selectedCategoryId,
-              onCategoryTap: (category) {
-                _controller.toggleCategory(category);
-                selectedCategoryId = _controller.selectedCategoryId;
-                _queryBySelectedCategory();
-                setState(() {});
-                setModalState(() {});
-                Navigator.of(context).pop();
-              },
-              onCollapseTap: null,
-              pinApplyButtonToBottom: false,
+        builder: (context, setModalState) => DismissKeyboardOnTap(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: ProductFilterPanel(
+                categories: categories,
+                selectedCategoryId: selectedCategoryId,
+                onCategoryTap: (category) {
+                  _controller.toggleCategory(category);
+                  selectedCategoryId = _controller.selectedCategoryId;
+                  _queryBySelectedCategory();
+                  setState(() {});
+                  setModalState(() {});
+                  Navigator.of(context).pop();
+                },
+                onCollapseTap: null,
+                pinApplyButtonToBottom: false,
+              ),
             ),
           ),
         ),

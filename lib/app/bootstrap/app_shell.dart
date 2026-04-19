@@ -10,6 +10,7 @@ import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:groe_app_pad/shared/services/app_message_service.dart';
 import 'package:groe_app_pad/theme/app_theme.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -123,11 +124,13 @@ class _AppShellState extends ConsumerState<AppShell>
               return MaxWidthBox(
                 maxWidth: 1400,
                 child: ClipRect(
-                  child: ResponsiveScaledBox(
+                    child: ResponsiveScaledBox(
                     // < 600：按 1024 基准做等比缩放（开启）
                     // >= 600：不做全局等比缩放（关闭）
                     width: enableScale ? 1024 : null,
-                    child: child ?? const SizedBox.shrink(),
+                    child: DismissKeyboardOnTap(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               );

@@ -47,13 +47,8 @@ final cartSelectedAmountProvider = Provider<double>((ref) {
 class CartController extends AsyncNotifier<List<CartListDto>> {
   @override
   FutureOr<List<CartListDto>> build() async {
-    ref.listen<AsyncValue<Session>>(sessionControllerProvider, (
-      previous,
-      next,
-    ) {
-      unawaited(_onSessionChanged(previous, next));
-    });
-
+    // 仅依赖 [sessionControllerProvider]：会话/站点变化会触发本 build
+    // 重新拉取购物车，无需再叠一层 [ref.listen]（避免双请求与交叉逻辑）。
     final session = ref.watch(sessionControllerProvider).asData?.value;
     if (!_isAuthenticatedBySession(session)) {
       return const <CartListDto>[];
@@ -299,26 +294,6 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       success: (_) => true,
       failure: (_) => false,
     );
-  }
-
-  Future<void> _onSessionChanged(
-    AsyncValue<Session>? previous,
-    AsyncValue<Session> next,
-  ) async {
-    final previousSession = previous?.asData?.value;
-    final nextSession = next.asData?.value;
-    if (nextSession == null || nextSession.isAuthenticated != true) {
-      state = const AsyncData(<CartListDto>[]);
-      unawaited(clearCartListFromLocal());
-      return;
-    }
-
-    final currentCompanyId = nextSession.companyId;
-    final previousCompanyId = previousSession?.companyId;
-    if (previousCompanyId == currentCompanyId && state.hasValue) {
-      return;
-    }
-    await refresh();
   }
 
   Future<bool> _applySelection({

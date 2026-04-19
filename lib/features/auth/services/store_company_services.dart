@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/auth/api/store_company_requests.dart';
 import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
+import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
 import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
 
 // 门店列表与切换店铺：开放列表解析、切换后会话落盘。
@@ -82,10 +82,7 @@ Future<ApiResult<UserInfoBase>> switchShopService({
         AppException('Missing token in switch response'),
       );
     }
-    await secureStorageService.saveUserInfoBase(user);
-    await secureStorageService.saveCompanyId(resolvedCompanyId);
-    await secureStorageService.saveTokenMap(resolvedCompanyId, token);
-    await syncSiteInfoToLocal(companyId: resolvedCompanyId);
+    await persistAuthenticatedUserSnapshot(user);
     return ApiSuccess(user);
   } on DioException catch (e) {
     return ApiFailure(

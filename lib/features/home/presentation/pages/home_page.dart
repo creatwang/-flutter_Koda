@@ -28,6 +28,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   HomeSection _section = HomeSection.products;
+  bool _isLogoutLoading = false;
 
   @override
   void initState() {
@@ -88,11 +89,41 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
         IconButton(
           tooltip: l10n.commonLogout,
-          onPressed: () async {
-            await ref.read(sessionControllerProvider.notifier).signOut();
-            if (context.mounted) context.go(AppRoutes.login);
-          },
-          icon: const Icon(Icons.logout),
+          onPressed: _isLogoutLoading
+              ? null
+              : () async {
+                  setState(() => _isLogoutLoading = true);
+                  final result = await ref
+                      .read(sessionControllerProvider.notifier)
+                      .signOutWithRemoteLogout();
+                  if (!context.mounted) return;
+                  setState(() => _isLogoutLoading = false);
+                  result.when(
+                    success: (_) => context.go(AppRoutes.login),
+                    failure: (exception) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: SelectableText.rich(
+                            TextSpan(
+                              text: exception.message,
+                              style: const TextStyle(
+                                color: Color(0xFFFFD7D8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+          icon: _isLogoutLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.logout),
         ),
       ],
       floatingActionButton: kDebugMode

@@ -7,6 +7,7 @@ import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -41,9 +42,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final isLoading = sessionState.isLoading;
     final isCompact = MediaQuery.of(context).size.width < 860;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () => FocusScope.of(context).unfocus(),
+    return DismissKeyboardOnTap(
       child: Scaffold(
         body: DecoratedBox(
           decoration: BoxDecoration(

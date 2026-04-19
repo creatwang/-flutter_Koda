@@ -6,19 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 
 /// 商品列表分页（含排序、分类筛选状态）。
 final productsProvider =
     AsyncNotifierProvider<ProductsNotifier, PaginatedProductsState>(
       ProductsNotifier.new,
-    );
-
-/// 收藏列表刷新信号（收藏变更后 [bump]）。
-final favoritesRevisionProvider =
-    NotifierProvider<FavoritesRevisionNotifier, int>(
-      FavoritesRevisionNotifier.new,
     );
 
 /// 收藏商品分页状态。
@@ -124,21 +117,12 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 }
 
-/// 收藏列表版本号（配合 [FavoriteProductsNotifier] `watch` 触发重建）。
-class FavoritesRevisionNotifier extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void bump() => state++;
-}
-
 /// 收藏商品列表：首屏、刷新、分页加载更多。
 class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 20;
 
   @override
   FutureOr<PaginatedProductsState> build() async {
-    ref.watch(favoritesRevisionProvider);
     final result = await fetchFavorProductsPageService(
       page: 1,
       pageSize: _pageSize,
@@ -204,18 +188,6 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     );
   }
 }
-
-/// 列表形态单商品（[id] 为商品 id）。
-final productByIdProvider = FutureProvider.family<ProductItem, int>((
-  ref,
-  id,
-) async {
-  final result = await fetchProductByIdService(id);
-  return result.when(
-    success: (data) => data,
-    failure: (exception) => throw exception,
-  );
-});
 
 /// 商品详情 DTO（[id] 为商品 id）。
 final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((

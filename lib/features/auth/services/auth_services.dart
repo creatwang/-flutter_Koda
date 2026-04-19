@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
+import 'package:groe_app_pad/core/network/dio_client.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
-import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
+import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
 
 import '../models/user_info_bean.dart';
 
@@ -29,6 +29,86 @@ typedef AuthLoginService =
 final authLoginServiceProvider = Provider<AuthLoginService>(
   (ref) => authLoginService,
 );
+
+/// 调用 `POST /store/user/logout`；成功返回 [ApiSuccess]，否则 [ApiFailure]。
+Future<ApiResult<void>> logoutStoreUserService({DioClient? client}) async {
+  try {
+    final response = await requestAuthLogout(client: client);
+    final data = response.data;
+    if (!_isLogoutResponseSuccess(data)) {
+      final message = data is Map<String, dynamic>
+          ? data['message']?.toString()
+          : null;
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: message ?? 'Logout failed',
+        message: message ?? 'Logout failed',
+      );
+    }
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Logout request failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+/// 登出接口约定包：
+/// `{ "code": 0, "message": "ok", "type": "success", "result": true }`
+bool _isLogoutResponseSuccess(dynamic data) {
+  if (data == null || data == '') return true;
+  if (data == false || data == 'false') return false;
+  if (data == true ||
+      data == 1 ||
+      data == '1' ||
+      data?.toString().toLowerCase() == 'true') {
+    return true;
+  }
+  if (data == 0 || data == '0') return false;
+  if (data is Map) {
+    final map = Map<String, dynamic>.from(data);
+    final codeInt = _parseIntLoose(map['code']);
+    if (codeInt != null && codeInt != 0) return false;
+
+    if (map.containsKey('result')) {
+      final result = map['result'];
+      if (result == false ||
+          result == 0 ||
+          result?.toString().toLowerCase() == 'false' ||
+          result?.toString() == '0') {
+        return false;
+      }
+      if (result == true ||
+          result == 1 ||
+          result?.toString() == '1' ||
+          result?.toString().toLowerCase() == 'true') {
+        return true;
+      }
+    }
+    if (codeInt == 0) return true;
+    if (!map.containsKey('code') && !map.containsKey('result')) {
+      return true;
+    }
+    return false;
+  }
+  if (data is String) {
+    final lower = data.trim().toLowerCase();
+    if (lower == 'false' || lower == '0') return false;
+    return lower.isNotEmpty;
+  }
+  return false;
+}
+
+int? _parseIntLoose(Object? value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  return int.tryParse(value.toString());
+}
 
 /// 执行登录并写入 `userInfoBase`、`companyId`、`tokenMap`，同步站点信息。
 ///
@@ -57,13 +137,7 @@ Future<ApiResult<TokenPair>> authLoginService({
         error: 'Invalid company_id in login response',
       );
     }
-    await secureStorageService.saveUserInfoBase(userInfoBase);
-    await secureStorageService.saveCompanyId(companyId);
-    await secureStorageService.saveTokenMap(
-      companyId,
-      userInfoBase.token.toString(),
-    );
-    await syncSiteInfoToLocal(companyId: companyId);
+    await persistAuthenticatedUserSnapshot(userInfoBase);
     return ApiSuccess(
       TokenPair(token: userInfoBase.token.toString(), companyId: companyId),
     );

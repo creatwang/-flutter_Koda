@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
+import 'package:groe_app_pad/features/auth/controllers/main_user_providers.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
+import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
@@ -36,30 +39,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _showSettingsValidation = false;
   String? _settingsErrorMessage;
   bool _isSavingSettings = false;
+  bool _isSigningOut = false;
   bool _hasHydratedName = false;
-
-  static const List<_ProfileSectionMeta> _menus = <_ProfileSectionMeta>[
-    _ProfileSectionMeta(
-      section: ProfileContentSection.settings,
-      label: 'Settings',
-      icon: Icons.settings_outlined,
-    ),
-    _ProfileSectionMeta(
-      section: ProfileContentSection.myCustomers,
-      label: 'My Customers',
-      icon: Icons.groups_outlined,
-    ),
-    _ProfileSectionMeta(
-      section: ProfileContentSection.orderCenter,
-      label: 'Order Center',
-      icon: Icons.notifications_none_outlined,
-    ),
-    _ProfileSectionMeta(
-      section: ProfileContentSection.favorites,
-      label: 'Favorites',
-      icon: Icons.favorite_border,
-    ),
-  ];
 
   @override
   void dispose() {
@@ -159,15 +140,41 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _onSignOut() async {
-    await ref.read(sessionControllerProvider.notifier).signOut();
+    setState(() {
+      _settingsErrorMessage = null;
+      _isSigningOut = true;
+    });
+    final result = await ref
+        .read(sessionControllerProvider.notifier)
+        .signOutWithRemoteLogout();
     if (!mounted) return;
-    context.go(AppRoutes.login);
+    setState(() => _isSigningOut = false);
+    result.when(
+      success: (_) => context.go(AppRoutes.login),
+      failure: (exception) {
+        setState(() => _settingsErrorMessage = exception.message);
+      },
+    );
   }
 
   Future<void> _onSwitchAccount() async {
-    await ref.read(sessionControllerProvider.notifier).signOut();
+    final result = await ref
+        .read(sessionControllerProvider.notifier)
+        .switchBackToMainUser();
     if (!mounted) return;
-    context.go(AppRoutes.login);
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Switched to main account.')),
+        );
+        context.go(AppRoutes.home);
+      },
+      failure: (exception) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(exception.message)));
+      },
+    );
   }
 
   Future<void> _onOpenSwitchSiteSheet() async {
@@ -176,9 +183,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedMeta = _menus.firstWhere(
-      (item) => item.section == _currentSection,
-    );
     final userInfoState = ref.watch(profileUserInfoProvider);
     final favoriteState = ref.watch(favoriteProductsProvider);
     final favoriteData = favoriteState.asData?.value;
@@ -189,6 +193,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = userInfoState.asData?.value.id?.toInt();
     final canViewCustomerOrders =
         userInfoState.asData?.value.isAuthAccount == true;
+    final visibleMenus = _buildProfileSidebarMenus(
+      isSalesRep: canViewCustomerOrders,
+    );
+    final contentSection = _resolveProfileVisibleSection(
+      visibleMenus,
+      _currentSection,
+    );
+    if (contentSection != _currentSection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _currentSection = contentSection);
+        }
+      });
+    }
+    final selectedMeta = visibleMenus.firstWhere(
+      (item) => item.section == contentSection,
+      orElse: () => visibleMenus.first,
+    );
+    final mainUserAsync = ref.watch(mainUserInfoProvider);
+    final hasMainAccountSnapshot = mainUserAsync.maybeWhen(
+      data: (u) => u != null,
+      orElse: () => false,
+    );
     if (!_hasHydratedName && userName.trim().isNotEmpty) {
       _fullNameController.text = userName;
       _hasHydratedName = true;
@@ -204,12 +231,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               profileName: userName,
               profileId: userId,
               favoriteCount: favoriteCount,
-              currentSection: _currentSection,
-              menus: _menus,
+              currentSection: contentSection,
+              menus: visibleMenus,
               onSectionChanged: (next) {
                 setState(() => _currentSection = next);
                 if (next == ProfileContentSection.favorites) {
                   ref.read(favoriteProductsProvider.notifier).refresh();
+                }
+                if (next == ProfileContentSection.myCustomers) {
+                  ref.read(storeCustomersProvider.notifier).refresh();
                 }
               },
             ),
@@ -219,7 +249,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: SizedBox(
               height: double.infinity,
               child: _ProfileContentArea(
-                currentSection: _currentSection,
+                currentSection: contentSection,
                 title: selectedMeta.label,
                 fullNameController: _fullNameController,
                 oldPasswordController: _oldPasswordController,
@@ -232,9 +262,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 onSignOut: _onSignOut,
                 onSwitchAccount: _onSwitchAccount,
                 onOpenSwitchSiteSheet: _onOpenSwitchSiteSheet,
+                hasMainAccountSnapshot: hasMainAccountSnapshot,
+                isSigningOut: _isSigningOut,
                 isSavingSettings: _isSavingSettings,
                 isLoadingUserInfo:
-                    _currentSection == ProfileContentSection.settings &&
+                    contentSection == ProfileContentSection.settings &&
                     userInfoState.isLoading,
                 canViewCustomerOrders: canViewCustomerOrders,
                 currentOrderTab: _currentOrderTab,
@@ -480,6 +512,8 @@ class _ProfileContentArea extends StatelessWidget {
     required this.onSignOut,
     required this.onSwitchAccount,
     required this.onOpenSwitchSiteSheet,
+    required this.hasMainAccountSnapshot,
+    required this.isSigningOut,
     required this.isSavingSettings,
     required this.isLoadingUserInfo,
     required this.canViewCustomerOrders,
@@ -500,6 +534,8 @@ class _ProfileContentArea extends StatelessWidget {
   final Future<void> Function() onSignOut;
   final Future<void> Function() onSwitchAccount;
   final Future<void> Function() onOpenSwitchSiteSheet;
+  final bool hasMainAccountSnapshot;
+  final bool isSigningOut;
   final bool isSavingSettings;
   final bool isLoadingUserInfo;
   final bool canViewCustomerOrders;
@@ -600,7 +636,7 @@ class _ProfileContentArea extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(10),
-                      onTap: isLoadingUserInfo
+                      onTap: isLoadingUserInfo || isSigningOut
                           ? null
                           : () async => onRefreshSettings(),
                       child: Padding(
@@ -782,7 +818,7 @@ class _ProfileContentArea extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 10),
                                   FilledButton(
-                                    onPressed: isSavingSettings
+                                    onPressed: isSavingSettings || isSigningOut
                                         ? null
                                         : () => onSaveSettings(),
                                     style: FilledButton.styleFrom(
@@ -841,8 +877,9 @@ class _ProfileContentArea extends StatelessWidget {
                                         width: 40,
                                         height: 40,
                                         decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
@@ -886,28 +923,47 @@ class _ProfileContentArea extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 14),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _SettingsAccountActionButton(
-                                    icon: Icons.switch_account_rounded,
-                                    title: 'Switch Account',
-                                    subtitle: 'Switch back to original account',
-                                    onTap: onSwitchAccount,
+                            if (hasMainAccountSnapshot)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _SettingsAccountActionButton(
+                                      icon: Icons.switch_account_rounded,
+                                      title: 'Switch Account',
+                                      subtitle:
+                                          'Switch back to original account',
+                                      onTap: onSwitchAccount,
+                                      isEnabled: !isSigningOut,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _SettingsAccountActionButton(
-                                    icon: Icons.logout_rounded,
-                                    title: 'Sign Out',
-                                    subtitle: 'Exit current account',
-                                    isDanger: true,
-                                    onTap: onSignOut,
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _SettingsAccountActionButton(
+                                      icon: Icons.logout_rounded,
+                                      title: 'Sign Out',
+                                      subtitle: 'Exit current account',
+                                      isDanger: true,
+                                      onTap: onSignOut,
+                                      isLoading: isSigningOut,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              )
+                            else
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _SettingsAccountActionButton(
+                                      icon: Icons.logout_rounded,
+                                      title: 'Sign Out',
+                                      subtitle: 'Exit current account',
+                                      isDanger: true,
+                                      onTap: onSignOut,
+                                      isLoading: isSigningOut,
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ),
@@ -920,16 +976,18 @@ class _ProfileContentArea extends StatelessWidget {
                 child: switch (currentSection) {
                   ProfileContentSection.favorites =>
                     const ProfileFavoritesSectionWidget(),
+                  ProfileContentSection.myCustomers =>
+                    const ProfileMyCustomersSectionWidget(),
                   ProfileContentSection.orderCenter =>
                     ProfileOrderCenterSectionWidget(
                       canViewCustomerOrders: canViewCustomerOrders,
                       currentTab: currentOrderTab,
                     ),
                   _ => AppEmptyView(
-                      message: '$title is empty',
-                      width: 130,
-                      height: 130,
-                    ),
+                    message: '$title is empty',
+                    width: 130,
+                    height: 130,
+                  ),
                 },
               ),
           ],
@@ -1021,6 +1079,8 @@ class _SettingsAccountActionButton extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.isDanger = false,
+    this.isLoading = false,
+    this.isEnabled = true,
   });
 
   final IconData icon;
@@ -1028,66 +1088,91 @@ class _SettingsAccountActionButton extends StatelessWidget {
   final String subtitle;
   final Future<void> Function() onTap;
   final bool isDanger;
+  final bool isLoading;
+  final bool isEnabled;
 
   @override
   Widget build(BuildContext context) {
+    final canTap = isEnabled && !isLoading;
     final iconColor = isDanger
         ? const Color(0xFFFF9EA1)
         : ProMaxTokens.iconPrimary;
     final titleColor = isDanger
         ? const Color(0xFFFFD7D8)
         : ProMaxTokens.textPrimary;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
+    return Opacity(
+      opacity: (!isEnabled && !isLoading) ? 0.45 : 1,
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        onTap: () => onTap(),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDanger
-                  ? const [Color(0x38FF6E76), Color(0x1B2A1216)]
-                  : const [Color(0x2D8ED0FF), Color(0x150D1A2C)],
-            ),
-            border: Border.all(
-              color: isDanger
-                  ? const Color(0x66FF6E76)
-                  : ProMaxTokens.inputBorderFocused.withValues(alpha: 0.70),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: iconColor, size: 18),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: titleColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: canTap
+              ? () async {
+                  await onTap();
+                }
+              : null,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDanger
+                    ? const [Color(0x38FF6E76), Color(0x1B2A1216)]
+                    : const [Color(0x2D8ED0FF), Color(0x150D1A2C)],
               ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
-                  fontSize: 11,
-                  height: 1.25,
-                ),
+              border: Border.all(
+                color: isDanger
+                    ? const Color(0x66FF6E76)
+                    : ProMaxTokens.inputBorderFocused.withValues(alpha: 0.70),
               ),
-            ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: iconColor, size: 18),
+                    if (isLoading) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: iconColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
+                    fontSize: 11,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1141,4 +1226,40 @@ class _ProfileSectionMeta {
   final ProfileContentSection section;
   final String label;
   final IconData icon;
+}
+
+List<_ProfileSectionMeta> _buildProfileSidebarMenus({
+  required bool isSalesRep,
+}) {
+  return <_ProfileSectionMeta>[
+    const _ProfileSectionMeta(
+      section: ProfileContentSection.settings,
+      label: 'Settings',
+      icon: Icons.settings_outlined,
+    ),
+    if (isSalesRep)
+      const _ProfileSectionMeta(
+        section: ProfileContentSection.myCustomers,
+        label: 'My Customers',
+        icon: Icons.groups_outlined,
+      ),
+    const _ProfileSectionMeta(
+      section: ProfileContentSection.orderCenter,
+      label: 'Order Center',
+      icon: Icons.notifications_none_outlined,
+    ),
+    const _ProfileSectionMeta(
+      section: ProfileContentSection.favorites,
+      label: 'Favorites',
+      icon: Icons.favorite_border,
+    ),
+  ];
+}
+
+ProfileContentSection _resolveProfileVisibleSection(
+  List<_ProfileSectionMeta> menus,
+  ProfileContentSection current,
+) {
+  if (menus.any((m) => m.section == current)) return current;
+  return ProfileContentSection.settings;
 }

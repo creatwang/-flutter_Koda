@@ -10,6 +10,7 @@ class SecureStorageService {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _userInfoBase = 'user_info_base';
+  static const _mainUserInfo = 'main_user_info';
   static const _tokenMap = 'token_map';
   static const _companyId = 'company_id';
 
@@ -52,6 +53,27 @@ class SecureStorageService {
     return userInfoBase;
   }
 
+  /// 业务员「代客登录」前缓存的主账号信息，供 [Switch Account] 切回。
+  Future<void> saveMainUserInfo(UserInfoBase user) async {
+    final jsonString = jsonEncode(user.toJson());
+    await _storage.write(key: _mainUserInfo, value: jsonString);
+  }
+
+  /// 读取主账号缓存；无则返回 `null`。
+  Future<UserInfoBase?> readMainUserInfo() async {
+    final jsonString = await _storage.read(key: _mainUserInfo);
+    if (jsonString == null || jsonString.isEmpty) return null;
+    try {
+      return UserInfoBase.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearMainUserInfo() async {
+    await _storage.delete(key: _mainUserInfo);
+  }
+
   /// 保存 token。
   Future<void> saveTokenMap(int companyId, String token) async {
     final previousMap = await _readTokenMap();
@@ -84,6 +106,7 @@ class SecureStorageService {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userInfoBase);
+    await _storage.delete(key: _mainUserInfo);
     await _storage.delete(key: _tokenMap);
     await _storage.delete(key: _companyId);
   }

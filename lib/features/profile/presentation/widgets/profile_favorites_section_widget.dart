@@ -86,7 +86,7 @@ class _ProfileFavoritesSectionWidgetState
     if (!mounted) return;
     result.when(
       success: (_) {
-        ref.read(favoritesRevisionProvider.notifier).bump();
+        ref.invalidate(favoriteProductsProvider);
       },
       failure: (_) {
         setState(() {

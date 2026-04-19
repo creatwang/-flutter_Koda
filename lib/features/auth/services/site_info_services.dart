@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const String _siteInfoStorageKey = 'site_info_v1';
 
+/// 拉取远端站点配置并转为 [SiteInfoDto]。
+///
+/// [companyId]：当前站点 id。
 Future<ApiResult<SiteInfoDto>> fetchSiteInfoService({
   required int companyId,
 }) async {
@@ -29,6 +32,7 @@ Future<ApiResult<SiteInfoDto>> fetchSiteInfoService({
   }
 }
 
+/// 拉取站点信息并写入本地；失败则清空本地缓存。
 Future<void> syncSiteInfoToLocal({required int companyId}) async {
   final result = await fetchSiteInfoService(companyId: companyId);
   await result.when(
@@ -37,12 +41,14 @@ Future<void> syncSiteInfoToLocal({required int companyId}) async {
   );
 }
 
+/// 持久化 [SiteInfoDto] 到 [SharedPreferences]。
 Future<void> saveSiteInfoToLocal({required SiteInfoDto siteInfo}) async {
   final preferences = await SharedPreferences.getInstance();
   final encoded = jsonEncode(siteInfo.toJson());
   await preferences.setString(_siteInfoStorageKey, encoded);
 }
 
+/// 读取本地缓存的站点配置（无则 `null`）。
 Future<SiteInfoDto?> readSiteInfoFromLocal() async {
   final preferences = await SharedPreferences.getInstance();
   final rawJson = preferences.getString(_siteInfoStorageKey);
@@ -56,12 +62,14 @@ Future<SiteInfoDto?> readSiteInfoFromLocal() async {
   }
 }
 
+/// 是否具备「导出报价」插件能力（读本地站点缓存）。
 Future<bool> readExportQuotationCapabilityFromLocal() async {
   return readBusinessPluginCapabilityFromLocal(
     pluginKey: BusinessPluginKeys.exportQuotation,
   );
 }
 
+/// 根据 [pluginKey] 判断本地站点是否启用对应业务插件。
 Future<bool> readBusinessPluginCapabilityFromLocal({
   required String pluginKey,
 }) async {
@@ -72,11 +80,13 @@ Future<bool> readBusinessPluginCapabilityFromLocal({
   );
 }
 
+/// 移除本地站点缓存。
 Future<void> clearSiteInfoFromLocal() async {
   final preferences = await SharedPreferences.getInstance();
   await preferences.remove(_siteInfoStorageKey);
 }
 
+/// 基于已解析的 [SiteInfoDto] 判断是否支持导出报价。
 bool hasExportQuotationCapability(SiteInfoDto siteInfo) {
   return hasBusinessPlugin(
     pluginUniqids: siteInfo.pluginUniqid,

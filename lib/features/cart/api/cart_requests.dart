@@ -2,7 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
+/// 购物车与下单相关接口路径。
 class CartRequests {
+  CartRequests._();
+
   static const String listBySitePath = '/store/cart/listsBySite';
   static const String selectedPath = '/store/cart/selected';
   static const String changePath = '/store/cart/change';
@@ -13,6 +16,10 @@ class CartRequests {
   static const String clearPath = '/store/cart/clear';
 }
 
+/// 按站点拉取购物车列表（需鉴权）。
+///
+/// [bypassMemoryCache]：为 `true` 时在请求上附加跳过内存缓存标记。
+/// [client]：可选，默认 [protectedDioClient]。
 Future<Response<dynamic>> requestCartListBySite({
   DioClient? client,
   bool bypassMemoryCache = false,
@@ -25,6 +32,10 @@ Future<Response<dynamic>> requestCartListBySite({
   );
 }
 
+/// 更新购物车行选中状态（需鉴权）。
+///
+/// [ids]：行 id 列表；单条时请求体会发标量。
+/// [selected]：`1` 选中，`0` 取消。
 Future<Response<dynamic>> requestCartSelected({
   required List<int> ids,
   required int selected,
@@ -39,6 +50,9 @@ Future<Response<dynamic>> requestCartSelected({
   );
 }
 
+/// 修改购物车行数量（需鉴权）。
+///
+/// [id]：购物车行 id；[productNum]：目标数量。
 Future<Response<dynamic>> requestCartChangeQuantity({
   required int id,
   required int productNum,
@@ -50,6 +64,9 @@ Future<Response<dynamic>> requestCartChangeQuantity({
   );
 }
 
+/// 删除购物车行（需鉴权）。
+///
+/// [ids]：待删除行 id 列表。
 Future<Response<dynamic>> requestCartDelete({
   required List<int> ids,
   DioClient? client,
@@ -60,6 +77,9 @@ Future<Response<dynamic>> requestCartDelete({
   );
 }
 
+/// 多站点合并下单（需鉴权）。
+///
+/// [companyIds]：参与下单的站点 id；[cart]：接口要求的购物车结构体。
 Future<Response<dynamic>> requestCreateOrderBySites({
   required List<int> companyIds,
   required List<Map<String, dynamic>> cart,
@@ -74,6 +94,9 @@ Future<Response<dynamic>> requestCreateOrderBySites({
   );
 }
 
+/// 清空某站点购物车（需鉴权）。
+///
+/// [companyId]：站点 id。
 Future<Response<dynamic>> requestCartClear({
   required int companyId,
   DioClient? client,
@@ -84,6 +107,10 @@ Future<Response<dynamic>> requestCartClear({
   );
 }
 
+/// 加购（需鉴权）。
+///
+/// [productId] / [subIndex] / [productNum] / [space] / [subName]：与后端
+/// 加购接口字段一致。
 Future<Response<dynamic>> requestCartCreate({
   required int productId,
   required String subIndex,
@@ -104,6 +131,9 @@ Future<Response<dynamic>> requestCartCreate({
   );
 }
 
+/// 购物车行改规格（需鉴权）。
+///
+/// [id]：原购物车行 id；其余字段同加购语义。
 Future<Response<dynamic>> requestCartChangeSpec({
   required int id,
   required int productId,

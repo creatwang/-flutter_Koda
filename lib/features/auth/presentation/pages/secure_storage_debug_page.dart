@@ -42,10 +42,11 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
         _errorMessage = '读取失败: $error';
       });
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

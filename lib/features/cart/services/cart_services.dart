@@ -4,6 +4,7 @@ import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/cart/api/cart_requests.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
 
+/// 购物车网络结果解析与 [AppException] 映射（调用 `cart_requests`）。
 Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
   bool bypassMemoryCache = false,
 }) async {
@@ -35,6 +36,9 @@ Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
   }
 }
 
+/// 批量更新购物车行选中态。
+///
+/// [ids]：行 id；[selected]：目标选中状态。
 Future<ApiResult<void>> updateCartSelectedService({
   required List<int> ids,
   required bool selected,
@@ -54,6 +58,9 @@ Future<ApiResult<void>> updateCartSelectedService({
   }
 }
 
+/// 修改单行购买数量。
+///
+/// [id]：购物车行 id；[productNum]：新数量。
 Future<ApiResult<void>> changeCartQuantityService({
   required int id,
   required int productNum,
@@ -73,6 +80,9 @@ Future<ApiResult<void>> changeCartQuantityService({
   }
 }
 
+/// 删除购物车行。
+///
+/// [ids]：待删除行 id 列表。
 Future<ApiResult<void>> removeCartItemsService({required List<int> ids}) async {
   try {
     await requestCartDelete(ids: ids);
@@ -89,6 +99,9 @@ Future<ApiResult<void>> removeCartItemsService({required List<int> ids}) async {
   }
 }
 
+/// 多站点合并下单。
+///
+/// [companyIds]：站点集合；[cart]：接口要求的购物车负载。
 Future<ApiResult<void>> createOrderBySitesService({
   required List<int> companyIds,
   required List<Map<String, dynamic>> cart,
@@ -111,6 +124,9 @@ Future<ApiResult<void>> createOrderBySitesService({
   }
 }
 
+/// 按站点清空购物车。
+///
+/// [companyId]：站点 id。
 Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
   try {
     await requestCartClear(companyId: companyId);
@@ -127,6 +143,9 @@ Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
   }
 }
 
+/// 加购。
+///
+/// 字段与后端 `create` 接口一致。
 Future<ApiResult<void>> createCartItemService({
   required int productId,
   required String subIndex,
@@ -155,6 +174,9 @@ Future<ApiResult<void>> createCartItemService({
   }
 }
 
+/// 购物车行改规格。
+///
+/// [id]：原行 id；其余同加购语义。
 Future<ApiResult<void>> changeCartItemSpecService({
   required int id,
   required int productId,

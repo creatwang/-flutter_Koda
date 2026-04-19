@@ -2,18 +2,26 @@ import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
+/// 个人中心相关接口路径。
 class ProfileRequests {
+  ProfileRequests._();
+
   static const String userInfoPath = '/store/user/info';
   static const String orderListPath = '/store/order/lists';
-  static const String customerOrderListPath = '/store/account/customerOrderList';
+  static const String customerOrderListPath =
+      '/store/account/customerOrderList';
 }
 
+/// 获取当前用户信息（需鉴权）。
 Future<Response<dynamic>> requestUserInfo({
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).get(ProfileRequests.userInfoPath);
 }
 
+/// 更新用户信息（需鉴权）。
+///
+/// [name]：展示名；密码相关字段可空，非空时参与请求体。
 Future<Response<dynamic>> requestUpdateUserInfo({
   required String name,
   String? oldPassword,
@@ -21,9 +29,7 @@ Future<Response<dynamic>> requestUpdateUserInfo({
   String? conPassword,
   DioClient? client,
 }) {
-  final payload = <String, dynamic>{
-    'name': name,
-  };
+  final payload = <String, dynamic>{'name': name};
   if (oldPassword != null && oldPassword.trim().isNotEmpty) {
     payload['old_password'] = oldPassword;
   }
@@ -40,6 +46,10 @@ Future<Response<dynamic>> requestUpdateUserInfo({
   );
 }
 
+/// 我的订单分页（需鉴权）。
+///
+/// [page] / [pageSize]：分页；[status] / [keyword]：筛选；
+/// [withBatchOrder] / [allShop]：与后端约定一致。
 Future<Response<dynamic>> requestOrderList({
   int page = 1,
   int pageSize = 20,
@@ -51,7 +61,7 @@ Future<Response<dynamic>> requestOrderList({
 }) {
   return (client ?? protectedDioClient).get(
     ProfileRequests.orderListPath,
-    queryParameters: {
+    queryParameters: <String, dynamic>{
       'status': status,
       'page': page,
       'page_size': pageSize,
@@ -62,6 +72,9 @@ Future<Response<dynamic>> requestOrderList({
   );
 }
 
+/// 客户订单分页（需鉴权，业务员场景）。
+///
+/// 参数语义同 [requestOrderList]。
 Future<Response<dynamic>> requestCustomerOrderList({
   int page = 1,
   int pageSize = 20,
@@ -73,7 +86,7 @@ Future<Response<dynamic>> requestCustomerOrderList({
 }) {
   return (client ?? protectedDioClient).get(
     ProfileRequests.customerOrderListPath,
-    queryParameters: {
+    queryParameters: <String, dynamic>{
       'status': status,
       'page': page,
       'page_size': pageSize,

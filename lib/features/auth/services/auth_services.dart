@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
 import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
@@ -18,16 +18,21 @@ export 'package:groe_app_pad/core/platform_services/network_clients.dart'
         authClearTokenServiceProvider,
         authClearTokenService;
 
+/// 登录用例：账号密码 → 持久化用户与站点 → [TokenPair]。
 typedef AuthLoginService =
     Future<ApiResult<TokenPair>> Function({
       required String username,
       required String password,
     });
 
+/// 暴露给 [Provider] 的默认登录实现。
 final authLoginServiceProvider = Provider<AuthLoginService>(
   (ref) => authLoginService,
 );
 
+/// 执行登录并写入 `userInfoBase`、`companyId`、`tokenMap`，同步站点信息。
+///
+/// [username] / [password]：登录凭证。
 Future<ApiResult<TokenPair>> authLoginService({
   required String username,
   required String password,

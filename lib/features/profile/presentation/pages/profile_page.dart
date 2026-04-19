@@ -6,6 +6,7 @@ import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
@@ -169,6 +170,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     context.go(AppRoutes.login);
   }
 
+  Future<void> _onOpenSwitchSiteSheet() async {
+    await showSwitchSiteBottomSheet(parentContext: context, ref: ref);
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedMeta = _menus.firstWhere(
@@ -226,6 +231,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 onRefreshSettings: _onRefreshSettings,
                 onSignOut: _onSignOut,
                 onSwitchAccount: _onSwitchAccount,
+                onOpenSwitchSiteSheet: _onOpenSwitchSiteSheet,
                 isSavingSettings: _isSavingSettings,
                 isLoadingUserInfo:
                     _currentSection == ProfileContentSection.settings &&
@@ -374,7 +380,7 @@ class _ProfileSidebar extends StatelessWidget {
                           ),
                           const SizedBox(width: 10),
                           const Expanded(
-                            child: _StatTile(value: '24', label: 'CONCEPTS'),
+                            child: _StatTile(value: '24', label: 'CART NUM'),
                           ),
                         ],
                       ),
@@ -473,6 +479,7 @@ class _ProfileContentArea extends StatelessWidget {
     required this.onRefreshSettings,
     required this.onSignOut,
     required this.onSwitchAccount,
+    required this.onOpenSwitchSiteSheet,
     required this.isSavingSettings,
     required this.isLoadingUserInfo,
     required this.canViewCustomerOrders,
@@ -492,6 +499,7 @@ class _ProfileContentArea extends StatelessWidget {
   final Future<void> Function() onRefreshSettings;
   final Future<void> Function() onSignOut;
   final Future<void> Function() onSwitchAccount;
+  final Future<void> Function() onOpenSwitchSiteSheet;
   final bool isSavingSettings;
   final bool isLoadingUserInfo;
   final bool canViewCustomerOrders;
@@ -808,14 +816,64 @@ class _ProfileContentArea extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Another  Settings',
-                              style: TextStyle(
-                                color: ProMaxTokens.iconPrimary,
-                                fontSize: 12,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w700,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                const Expanded(
+                                  child: Text(
+                                    'Another  Settings',
+                                    style: TextStyle(
+                                      color: ProMaxTokens.iconPrimary,
+                                      fontSize: 12,
+                                      letterSpacing: 1.2,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                Tooltip(
+                                  message: 'Switch site',
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => onOpenSwitchSiteSheet(),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Ink(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: <Color>[
+                                              const Color(0x55F4C77A),
+                                              const Color(0x28FFC9A8),
+                                            ],
+                                          ),
+                                          border: Border.all(
+                                            color: const Color(0x88F4C77A),
+                                          ),
+                                          boxShadow: <BoxShadow>[
+                                            BoxShadow(
+                                              color: const Color(0x33F4C77A),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.store_mall_directory_rounded,
+                                            color: Color(0xFFF4E6C8),
+                                            size: 21,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 10),
                             Text(

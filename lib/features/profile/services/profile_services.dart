@@ -2,9 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
 import 'package:groe_app_pad/features/profile/api/profile_requests.dart';
+import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
 
+/// 个人中心：用户信息、订单列表等业务封装与响应适配。
 Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
   try {
     final response = await requestUserInfo();
@@ -28,6 +29,10 @@ Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
   }
 }
 
+/// 更新用户资料（含可选改密字段）。
+///
+/// [name]：姓名；[oldPassword] / [newPassword] / [conPassword]：改密三栏，
+/// 可传空串表示不改密。
 Future<ApiResult<void>> updateUserInfoService({
   required String name,
   required String oldPassword,
@@ -64,56 +69,45 @@ Future<ApiResult<void>> updateUserInfoService({
   }
 }
 
+/// 我的订单第一页及分页加载（内部与 [fetchProfileCustomerOrderListService]
+/// 共用解析逻辑）。
 Future<ApiResult<ProductOrderListDto>> fetchProfileOrderListService({
   required int page,
   required int pageSize,
-}) async {
-  try {
-    final response = await requestOrderList(
-      page: page,
-      pageSize: pageSize,
-    );
-    final payload = _resolveOrderListPayload(response.data);
-    if (payload == null) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        error: 'Invalid profile order list response format',
-      );
-    }
-    return ApiSuccess(ProductOrderListDto.fromJson(payload));
-  } on DioException catch (e) {
-    return ApiFailure(
-      AppException(
-        e.message ?? 'Fetch profile order list failed',
-        code: e.response?.statusCode?.toString(),
-      ),
-    );
-  } catch (e) {
-    return ApiFailure(AppException(e.toString()));
-  }
+}) {
+  return _fetchOrderListPage(
+    request: () => requestOrderList(page: page, pageSize: pageSize),
+  );
 }
 
+/// 客户订单分页（业务员）。
 Future<ApiResult<ProductOrderListDto>> fetchProfileCustomerOrderListService({
   required int page,
   required int pageSize,
+}) {
+  return _fetchOrderListPage(
+    request: () =>
+        requestCustomerOrderList(page: page, pageSize: pageSize),
+  );
+}
+
+Future<ApiResult<ProductOrderListDto>> _fetchOrderListPage({
+  required Future<Response<dynamic>> Function() request,
 }) async {
   try {
-    final response = await requestCustomerOrderList(
-      page: page,
-      pageSize: pageSize,
-    );
+    final response = await request();
     final payload = _resolveOrderListPayload(response.data);
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid profile customer order list response format',
+        error: 'Invalid order list response format',
       );
     }
     return ApiSuccess(ProductOrderListDto.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch profile customer order list failed',
+        e.message ?? 'Fetch order list failed',
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -123,7 +117,9 @@ Future<ApiResult<ProductOrderListDto>> fetchProfileCustomerOrderListService({
 }
 
 bool _isUpdateSuccess(dynamic data) {
-  if (data == true || data == 1 || data == '1' || data == 'true') return true;
+  if (data == true || data == 1 || data == '1' || data == 'true') {
+    return true;
+  }
   if (data is Map<String, dynamic>) {
     final result = data['result'];
     return result == true ||

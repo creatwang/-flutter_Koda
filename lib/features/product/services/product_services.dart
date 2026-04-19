@@ -1,22 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/product/api/product_requests.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/models/product_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_fav_dto.dart';
+import 'package:groe_app_pad/features/product/models/product_item.dart';
 
-import '../../../core/platform_services/network_clients.dart';
-
+/// 商品列表、收藏、分类、详情等业务封装（依赖当前站点 `companyId`）。
 class FavoriteProductsPageResult {
-  const FavoriteProductsPageResult({required this.items, required this.total});
+  /// [items]：本页商品；[total]：服务端总数（用于分页）。
+  const FavoriteProductsPageResult({
+    required this.items,
+    required this.total,
+  });
 
   final List<ProductItem> items;
   final int total;
 }
 
+/// 商品分页列表（当前站点）。
+///
+/// [page] / [pageSize]：分页；[shopCateGoryId]：店铺分类；
+/// [sort] / [orderBy]：排序参数。
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
@@ -68,6 +76,9 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   }
 }
 
+/// 收藏商品分页。
+///
+/// [page] / [pageSize]：分页（站点取自本地 `companyId`）。
 Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
   required int page,
   required int pageSize,
@@ -126,6 +137,7 @@ int _parseTotalCount(Map<String, dynamic> data, {required int fallback}) {
   return fallback;
 }
 
+/// 当前站点下的商品分类树。
 Future<ApiResult<List<ProductCategoryTreeDto>>>
 fetchCategoryTreeService() async {
   final companyId = await secureStorageService.getCompanyId();
@@ -172,6 +184,7 @@ fetchCategoryTreeService() async {
   }
 }
 
+/// 列表接口形态的单商品（REST 子路径），映射为 [ProductItem]。
 Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   try {
     final response = await requestProductById(id);
@@ -195,6 +208,7 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   }
 }
 
+/// 商品详情页数据（开放详情接口 + `result` 解包兼容）。
 Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
   try {
     final response = await requestProductDetail(id: id);
@@ -227,6 +241,9 @@ Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
   }
 }
 
+/// 添加收藏（当前站点）。
+///
+/// [productId]：商品 id。
 Future<ApiResult<void>> createFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
@@ -250,6 +267,9 @@ Future<ApiResult<void>> createFavorService({required int productId}) async {
   }
 }
 
+/// 取消收藏（当前站点）。
+///
+/// [productId]：商品 id。
 Future<ApiResult<void>> deleteFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {

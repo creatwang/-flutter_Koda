@@ -1,9 +1,12 @@
+// 订单中心：我的订单与客户订单分页状态。
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
 import 'package:groe_app_pad/features/profile/services/profile_services.dart';
 
+/// 订单列表一屏数据与分页元信息。
 class ProfileOrderListState {
   const ProfileOrderListState({
     required this.items,
@@ -36,16 +39,19 @@ class ProfileOrderListState {
   }
 }
 
+/// 当前用户「我的订单」分页。
 final profileMyOrderListProvider = AsyncNotifierProvider<
   ProfileMyOrderListNotifier,
   ProfileOrderListState
 >(ProfileMyOrderListNotifier.new);
 
+/// 业务员视角「客户订单」分页。
 final profileCustomerOrderListProvider = AsyncNotifierProvider<
   ProfileCustomerOrderListNotifier,
   ProfileOrderListState
 >(ProfileCustomerOrderListNotifier.new);
 
+/// [fetchProfileOrderListService] 驱动的列表与加载更多。
 class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
   static const int _pageSize = 20;
 
@@ -116,6 +122,7 @@ class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
   }
 }
 
+/// [fetchProfileCustomerOrderListService] 驱动的列表与加载更多。
 class ProfileCustomerOrderListNotifier
     extends AsyncNotifier<ProfileOrderListState> {
   static const int _pageSize = 20;

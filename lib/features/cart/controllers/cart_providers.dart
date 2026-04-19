@@ -1,3 +1,5 @@
+// 购物车：按站点分组列表与加购、改规格、下单等操作。
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,11 +10,13 @@ import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_services.dart';
 
+/// 购物车主状态（监听会话以在站点切换时自动刷新）。
 final cartControllerProvider =
     AsyncNotifierProvider<CartController, List<CartListDto>>(
       CartController.new,
     );
 
+/// 购物车商品总件数（用于角标）。
 final cartBadgeCountProvider = Provider<int>((ref) {
   final cartData = ref.watch(cartControllerProvider).asData?.value;
   if (cartData == null) return 0;
@@ -21,6 +25,7 @@ final cartBadgeCountProvider = Provider<int>((ref) {
   ).fold<int>(0, (sum, item) => sum + item.productNum);
 });
 
+/// 当前选中行数量之和。
 final cartSelectedCountProvider = Provider<int>((ref) {
   final cartData = ref.watch(cartControllerProvider).asData?.value;
   if (cartData == null) return 0;
@@ -29,6 +34,7 @@ final cartSelectedCountProvider = Provider<int>((ref) {
       .fold<int>(0, (sum, item) => sum + item.productNum);
 });
 
+/// 选中行金额小计（单价 × 数量）。
 final cartSelectedAmountProvider = Provider<double>((ref) {
   final cartData = ref.watch(cartControllerProvider).asData?.value;
   if (cartData == null) return 0;
@@ -37,6 +43,7 @@ final cartSelectedAmountProvider = Provider<double>((ref) {
       .fold<double>(0, (sum, item) => sum + item.price * item.productNum);
 });
 
+/// 购物车业务入口：与 [cart_services] 交互并维护乐观更新。
 class CartController extends AsyncNotifier<List<CartListDto>> {
   @override
   FutureOr<List<CartListDto>> build() async {

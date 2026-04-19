@@ -1,3 +1,5 @@
+// 商品列表、收藏、详情与分类树的 Riverpod 数据源。
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,21 +9,25 @@ import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 
+/// 商品列表分页（含排序、分类筛选状态）。
 final productsProvider =
     AsyncNotifierProvider<ProductsNotifier, PaginatedProductsState>(
       ProductsNotifier.new,
     );
 
+/// 收藏列表刷新信号（收藏变更后 [bump]）。
 final favoritesRevisionProvider =
     NotifierProvider<FavoritesRevisionNotifier, int>(
       FavoritesRevisionNotifier.new,
     );
 
+/// 收藏商品分页状态。
 final favoriteProductsProvider =
     AsyncNotifierProvider<FavoriteProductsNotifier, PaginatedProductsState>(
       FavoriteProductsNotifier.new,
     );
 
+/// 维护商品列表的加载、刷新、加载更多与筛选参数。
 class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 8;
   int _selectedShopCategoryId = 0;
@@ -118,6 +124,7 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 }
 
+/// 收藏列表版本号（配合 [FavoriteProductsNotifier] `watch` 触发重建）。
 class FavoritesRevisionNotifier extends Notifier<int> {
   @override
   int build() => 0;
@@ -125,6 +132,7 @@ class FavoritesRevisionNotifier extends Notifier<int> {
   void bump() => state++;
 }
 
+/// 收藏商品列表：首屏、刷新、分页加载更多。
 class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   static const int _pageSize = 20;
 
@@ -197,6 +205,7 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 }
 
+/// 列表形态单商品（[id] 为商品 id）。
 final productByIdProvider = FutureProvider.family<ProductItem, int>((
   ref,
   id,
@@ -208,6 +217,7 @@ final productByIdProvider = FutureProvider.family<ProductItem, int>((
   );
 });
 
+/// 商品详情 DTO（[id] 为商品 id）。
 final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((
   ref,
   id,
@@ -219,6 +229,7 @@ final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((
   );
 });
 
+/// 当前站点商品分类树。
 final categoryTreeProvider = FutureProvider<List<ProductCategoryTreeDto>>((
   ref,
 ) async {

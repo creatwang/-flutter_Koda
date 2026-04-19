@@ -5,13 +5,12 @@ import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_common_password_bottom_sheet.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
-/// 业务员客户列表：顶栏、关键词筛选、表头、列表行（代客登录等逻辑不变）。
+/// 业务员客户列表：表头、列表行（代客登录等逻辑不变）。
 class ProfileMyCustomersSectionWidget extends ConsumerStatefulWidget {
   const ProfileMyCustomersSectionWidget({super.key});
 
@@ -22,26 +21,12 @@ class ProfileMyCustomersSectionWidget extends ConsumerStatefulWidget {
 
 class _ProfileMyCustomersSectionWidgetState
     extends ConsumerState<ProfileMyCustomersSectionWidget> {
-  final TextEditingController _keywordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _keywordController.dispose();
-    super.dispose();
-  }
-
   Future<void> _refresh() async {
     await ref.read(storeCustomersProvider.notifier).refresh();
   }
 
   void _loadMore() {
     ref.read(storeCustomersProvider.notifier).loadMore();
-  }
-
-  Future<void> _applyKeyword() async {
-    await ref
-        .read(storeCustomersProvider.notifier)
-        .applyFilters(keyword: _keywordController.text.trim());
   }
 
   Future<void> _onLogin(StoreCustomerItemDto item) async {
@@ -102,68 +87,12 @@ class _ProfileMyCustomersSectionWidgetState
     );
   }
 
-  Future<void> _onSetCommandPassword() async {
-    await showStoreCustomerCommonPasswordBottomSheet(
-      context: context,
-      ref: ref,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeCustomersProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _MyCustomersTopBar(
-          onAddCustomer: () => showStoreCustomerFormBottomSheet(
-            context: context,
-            ref: ref,
-            mode: StoreCustomerSheetMode.create,
-          ),
-          onSetCommandPassword: _onSetCommandPassword,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _keywordController,
-                style: const TextStyle(color: ProMaxTokens.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Keyword',
-                  hintStyle: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.7),
-                  ),
-                  filled: true,
-                  fillColor: ProMaxTokens.inputBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                ),
-                onSubmitted: (_) => _applyKeyword(),
-              ),
-            ),
-            const SizedBox(width: 10),
-            OutlinedButton(
-              onPressed: _applyKeyword,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: ProMaxTokens.textPrimary,
-                side: const BorderSide(color: ProMaxTokens.inputBorder),
-                minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: const Text('Apply'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
         Expanded(
           child: state.when(
             loading: () => const AppLoadingView(),
@@ -270,76 +199,6 @@ String _customerSecondaryLine(StoreCustomerItemDto item) {
   return e.isNotEmpty ? e : item.username;
 }
 
-/// 顶栏：左标题、右两个文字按钮（与设计稿一致：纯色条 + 半透明按钮底）。
-class _MyCustomersTopBar extends StatelessWidget {
-  const _MyCustomersTopBar({
-    required this.onAddCustomer,
-    required this.onSetCommandPassword,
-  });
-
-  final VoidCallback onAddCustomer;
-  final VoidCallback onSetCommandPassword;
-
-  static const Color _barBackground = Color(0xFF45403C);
-  static const double _radius = 8;
-
-  static ButtonStyle _pillButtonStyle() => TextButton.styleFrom(
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.white.withValues(alpha: 0.14),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        minimumSize: const Size(0, 40),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(_radius),
-      child: ColoredBox(
-        color: _barBackground,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Expanded(
-                child: Text(
-                  'My customers',
-                  style: TextStyle(
-                    color: ProMaxTokens.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton.icon(
-                    onPressed: onAddCustomer,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Customer'),
-                    style: _pillButtonStyle(),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: onSetCommandPassword,
-                    style: _pillButtonStyle(),
-                    child: const Text('Set Command Password'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _MyCustomersTableHeader extends StatelessWidget {
   const _MyCustomersTableHeader();
 
@@ -413,16 +272,15 @@ class _CustomerRowCard extends StatelessWidget {
     final bool hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       child: Material(
-        color: ProMaxTokens.cardBackground,
+        color: Color.fromRGBO(0, 0, 0, 0.2),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           onTap: onLogin,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ProMaxTokens.panelBorder),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -463,7 +321,7 @@ class _CustomerRowCard extends StatelessWidget {
                                   color: ProMaxTokens.textSecondary.withValues(
                                     alpha: 0.92,
                                   ),
-                                  fontSize: 13,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -477,13 +335,13 @@ class _CustomerRowCard extends StatelessWidget {
                     child: Center(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: _uidPillFill,
-                          borderRadius: BorderRadius.circular(999),
+                          color: Color.fromRGBO(207, 218, 242, 1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: 8,
+                            vertical: 4,
                           ),
                           child: Text(
                             '${item.id}',

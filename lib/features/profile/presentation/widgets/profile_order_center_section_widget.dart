@@ -198,77 +198,110 @@ class _OrderCard extends StatelessWidget {
     );
     final piText = isPiSuccess ? 'Successful' : 'Fail';
     final erpText = item.status == 1 ? 'Send to ERP' : 'Not sent to ERP';
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showUserInfo && item.user != null) ...[
-            Text(
-              item.user?.name ?? item.user?.username ?? '--',
-              style: const TextStyle(
-                color: ProMaxTokens.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Wrap(
-            spacing: 14,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showUserInfo && item.user != null) ...[
               Text(
-                'OrderNo: ${item.orderNo ?? '--'}',
+                item.user?.name ?? item.user?.username ?? '--',
                 style: const TextStyle(
                   color: ProMaxTokens.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              Text(
-                'Time: ${item.createdAt ?? '--'}',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
-              Text(
-                erpText,
-                style: const TextStyle(
-                  color: Color(0xFF84CCFF),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 8),
+            ],
+            Padding(
+              padding: const EdgeInsets.only(left: 30, top: 14, right: 30),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: piColor,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('OrderNo', style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500
+                        ),),
+                        SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          '${item.orderNo ?? '--'}',
+                          style: const TextStyle(
+                            color: ProMaxTokens.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14
+                          ),
+                        )
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    piText,
-                    style: TextStyle(
-                      color: piColor,
-                      fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Text(
+                      'Time: ${item.createdAt ?? '--'}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 14
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          erpText,
+                          style: const TextStyle(
+                            color: Color(0xFF84CCFF),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14
+                          ),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: piColor,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              piText,
+                              style: TextStyle(
+                                color: piColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...item.product.map(
-            (department) => _DepartmentBlock(department: department),
-          ),
-        ],
+            ),
+            const SizedBox(height: 8),
+            ...item.product.map(
+              (department) => _DepartmentBlock(department: department),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -282,23 +315,35 @@ class _DepartmentBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withValues(alpha: 0.2)
       ),
+      margin: const EdgeInsets.only(top: 8),
       child: ExpansionTile(
+        visualDensity: VisualDensity(vertical: -2),
+        shape: const Border(top: BorderSide(color: Color.fromRGBO(130, 130, 130, 1), )),
         initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 10),
         iconColor: Colors.white70,
         collapsedIconColor: Colors.white60,
-        title: Text(
-          department.name ?? 'Unknown Department',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-          ),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 30),
+        title:Row( // 使用 Row 配合 MainAxisSize.min 让内容从左对齐并收缩
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.folder_open, size: 18,),
+            SizedBox(
+              width: 4,
+            ),
+            Container(
+              child: Text(
+                department.name ?? 'Unknown Department',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ),
         children: department.list
             .map((space) => _SpaceBlock(space: space))
@@ -315,29 +360,49 @@ class _SpaceBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+      ),
+      child: ListTileTheme(
+        // 核心调整代码：
+        horizontalTitleGap: 8,    // 1. 设置图标与文字之间的像素间距
+        minLeadingWidth: 0,      // 2. 去掉 leading 图标的最小宽度限制（默认是 40）
         child: ExpansionTile(
+          visualDensity: VisualDensity(vertical: -4),
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+          // 1. 将箭头图标放在最前面
+          leading: const Icon(Icons.expand_more, size: 20),
+          // 2. 隐藏右侧默认的箭头
+          trailing: const SizedBox.shrink(),
+          shape: const Border(top: BorderSide(color: Color.fromRGBO(130, 130, 130, 1), )),
           iconColor: Colors.white70,
+          tilePadding: EdgeInsets.symmetric(horizontal: 30),
+          childrenPadding: EdgeInsets.only(left: 48),
           collapsedIconColor: Colors.white60,
-          title: Text(
-            space.name ?? 'default',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
+          title: Row( // 使用 Row 配合 MainAxisSize.min 让内容从左对齐并收缩
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const _ProductTableHeader(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white24, // 示例：给文字加个微弱背景
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                space.name ?? 'default',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+          children: [
+            // 产品信息header 需要可以放出来
+            // const _ProductTableHeader(),
             ...space.list.map((line) => _ProductLineTile(line: line)),
           ],
         ),
@@ -403,7 +468,7 @@ class _ProductLineTile extends StatelessWidget {
     final quantityText = '${line.quantity ?? 0}${line.unit ?? ''}';
     final priceText = '\$${line.totalPrice ?? line.price ?? '--'}';
     return Container(
-      margin: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 12),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
@@ -411,7 +476,7 @@ class _ProductLineTile extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             flex: 6,
@@ -473,7 +538,7 @@ class _ProductLineTile extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              quantityText,
+              'x$quantityText',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: ProMaxTokens.textPrimary,

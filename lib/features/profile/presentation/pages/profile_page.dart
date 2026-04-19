@@ -9,6 +9,9 @@ import 'package:groe_app_pad/features/profile/controllers/customer_account_provi
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/profile_section_header_widget.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_common_password_bottom_sheet.dart';
+import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
@@ -284,6 +287,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   if (_currentOrderTab == nextTab) return;
                   setState(() => _currentOrderTab = nextTab);
                 },
+                onMyCustomersAddCustomer: canViewCustomerOrders
+                    ? () => showStoreCustomerFormBottomSheet(
+                          context: context,
+                          ref: ref,
+                          mode: StoreCustomerSheetMode.create,
+                        )
+                    : null,
+                onMyCustomersSetCommandPassword: canViewCustomerOrders
+                    ? () async {
+                        await showStoreCustomerCommonPasswordBottomSheet(
+                          context: context,
+                          ref: ref,
+                        );
+                      }
+                    : null,
               ),
             ),
           ),
@@ -535,6 +553,8 @@ class _ProfileContentArea extends StatelessWidget {
     required this.canViewCustomerOrders,
     required this.currentOrderTab,
     required this.onOrderTabChanged,
+    this.onMyCustomersAddCustomer,
+    this.onMyCustomersSetCommandPassword,
   });
 
   final ProfileContentSection currentSection;
@@ -558,6 +578,8 @@ class _ProfileContentArea extends StatelessWidget {
   final bool canViewCustomerOrders;
   final ProfileOrderTab currentOrderTab;
   final ValueChanged<ProfileOrderTab> onOrderTabChanged;
+  final VoidCallback? onMyCustomersAddCustomer;
+  final VoidCallback? onMyCustomersSetCommandPassword;
 
   @override
   Widget build(BuildContext context) {
@@ -585,6 +607,35 @@ class _ProfileContentArea extends StatelessWidget {
       isPasswordGroupRequired: isPasswordGroupRequired,
       value: newPasswordController.text,
     );
+
+    final Widget? sectionHeaderTrailing;
+    if (isOrderCenter && canViewCustomerOrders) {
+      sectionHeaderTrailing = Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: ProfileOrderTabSwitcherWidget(
+          currentTab: currentOrderTab,
+          onTabChanged: onOrderTabChanged,
+        ),
+      );
+    } else if (currentSection == ProfileContentSection.myCustomers &&
+        onMyCustomersAddCustomer != null &&
+        onMyCustomersSetCommandPassword != null) {
+      sectionHeaderTrailing = Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: ProfileMyCustomersHeaderActionsWidget(
+          onAddCustomer: onMyCustomersAddCustomer!,
+          onSetCommandPassword: onMyCustomersSetCommandPassword!,
+        ),
+      );
+    } else if (isSettings) {
+      sectionHeaderTrailing = ProfileSectionHeaderRefreshButton(
+        isEnabled: !isLoadingUserInfo && !isSigningOut,
+        onPressed: () async => onRefreshSettings(),
+      );
+    } else {
+      sectionHeaderTrailing = null;
+    }
+
     Future<void> ensureFieldVisible() async {
       await Future<void>.delayed(const Duration(milliseconds: 220));
       if (!context.mounted) return;
@@ -598,80 +649,17 @@ class _ProfileContentArea extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: ProMaxTokens.panelBackground,
         borderRadius: BorderRadius.circular(ProMaxTokens.radiusPanel),
-        border: Border.all(color: ProMaxTokens.panelBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x30000000),
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          ProMaxTokens.space5,
-          18,
-          ProMaxTokens.space5,
-          18,
-        ),
+        padding: const EdgeInsets.all(0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 各分区大标题；My customers 在列表内自带顶栏，此处省略避免重复。
-            if (currentSection != ProfileContentSection.myCustomers) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: ProMaxTokens.textPrimary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.0,
-                        shadows: [
-                          Shadow(
-                            color: Color(0x55000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (isOrderCenter && canViewCustomerOrders)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: ProfileOrderTabSwitcherWidget(
-                        currentTab: currentOrderTab,
-                        onTabChanged: onOrderTabChanged,
-                      ),
-                    ),
-                  if (isSettings)
-                    Material(
-                      color: ProMaxTokens.cardBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        onTap: isLoadingUserInfo || isSigningOut
-                            ? null
-                            : () async => onRefreshSettings(),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.refresh,
-                            color: Colors.white,
-                            size: 19,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 14),
-            ],
+            ProfileSectionHeaderWidget(
+              title: title,
+              trailing: sectionHeaderTrailing,
+            ),
             if (isSettings) ...[
               Expanded(
                 child: Stack(

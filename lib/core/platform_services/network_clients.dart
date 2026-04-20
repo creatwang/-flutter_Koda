@@ -33,6 +33,21 @@ BaseOptions buildBaseOptions() {
 }
 
 final SecureStorageService secureStorageService = SecureStorageService(const FlutterSecureStorage());
+final MemoryCacheInterceptor _publicMemoryCacheInterceptor =
+    MemoryCacheInterceptor(ttl: const Duration(minutes: 2));
+final MemoryCacheInterceptor _protectedMemoryCacheInterceptor =
+    MemoryCacheInterceptor(ttl: const Duration(minutes: 2));
+
+/// 清理全部 Dio 内存缓存（公开/鉴权客户端）。
+void clearAllNetworkMemoryCaches() {
+  _publicMemoryCacheInterceptor.clearAll();
+  _protectedMemoryCacheInterceptor.clearAll();
+}
+
+/// 清理鉴权客户端中指定前缀的内存缓存。
+int evictProtectedNetworkCacheByPrefix(String prefix) {
+  return _protectedMemoryCacheInterceptor.evictByPrefix(prefix);
+}
 
 /// 开放客户端实例（无需登录的请求可复用）
 final DioClient publicDioClient = DioClient(_buildPublicDio());
@@ -42,7 +57,7 @@ Dio _buildPublicDio({ResponseDataMode responseDataMode = ResponseDataMode.origin
   dio.interceptors.addAll([
     RequestTraceInterceptor(),
     ResponseDataModeInterceptor(responseDataMode),
-    MemoryCacheInterceptor(ttl: const Duration(minutes: 2)),
+    _publicMemoryCacheInterceptor,
     RetryInterceptor(dio),
   ]);
   return dio;
@@ -62,7 +77,7 @@ Dio _buildProtectedDio({
     RequestTraceInterceptor(),
     ResponseDataModeInterceptor(responseDataMode),
     AuthInterceptor(secureStorageService),
-    MemoryCacheInterceptor(ttl: const Duration(minutes: 2)),
+    _protectedMemoryCacheInterceptor,
     RetryInterceptor(dio),
   ]);
 

@@ -35,8 +35,6 @@ Future<Response<dynamic>> requestStoreCustomerList({
       'keyword': keyword,
       'company_id': companyId,
     },
-    // 列表结果随当前登录用户/token 变化；缓存键不含鉴权信息，故禁用 GET 缓存。
-    options: Options(extra: <String, dynamic>{'noCache': true}),
   );
 }
 

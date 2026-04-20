@@ -14,6 +14,22 @@ class MemoryCacheInterceptor extends Interceptor {
   final Duration ttl;
   final Map<String, _CacheEntry> _cache = {};
 
+  /// 清空当前拦截器持有的全部内存缓存。
+  void clearAll() => _cache.clear();
+
+  /// 删除指定完整缓存键，返回是否存在并删除成功。
+  bool evictKey(String key) => _cache.remove(key) != null;
+
+  /// 删除指定前缀命中的缓存键，返回删除数量。
+  int evictByPrefix(String prefix) {
+    final matchedKeys = _cache.keys.where((key) => key.startsWith(prefix));
+    final keysToRemove = matchedKeys.toList(growable: false);
+    for (final key in keysToRemove) {
+      _cache.remove(key);
+    }
+    return keysToRemove.length;
+  }
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final requestId = '${options.extra['requestId'] ?? '-'}';

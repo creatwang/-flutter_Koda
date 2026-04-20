@@ -101,6 +101,58 @@
 - UI 刷新：同步后失效 `canExportQuotationProvider` /
   `profileUserInfoProvider`，页面读到新值后自动重建
 
+## 内存网络缓存策略（Dio Interceptor）
+
+- 介质：`MemoryCacheInterceptor`（进程内 `Map`，应用重启后清空）
+- 作用范围：`publicDioClient` 与 `protectedDioClient`
+- 默认 TTL：2 分钟（在 `network_clients.dart` 注入时配置）
+- 缓存键：`path + '?' + queryParameters`
+- 命中前提：
+  - 请求为 `GET`
+  - 且 `extra['noCache'] != true`
+  - 且缓存项存在且未过期
+
+### Session 变更时的统一清理（已落地）
+
+以下场景会调用 `clearAllNetworkMemoryCaches()`，直接清空两套 Dio
+客户端内存缓存，避免跨会话串读：
+
+- 切换站点：`SessionController.switchShop`
+- 退出登录：`SessionController._clearLocalSessionAfterLogout`（`signOut` /
+  `signOutWithRemoteLogout` 共用）
+- 代客登录切换账号：`SessionController.loginAsStoreCustomer`
+- 切回主账号：`SessionController.switchBackToMainUser`
+
+### 手动失效 API（A 方案）
+
+`MemoryCacheInterceptor` 提供：
+
+- `clearAll()`
+- `evictKey(String key)`
+- `evictByPrefix(String prefix)`
+
+平台层暴露：
+
+- `clearAllNetworkMemoryCaches()`：清理 public/protected 全部缓存
+- `evictProtectedNetworkCacheByPrefix(prefix)`：定向清理鉴权客户端缓存
+
+### 写后失效映射（首批：用户列表）
+
+为避免“写操作成功后 refresh 仍读到旧缓存”，已对客户列表采用「写后
+按前缀失效」：
+
+- 列表 GET 接口：`/store/account/customer`
+- 失效前缀：`/store/account/customer?`
+- 写操作成功后清理：
+  - `createStoreCustomerService`
+  - `updateStoreCustomerService`
+  - `deleteStoreCustomerService`
+
+说明：
+
+- 该链路已移除 `requestStoreCustomerList` 的 `noCache:true`
+- 依赖写后前缀失效 + session 切换全清，保证一致性与命中率平衡
+
 ## 用户切换与登出
 
 - 用户登出时清空购物车缓存。

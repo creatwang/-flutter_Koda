@@ -95,6 +95,7 @@ class SessionController extends AsyncNotifier<Session> {
             AppException('Invalid user payload after switch'),
           );
         }
+        clearAllNetworkMemoryCaches();
         state = AsyncData(
           Session(isAuthenticated: true, companyId: cid, token: token),
         );
@@ -138,6 +139,7 @@ class SessionController extends AsyncNotifier<Session> {
         // SharedPreferences 在部分测试环境未初始化，允许安全降级。
       }
     }
+    clearAllNetworkMemoryCaches();
     await ref.read(authClearTokenServiceProvider)();
     state = const AsyncData(Session(isAuthenticated: false));
     // 登出：不调其它业务接口；仅清本地 + 同步内存态。
@@ -186,6 +188,7 @@ class SessionController extends AsyncNotifier<Session> {
       }
       return ApiFailure<void>(AppException('Invalid customer session'));
     }
+    clearAllNetworkMemoryCaches();
     state = AsyncData(
       Session(isAuthenticated: true, companyId: cid, token: token),
     );
@@ -211,6 +214,7 @@ class SessionController extends AsyncNotifier<Session> {
       return ApiFailure<void>(AppException('Invalid main account snapshot'));
     }
     await secureStorageService.clearMainUserInfo();
+    clearAllNetworkMemoryCaches();
     state = AsyncData(
       Session(isAuthenticated: true, companyId: cid, token: token),
     );

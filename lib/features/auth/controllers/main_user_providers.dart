@@ -5,6 +5,8 @@ import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
 
 /// 安全存储中的主账号 [UserInfoBase]；无代客缓存时为 `null`。
-final mainUserInfoProvider = FutureProvider<UserInfoBase?>((ref) async {
+final mainUserInfoProvider = FutureProvider.autoDispose<UserInfoBase?>((
+  ref,
+) async {
   return secureStorageService.readMainUserInfo();
 });

@@ -42,6 +42,8 @@ class ProductGridSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return productsState.when(
+      skipLoadingOnRefresh: false,
+      skipLoadingOnReload: false,
       loading: () => const AppLoadingView(),
       error: (error, _) => AppErrorView(
         message: l10n.productLoadFailed(error.toString()),

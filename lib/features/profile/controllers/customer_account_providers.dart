@@ -13,7 +13,10 @@ import 'package:groe_app_pad/features/profile/services/customer_account_services
 
 /// 客户列表（业务员；依赖会话 `companyId` + `token`，且 `is_auth_account`）。
 final storeCustomersProvider =
-    AsyncNotifierProvider<StoreCustomersNotifier, PaginatedStoreCustomersState>(
+    AsyncNotifierProvider.autoDispose<
+      StoreCustomersNotifier,
+      PaginatedStoreCustomersState
+    >(
       StoreCustomersNotifier.new,
     );
 
@@ -74,8 +77,9 @@ class StoreCustomersNotifier
   }
 
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final companyId = ref
           .read(sessionControllerProvider)
           .asData
@@ -98,9 +102,12 @@ class StoreCustomersNotifier
         failure: (exception) => throw exception,
       );
     });
+    if (!ref.mounted) return;
+    state = next;
   }
 
   Future<void> loadMore() async {
+    if (!ref.mounted) return;
     final current = state.asData?.value;
     final companyId = ref
         .read(sessionControllerProvider)
@@ -117,6 +124,7 @@ class StoreCustomersNotifier
       return;
     }
 
+    if (!ref.mounted) return;
     state = AsyncData(current.copyWith(isLoadingMore: true));
     final nextPage = current.page + 1;
     final result = await fetchStoreCustomersPageService(
@@ -127,6 +135,7 @@ class StoreCustomersNotifier
       pageSize: _pageSize,
     );
 
+    if (!ref.mounted) return;
     state = result.when(
       success: (pageData) {
         final oldIds = current.items.map((e) => e.id).toSet();

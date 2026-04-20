@@ -101,6 +101,26 @@
 - UI 刷新：同步后失效 `canExportQuotationProvider` /
   `profileUserInfoProvider`，页面读到新值后自动重建
 
+## Provider 生命周期策略（autoDispose 对照）
+
+- 自动销毁（`autoDispose`，离开页面/无监听后释放）：
+  - `profileMyOrderListProvider`
+  - `profileCustomerOrderListProvider`
+  - `storeCustomersProvider`
+  - `productDetailProvider`
+  - `mainUserInfoProvider`
+  - `profileCartServerNumProvider`
+  - `storeCompanyListProvider`
+  - `myCustomerOrdersViewUserIdProvider`
+  - `myCustomerUserOrdersProvider`
+
+- 非自动销毁（保留内存态，按需手动 `invalidate/refresh`）：
+  - `productsProvider`
+  - `favoriteProductsProvider`
+  - `cartControllerProvider`
+  - `profileUserInfoProvider`
+  - `sessionControllerProvider`
+
 ## 内存网络缓存策略（Dio Interceptor）
 
 - 介质：`MemoryCacheInterceptor`（进程内 `Map`，应用重启后清空）

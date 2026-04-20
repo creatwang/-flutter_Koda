@@ -40,19 +40,20 @@ class ProfileOrderListState {
 }
 
 /// 当前用户「我的订单」分页。
-final profileMyOrderListProvider = AsyncNotifierProvider<
+final profileMyOrderListProvider = AsyncNotifierProvider.autoDispose<
   ProfileMyOrderListNotifier,
   ProfileOrderListState
 >(ProfileMyOrderListNotifier.new);
 
 /// 业务员视角「客户订单」分页。
-final profileCustomerOrderListProvider = AsyncNotifierProvider<
+final profileCustomerOrderListProvider = AsyncNotifierProvider.autoDispose<
   ProfileCustomerOrderListNotifier,
   ProfileOrderListState
 >(ProfileCustomerOrderListNotifier.new);
 
 /// [fetchProfileOrderListService] 驱动的列表与加载更多。
-class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
+class ProfileMyOrderListNotifier
+    extends AsyncNotifier<ProfileOrderListState> {
   static const int _pageSize = 20;
 
   @override
@@ -74,8 +75,9 @@ class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
   }
 
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final result = await fetchProfileOrderListService(
         page: 1,
         pageSize: _pageSize,
@@ -91,9 +93,12 @@ class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
         failure: (exception) => throw exception,
       );
     });
+    if (!ref.mounted) return;
+    state = next;
   }
 
   Future<void> loadMore() async {
+    if (!ref.mounted) return;
     final current = state.asData?.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
     state = AsyncData(current.copyWith(isLoadingMore: true));
@@ -102,6 +107,7 @@ class ProfileMyOrderListNotifier extends AsyncNotifier<ProfileOrderListState> {
       page: nextPage,
       pageSize: _pageSize,
     );
+    if (!ref.mounted) return;
     state = result.when(
       success: (data) {
         final oldIds = current.items.map((e) => e.id).toSet();
@@ -146,8 +152,9 @@ class ProfileCustomerOrderListNotifier
   }
 
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final result = await fetchProfileCustomerOrderListService(
         page: 1,
         pageSize: _pageSize,
@@ -163,9 +170,12 @@ class ProfileCustomerOrderListNotifier
         failure: (exception) => throw exception,
       );
     });
+    if (!ref.mounted) return;
+    state = next;
   }
 
   Future<void> loadMore() async {
+    if (!ref.mounted) return;
     final current = state.asData?.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
     state = AsyncData(current.copyWith(isLoadingMore: true));
@@ -174,6 +184,7 @@ class ProfileCustomerOrderListNotifier
       page: nextPage,
       pageSize: _pageSize,
     );
+    if (!ref.mounted) return;
     state = result.when(
       success: (data) {
         final oldIds = current.items.map((e) => e.id).toSet();

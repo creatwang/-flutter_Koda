@@ -57,19 +57,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _hasHydratedName = false;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(
-        ref.read(profileCartServerNumProvider.notifier).fetchOnProfileOpen(),
-      );
-    });
-  }
-
-  @override
   void dispose() {
-    ref.read(profileCartServerNumProvider.notifier).clearSnapshot();
     _fullNameController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
@@ -275,20 +263,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 }
                 if (next == ProfileContentSection.myCustomers) {
                   ref.read(storeCustomersProvider.notifier).refresh();
-                }
-                if (next == ProfileContentSection.orderCenter) {
-                  if (canViewCustomerOrders &&
-                      _currentOrderTab == ProfileOrderTab.customer) {
-                    unawaited(
-                      ref
-                          .read(profileCustomerOrderListProvider.notifier)
-                          .refresh(),
-                    );
-                  } else {
-                    unawaited(
-                      ref.read(profileMyOrderListProvider.notifier).refresh(),
-                    );
-                  }
                 }
               },
             ),

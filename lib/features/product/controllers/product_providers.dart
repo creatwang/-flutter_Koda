@@ -190,10 +190,8 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
 }
 
 /// 商品详情 DTO（[id] 为商品 id）。
-final productDetailProvider = FutureProvider.family<ProductDetailDto, int>((
-  ref,
-  id,
-) async {
+final productDetailProvider =
+    FutureProvider.autoDispose.family<ProductDetailDto, int>((ref, id) async {
   final result = await fetchProductDetailService(id);
   return result.when(
     success: (data) => data,

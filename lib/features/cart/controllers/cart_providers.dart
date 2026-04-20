@@ -30,11 +30,11 @@ final cartListBadgeCountProvider = Provider<int>((ref) {
 /// 个人中心侧栏 CART NUM：仅在打开 Profile 时请求 `/store/cart/num` 写入快照；
 /// 离开 Profile 或未拉取成功前用 [cartListBadgeCountProvider]。
 final profileCartServerNumProvider =
-    NotifierProvider<ProfileCartServerNumNotifier, int?>(
+    NotifierProvider.autoDispose<ProfileCartServerNumNotifier, int?>(
       ProfileCartServerNumNotifier.new,
     );
 
-/// 仅在 [ProfilePage] 打开时调用 [ProfileCartServerNumNotifier.fetchOnProfileOpen]。
+/// Profile 打开后被监听时自动拉取 `/store/cart/num`，离开后自动释放。
 class ProfileCartServerNumNotifier extends Notifier<int?> {
   @override
   int? build() {
@@ -43,16 +43,19 @@ class ProfileCartServerNumNotifier extends Notifier<int?> {
         state = null;
       }
     });
+    unawaited(fetchOnProfileOpen());
     return null;
   }
 
   Future<void> fetchOnProfileOpen() async {
     final session = ref.read(sessionControllerProvider).asData?.value;
+    if (!ref.mounted) return;
     if (!_isAuthenticatedBySession(session)) {
       state = null;
       return;
     }
     final result = await fetchCartTotalNumService();
+    if (!ref.mounted) return;
     result.when(
       success: (n) => state = n,
       failure: (_) => state = null,

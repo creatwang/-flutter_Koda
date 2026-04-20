@@ -91,7 +91,7 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPiSuccess = item.piStatus == 1;
-    final piColor = isPiSuccess ? const Color(0xFF6CE596) : const Color(
+    final piColor = isPiSuccess ? const Color.fromRGBO(6, 255, 60, 1) : const Color(
       0xFFFF8C92,
     );
     final piText = isPiSuccess ? 'Successful' : 'Fail';
@@ -106,17 +106,6 @@ class _OrderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (showUserInfo && item.user != null) ...[
-              Text(
-                item.user?.name ?? item.user?.username ?? '--',
-                style: const TextStyle(
-                  color: ProMaxTokens.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
             Padding(
               padding: const EdgeInsets.only(left: 30, top: 14, right: 30),
               child: Row(
@@ -126,22 +115,37 @@ class _OrderCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('OrderNo', style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500
-                        ),),
+                        Text.rich(
+                          style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500
+                          ),
+                          TextSpan(
+                            children: [
+                              TextSpan(text: 'OrderNo:'),
+                              WidgetSpan(child: SizedBox(
+                                width: 4,
+                              ),),
+                              TextSpan(
+                                text: item.orderNo ?? '--',
+                              )
+                            ]
+                          )
+                        ),
                         SizedBox(
                           height: 4,
                         ),
-                        Text(
-                          item.orderNo ?? '--',
-                          style: const TextStyle(
-                            color: ProMaxTokens.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14
+                        if (showUserInfo && item.user != null) ...[
+                          Text(
+                            item.user?.name ?? item.user?.username ?? '--',
+                            style: const TextStyle(
+                              color: ProMaxTokens.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        )
+                        ],
                       ],
                     ),
                   ),
@@ -150,7 +154,7 @@ class _OrderCard extends StatelessWidget {
                       'Time: ${item.createdAt ?? '--'}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 14
+                        fontSize: 12
                       ),
                     ),
                   ),
@@ -158,12 +162,20 @@ class _OrderCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          erpText,
-                          style: const TextStyle(
-                            color: Color(0xFF84CCFF),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14
+                        Container(
+
+                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(999)
+                          ),
+                          child: Text(
+                            erpText,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -183,7 +195,7 @@ class _OrderCard extends StatelessWidget {
                               style: TextStyle(
                                 color: piColor,
                                 fontWeight: FontWeight.w700,
-                                fontSize: 14
+                                fontSize: 12
                               ),
                             ),
                           ],

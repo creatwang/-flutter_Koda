@@ -62,9 +62,6 @@ class _ProfileMyCustomersSectionWidgetState
     super.dispose();
   }
 
-  int _orderListUserId(StoreCustomerItemDto item) =>
-      item.userMainId > 0 ? item.userMainId : item.id;
-
   Future<void> _refresh() async {
     await ref.read(storeCustomersProvider.notifier).refresh();
   }
@@ -150,7 +147,7 @@ class _ProfileMyCustomersSectionWidgetState
       return;
     }
     if (_isClosingOrdersPanel) return;
-    final int uid = _orderListUserId(item);
+    final int uid = item.id;
     setState(() {
       _pendingOrdersRowCustomerId = item.id;
       _didRunOpenSlide = false;
@@ -384,8 +381,7 @@ class _ProfileMyCustomersSectionWidgetState
                                       _pendingOrdersRowCustomerId != null,
                                   rowLoginLoading: rowLoginLoading,
                                   rowOrdersLoading: rowOrdersLoading,
-                                  onViewOrders: () =>
-                                      _onViewCustomerOrders(item),
+                                  onViewOrders: () => _onViewCustomerOrders(item),
                                   onEdit: () => showStoreCustomerFormBottomSheet(
                                     context: context,
                                     ref: ref,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
@@ -167,6 +167,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       onPageChanged: (index) {
                         if (_selectedImageIndex == index) return;
                         setState(() => _selectedImageIndex = index);
+                        _ensureSelectedThumbnailVisible(index);
                       },
                       onThumbnailTap: _onThumbnailTap,
                       onSelectVariant: (pid) =>
@@ -324,9 +325,6 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       });
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensureSelectedThumbnailVisible(imageIndex);
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
@@ -370,3 +368,5 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     );
   }
 }
+
+

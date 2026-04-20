@@ -514,6 +514,7 @@ class _ProductSkuCartSideSheetBodyState
                       child: _DrawerOptionTile(
                         label: display,
                         isSelected: isSelected,
+                        isDisabled: false,
                         fullWidth: true,
                         onTap: pid == null
                             ? null

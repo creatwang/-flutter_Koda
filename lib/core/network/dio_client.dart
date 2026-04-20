@@ -1,9 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:groe_app_pad/core/network/interceptors/memory_cache_interceptor.dart';
 import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
 
 class DioClient {
   DioClient(this._dio);
   final Dio _dio;
+
+  /// 清理当前 Dio 上挂载的全部内存缓存拦截器数据。
+  void clearAllMemoryCaches() {
+    for (final interceptor in _dio.interceptors) {
+      if (interceptor is MemoryCacheInterceptor) {
+        interceptor.clearAll();
+      }
+    }
+  }
+
+  /// 按前缀清理当前 Dio 的内存缓存，返回删除条数。
+  int evictMemoryCacheByPrefix(String prefix) {
+    var removed = 0;
+    for (final interceptor in _dio.interceptors) {
+      if (interceptor is MemoryCacheInterceptor) {
+        removed += interceptor.evictByPrefix(prefix);
+      }
+    }
+    return removed;
+  }
 
   Future<Response<dynamic>> get(
     String path, {

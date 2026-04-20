@@ -7,6 +7,7 @@ import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/main_user_providers.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
+import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
@@ -274,6 +275,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 }
                 if (next == ProfileContentSection.myCustomers) {
                   ref.read(storeCustomersProvider.notifier).refresh();
+                }
+                if (next == ProfileContentSection.orderCenter) {
+                  if (canViewCustomerOrders &&
+                      _currentOrderTab == ProfileOrderTab.customer) {
+                    unawaited(
+                      ref
+                          .read(profileCustomerOrderListProvider.notifier)
+                          .refresh(),
+                    );
+                  } else {
+                    unawaited(
+                      ref.read(profileMyOrderListProvider.notifier).refresh(),
+                    );
+                  }
                 }
               },
             ),

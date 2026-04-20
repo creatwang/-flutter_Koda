@@ -467,7 +467,7 @@ class _ProductSkuCartSideSheetBodyState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '\$${unitPrice.toStringAsFixed(0)}',
+                            '\$${unitPrice.toString()}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,

@@ -79,7 +79,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           children: [
             if (hasMatchedSku)
               Text(
-                '\$${totalPrice.toStringAsFixed(2)}',
+                '\$${totalPrice.toString()}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 25,

@@ -82,17 +82,22 @@ Future<Response<dynamic>> requestCustomerOrderList({
   String keyword = '',
   int withBatchOrder = 1,
   int allShop = 1,
+  int? userId,
   DioClient? client,
 }) {
+  final queryParameters = <String, dynamic>{
+    'status': status,
+    'page': page,
+    'page_size': pageSize,
+    'keyword': keyword,
+    'with_batch_order': withBatchOrder,
+    'all_shop': allShop,
+  };
+  if (userId != null) {
+    queryParameters['user_id'] = userId;
+  }
   return (client ?? protectedDioClient).get(
     ProfileRequests.customerOrderListPath,
-    queryParameters: <String, dynamic>{
-      'status': status,
-      'page': page,
-      'page_size': pageSize,
-      'keyword': keyword,
-      'with_batch_order': withBatchOrder,
-      'all_shop': allShop,
-    },
+    queryParameters: queryParameters,
   );
 }

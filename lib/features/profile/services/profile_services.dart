@@ -91,6 +91,22 @@ Future<ApiResult<ProductOrderListDto>> fetchProfileCustomerOrderListService({
   );
 }
 
+/// 指定客户 `user_id` 的订单分页（与 Order Center Customer 同源接口）。
+Future<ApiResult<ProductOrderListDto>>
+fetchProfileCustomerOrderListForUserService({
+  required int userId,
+  required int page,
+  required int pageSize,
+}) {
+  return _fetchOrderListPage(
+    request: () => requestCustomerOrderList(
+      page: page,
+      pageSize: pageSize,
+      userId: userId,
+    ),
+  );
+}
+
 Future<ApiResult<ProductOrderListDto>> _fetchOrderListPage({
   required Future<Response<dynamic>> Function() request,
 }) async {

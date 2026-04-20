@@ -11,7 +11,7 @@ alwaysApply: true
 
 `lib/features/<feature>/` 下必须包含以下 5 个目录：
 - `api/`：仅定义 HTTP 请求（路径、参数、method、响应约定）。
-- `services/`：调用 `api/` 后做业务数据处理与错误转换。
+- `services/`：以「调用 `api/` 后的业务数据处理与错误转换」为主；**亦可**放置从 `*_controller.dart`（或页面编排流程）中拆出的、**无 UI、无 Riverpod** 的纯逻辑模块——当某功能在 controller 内实现导致**代码量过大或职责过重**时，将其中可独立测试、可复用的计算/编排步骤下沉到 `services/`，由 controller 调用，以控制 page/controller 体积。
 - `models/`：DTO/实体/序列化结构。
 - `controllers/`：Riverpod providers/notifiers（状态管理）。
 - `presentation/pages|widgets/`：页面与组件。
@@ -31,6 +31,8 @@ alwaysApply: true
   - 负责纯交互流程与页面动作编排（非网络底层逻辑）。
   - 例如：复杂表单交互、局部操作流程、组件动作聚合。
   - 处理后同步到 widgets 局部状态，或触发 provider 动作。
+  - **体量控制**：若某一功能在 controller 内展开后导致单文件过长、难以阅读或测试，应将该功能中**与 UI 无关**的纯逻辑拆到 `services/`（或本模块内语义清晰的 `*_services.dart`），controller 保留调用入口及与页面状态的衔接；**并非只有「调 API」才允许使用 `services/`**。
+
 ## 2) 命名规范（必须）
 - 页面：`*_page.dart`
 - 组件：`*_widget.dart` 或语义化组件名（如 `product_card.dart`）
@@ -58,6 +60,7 @@ alwaysApply: true
 - `controllers` 不直接拼 URL，不直接处理底层 Dio 细节。
 ### 4.2 在哪里处理逻辑
 - 参数映射、响应结构适配、错误转换：`services/`
+- 从 controller 拆出的、与网络无关但体量大的纯业务/计算步骤：同样落在 `services/`，由 `*_controller.dart` 或 `*_providers.dart` 调用（避免把大块纯逻辑堆在 page 或单个 controller 文件内）。
 - 原始请求定义（endpoint、query/body）：`api/`
 - 视图状态（loading/data/error、分页）：`controllers/`
 - 纯展示与交互：`presentation/`

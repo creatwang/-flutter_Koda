@@ -46,6 +46,19 @@
       「My Customers」等业务员入口随之隐藏）。
     - `main_user_info` 与 `user_info_base` 分工：**前者**只用于「能否切回
       主账号」；**后者**始终表示**当前登录身份**。
+  - 代码入口（编排与存储 API）：
+    - `lib/features/auth/controllers/session_providers.dart`：
+      `SessionController.loginAsStoreCustomer`（代客前写入/失败回滚、成功后
+      `persistAuthenticatedUserSnapshot` 更新当前用户与会话）；
+      `SessionController.switchBackToMainUser`（读快照恢复会话后
+      `clearMainUserInfo`）。
+    - `lib/core/storage/secure_storage_service.dart`：
+      `saveMainUserInfo` / `readMainUserInfo` / `clearMainUserInfo`（键名
+      `main_user_info`）。
+    - `lib/features/auth/controllers/main_user_providers.dart`：
+      `mainUserInfoProvider`（供 UI 判断是否存在主账号快照）。
+    - `lib/features/profile/presentation/pages/profile_page.dart`：
+      `_onSwitchAccount` 调用 `switchBackToMainUser`。
 
 - 站点信息（`SiteInfoDto`）
   - 持久化介质：`SharedPreferences`

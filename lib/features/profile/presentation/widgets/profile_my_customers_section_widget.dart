@@ -6,6 +6,7 @@ import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
 import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
 import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
+import 'package:groe_app_pad/shared/services/app_message_service.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
@@ -42,10 +43,18 @@ class _ProfileMyCustomersSectionWidgetState
       if (!mounted) return;
       result.when(
         success: (_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Logged in as customer.')),
-          );
           context.go(AppRoutes.home);
+          // 先导航再提示：否则 SnackBar 绑在即将 dispose 的 subtree 上，
+          // 动画回调会触发「deactivated widget's ancestor」断言。
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final messenger = appScaffoldMessengerKey.currentState;
+            if (messenger == null) return;
+            messenger
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Logged in as customer.')),
+              );
+          });
         },
         failure: (e) {
           ScaffoldMessenger.of(

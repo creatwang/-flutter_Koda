@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
@@ -10,7 +11,7 @@ import 'package:groe_app_pad/features/profile/models/paginated_store_customers_s
 import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
 import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
 
-/// 客户列表（下拉刷新、滚动加载；依赖当前会话 `companyId` + `token`）。
+/// 客户列表（业务员；依赖会话 `companyId` + `token`，且 `is_auth_account`）。
 final storeCustomersProvider =
     AsyncNotifierProvider<StoreCustomersNotifier, PaginatedStoreCustomersState>(
       StoreCustomersNotifier.new,
@@ -20,8 +21,22 @@ class StoreCustomersNotifier
     extends AsyncNotifier<PaginatedStoreCustomersState> {
   static const int _pageSize = 20;
 
+  static const PaginatedStoreCustomersState _emptyFirstPage =
+      PaginatedStoreCustomersState(
+    items: [],
+    page: 1,
+    hasMore: false,
+  );
+
   String _status = '';
   String _keyword = '';
+
+  /// 「我的客户」仅业务员账号可调 `/store/account/customer`；
+  /// 代客子账号等会话切换后不应再打列表接口。
+  Future<bool> _isSalesRepContext() async {
+    final user = await secureStorageService.readUserInfoBase();
+    return user?.isAuthAccount == true;
+  }
 
   @override
   FutureOr<PaginatedStoreCustomersState> build() async {
@@ -34,11 +49,10 @@ class StoreCustomersNotifier
     final companyId = session?.companyId;
     final String? token = session?.token;
     if (companyId == null || token == null || token.isEmpty) {
-      return const PaginatedStoreCustomersState(
-        items: [],
-        page: 1,
-        hasMore: false,
-      );
+      return _emptyFirstPage;
+    }
+    if (!await _isSalesRepContext()) {
+      return _emptyFirstPage;
     }
     final result = await fetchStoreCustomersFirstPageService(
       companyId: companyId,
@@ -68,11 +82,10 @@ class StoreCustomersNotifier
           ?.value
           .companyId;
       if (companyId == null) {
-        return const PaginatedStoreCustomersState(
-          items: [],
-          page: 1,
-          hasMore: false,
-        );
+        return _emptyFirstPage;
+      }
+      if (!await _isSalesRepContext()) {
+        return _emptyFirstPage;
       }
       final result = await fetchStoreCustomersFirstPageService(
         companyId: companyId,
@@ -98,6 +111,9 @@ class StoreCustomersNotifier
         companyId == null ||
         !current.hasMore ||
         current.isLoadingMore) {
+      return;
+    }
+    if (!await _isSalesRepContext()) {
       return;
     }
 

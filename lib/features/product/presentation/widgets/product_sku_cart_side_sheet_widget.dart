@@ -100,7 +100,7 @@ class _ProductSkuCartSideSheetScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final width = (media.size.width * 0.42).clamp(360.0, 520.0);
+    final width = (media.size.width * 0.30).clamp(360.0, 520.0);
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -124,7 +124,6 @@ class _ProductSkuCartSideSheetScaffold extends StatelessWidget {
                       curve: Curves.easeOutCubic,
                     ),
                   ),
-              child: SafeArea(
                 child: Material(
                   elevation: 24,
                   color: const Color(0xFF151515),
@@ -140,7 +139,6 @@ class _ProductSkuCartSideSheetScaffold extends StatelessWidget {
                       onSubmit: onSubmit,
                     ),
                   ),
-                ),
               ),
             ),
           ),
@@ -420,15 +418,15 @@ class _ProductSkuCartSideSheetBodyState
                 onTap: _isSubmitting || _productNum <= 1
                     ? null
                     : () => setState(() => _productNum -= 1),
-                child: const Icon(Icons.remove, color: Colors.white, size: 22),
+                child: const Icon(Icons.remove, color: Colors.white, size: 10),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
                   '$_productNum',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -438,7 +436,7 @@ class _ProductSkuCartSideSheetBodyState
                 onTap: _isSubmitting
                     ? null
                     : () => setState(() => _productNum += 1),
-                child: const Icon(Icons.add, color: Colors.black, size: 22),
+                child: const Icon(Icons.add, color: Colors.black, size: 10),
               ),
             ],
           )
@@ -480,260 +478,256 @@ class _ProductSkuCartSideSheetBodyState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 88,
-                        height: 88,
-                        child: _DrawerThumb(url: thumbUrl),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '\$${unitPrice.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                height: 1.05,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                height: 1.25,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  qtyRow,
-                  if (variants.length > 1) ...[
-                    const SizedBox(height: 28),
-                    Text(
-                      l10n.cartSkuDrawerProductLine,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 76,
+                      height: 76,
+                      child: _DrawerThumb(url: thumbUrl),
                     ),
-                    const SizedBox(height: 10),
-                    ...variants.map((product) {
-                      final pid = product.id;
-                      final isSelected = pid != null && pid == selectedId;
-                      final display = product.name ?? product.nameCn ?? '--';
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _DrawerOptionTile(
-                          label: display,
-                          isSelected: isSelected,
-                          fullWidth: true,
-                          onTap: pid == null
-                              ? null
-                              : () => _selectVariantProduct(pid, variants),
-                        ),
-                      );
-                    }),
-                  ],
-                  ...specRows.asMap().entries.map((entry) {
-                    final rowIndex = entry.key;
-                    final group = entry.value;
-                    final options = group.options ?? const <Options>[];
-                    if (options.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    final label = (group.name ?? '').trim().isEmpty
-                        ? l10n.cartSkuDrawerProductLine
-                        : (group.name ?? '').trim();
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 22),
+                    const SizedBox(width: 14),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            label,
+                            '\$${unitPrice.toStringAsFixed(0)}',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              height: 1.05,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          options.length > 3
-                              ? Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: options
-                                      .map((option) {
-                                        final spec = option.spec ?? '';
-                                        final isSelected =
-                                            rowIndex < skuRowSelection.length &&
-                                            (skuRowSelection[rowIndex].spec ??
-                                                    '') ==
-                                                spec;
-                                        final display =
-                                            option.name ??
-                                            option.nameCn ??
-                                            '--';
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 8,
-                                          ),
-                                          child: _DrawerOptionTile(
-                                            label: display,
-                                            isSelected: isSelected,
-                                            fullWidth: true,
-                                            onTap: () => _applySpecOption(
-                                              rowIndex,
-                                              option,
-                                              selected,
-                                              variants,
-                                            ),
-                                          ),
-                                        );
-                                      })
-                                      .toList(growable: false),
-                                )
-                              : Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: options
-                                      .map((option) {
-                                        final spec = option.spec ?? '';
-                                        final isSelected =
-                                            rowIndex < skuRowSelection.length &&
-                                            (skuRowSelection[rowIndex].spec ??
-                                                    '') ==
-                                                spec;
-                                        final display =
-                                            option.name ??
-                                            option.nameCn ??
-                                            '--';
-                                        return _DrawerOptionTile(
-                                          label: display,
-                                          isSelected: isSelected,
-                                          fullWidth: false,
-                                          onTap: () => _applySpecOption(
-                                            rowIndex,
-                                            option,
-                                            selected,
-                                            variants,
-                                          ),
-                                        );
-                                      })
-                                      .toList(growable: false),
-                                ),
+                          const SizedBox(height: 6),
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              height: 1.25,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          qtyRow,
                         ],
-                      ),
-                    );
-                  }),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 20),
-                    SelectableText.rich(
-                      TextSpan(
-                        text: _errorMessage,
-                        style: const TextStyle(
-                          color: Color(0xFFFF8A80),
-                          fontSize: 13,
-                        ),
                       ),
                     ),
                   ],
-                ],
-              ),
-            ),
-          ),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: const StadiumBorder(),
+                ),
+                if (variants.length > 1) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.cartSkuDrawerProductLine,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => Navigator.of(context).pop(false),
-                    child: Text(
-                      l10n.cartSkuDrawerClose,
+                  ),
+                  const SizedBox(height: 10),
+                  ...variants.map((product) {
+                    final pid = product.id;
+                    final isSelected = pid != null && pid == selectedId;
+                    final display = product.name ?? product.nameCn ?? '--';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _DrawerOptionTile(
+                        label: display,
+                        isSelected: isSelected,
+                        fullWidth: true,
+                        onTap: pid == null
+                            ? null
+                            : () => _selectVariantProduct(pid, variants),
+                      ),
+                    );
+                  }),
+                ],
+                ...specRows.asMap().entries.map((entry) {
+                  final rowIndex = entry.key;
+                  final group = entry.value;
+                  final options = group.options ?? const <Options>[];
+                  if (options.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final label = (group.name ?? '').trim().isEmpty
+                      ? l10n.cartSkuDrawerProductLine
+                      : (group.name ?? '').trim();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        options.length > 3
+                            ? Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
+                          children: options
+                              .map((option) {
+                            final spec = option.spec ?? '';
+                            final isSelected =
+                                rowIndex < skuRowSelection.length &&
+                                    (skuRowSelection[rowIndex].spec ??
+                                        '') ==
+                                        spec;
+                            final display =
+                                option.name ??
+                                    option.nameCn ??
+                                    '--';
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 8,
+                              ),
+                              child: _DrawerOptionTile(
+                                label: display,
+                                isSelected: isSelected,
+                                fullWidth: true,
+                                onTap: () => _applySpecOption(
+                                  rowIndex,
+                                  option,
+                                  selected,
+                                  variants,
+                                ),
+                              ),
+                            );
+                          })
+                              .toList(growable: false),
+                        )
+                            : Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: options
+                              .map((option) {
+                            final spec = option.spec ?? '';
+                            final isSelected =
+                                rowIndex < skuRowSelection.length &&
+                                    (skuRowSelection[rowIndex].spec ??
+                                        '') ==
+                                        spec;
+                            final display =
+                                option.name ??
+                                    option.nameCn ??
+                                    '--';
+                            return _DrawerOptionTile(
+                              label: display,
+                              isSelected: isSelected,
+                              fullWidth: false,
+                              onTap: () => _applySpecOption(
+                                rowIndex,
+                                option,
+                                selected,
+                                variants,
+                              ),
+                            );
+                          })
+                              .toList(growable: false),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 20),
+                  SelectableText.rich(
+                    TextSpan(
+                      text: _errorMessage,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                        color: Color(0xFFFF8A80),
+                        fontSize: 13,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      side: const BorderSide(color: Colors.white, width: 1.2),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: const StadiumBorder(),
-                      disabledBackgroundColor: Color(0xFF3A3A3A),
-                      disabledForegroundColor: Colors.white38,
-                    ),
-                    onPressed: !hasMatchedSku || _isSubmitting
-                        ? null
-                        : () => _onPrimaryPressed(
-                              context,
-                              selected,
-                              variants,
-                              skuRowSelection,
-                              skuResolved,
-                            ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            primaryLabel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
-                          ),
-                  ),
-                ),
+                ],
               ],
             ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    shape: const StadiumBorder(),
+                  ),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                  child: Text(
+                    l10n.cartSkuDrawerClose,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    side: const BorderSide(color: Colors.white, width: 1.2),
+                    // padding: const EdgeInsets.symmetric(vertical: 4),
+                    shape: const StadiumBorder(),
+                    disabledBackgroundColor: Color(0xFF3A3A3A),
+                    disabledForegroundColor: Colors.white38,
+                  ),
+                  onPressed: !hasMatchedSku || _isSubmitting
+                      ? null
+                      : () => _onPrimaryPressed(
+                    context,
+                    selected,
+                    variants,
+                    skuRowSelection,
+                    skuResolved,
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : Text(
+                    primaryLabel,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -749,7 +743,7 @@ class _DrawerThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(8),
       child: ColoredBox(
         color: _kSkuDrawerChipIdle,
         child: url == null || url!.isEmpty
@@ -789,7 +783,7 @@ class _QtySquareButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  static const double _kSize = 48;
+  static const double _kSize = 16;
 
   @override
   Widget build(BuildContext context) {
@@ -800,7 +794,7 @@ class _QtySquareButton extends StatelessWidget {
     );
     return Material(
       color: background,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(4),
       clipBehavior: Clip.antiAlias,
       child: onTap == null
           ? inner
@@ -832,20 +826,20 @@ class _DrawerOptionTile extends StatelessWidget {
     final fg = isSelected ? Colors.black : Colors.white;
     final tile = Material(
       color: bg,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.symmetric(
-            vertical: fullWidth ? 14 : 10,
+            vertical: fullWidth ? 8 : 4,
             horizontal: fullWidth ? 16 : 14,
           ),
           child: Text(
             label,
             style: TextStyle(
               color: fg,
-              fontSize: fullWidth ? 13 : 12,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),

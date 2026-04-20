@@ -43,8 +43,9 @@ class ProductDetailInfoPanel extends StatelessWidget {
     final title = selected.name ?? detail.name ?? '--';
     final productCode = (selected.uniqid ?? detail.uniqid ?? '');
     final hasMatchedSku = skuResolved.sub != null;
-    final unitPrice =
-        ProductDetailController.unitPriceFromResolvedSub(skuResolved.sub);
+    final unitPrice = ProductDetailController.unitPriceFromResolvedSub(
+      skuResolved.sub,
+    );
     final totalPrice = unitPrice * productNum;
     final specRows = selected.specValue ?? const <SpecValue>[];
 
@@ -197,12 +198,21 @@ class ProductDetailInfoPanel extends StatelessWidget {
                                     rowIndex < skuRowSelection.length &&
                                     (skuRowSelection[rowIndex].spec ?? '') ==
                                         spec;
+                                final isUnavailable =
+                                    ProductSkuResolver.isSpecUnavailable(
+                                      currentProduct: selected,
+                                      currentProductId: selectedId,
+                                      specKey: spec,
+                                    );
+                                final isDisabled = isUnavailable && !isSelected;
                                 final display =
                                     option.name ?? option.nameCn ?? '--';
                                 return InkWell(
                                   borderRadius: BorderRadius.circular(8),
-                                  onTap: () =>
-                                      onApplySpecOption(rowIndex, option),
+                                  onTap: isDisabled
+                                      ? null
+                                      : () =>
+                                            onApplySpecOption(rowIndex, option),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
@@ -211,15 +221,17 @@ class ProductDetailInfoPanel extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
                                       color: isSelected
-                                          ? Colors.white.withValues(
-                                              alpha: 0.25,
-                                            )
-                                          : Colors.white.withValues(
-                                              alpha: 0.1,
-                                            ),
+                                          ? Colors.white.withValues(alpha: 0.25)
+                                          : isDisabled
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.white.withValues(alpha: 0.1),
                                       border: Border.all(
                                         color: isSelected
                                             ? Colors.white
+                                            : isDisabled
+                                            ? Colors.white.withValues(
+                                                alpha: 0.12,
+                                              )
                                             : Colors.white.withValues(
                                                 alpha: 0.25,
                                               ),
@@ -227,8 +239,10 @@ class ProductDetailInfoPanel extends StatelessWidget {
                                     ),
                                     child: Text(
                                       display,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: isDisabled
+                                            ? Colors.white54
+                                            : Colors.white,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 10,
                                       ),

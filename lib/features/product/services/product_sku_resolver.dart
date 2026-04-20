@@ -21,23 +21,134 @@ class ProductSkuResolveResult {
   final String? via;
 }
 
+class ProductSkuTapSelectionResult {
+  const ProductSkuTapSelectionResult({
+    required this.selectedProductId,
+    required this.skuSelectedOptions,
+    required this.skuSelectionOwnerId,
+  });
+
+  final int? selectedProductId;
+  final List<Options> skuSelectedOptions;
+  final int? skuSelectionOwnerId;
+}
+
+final class _SpecContainmentCandidate {
+  const _SpecContainmentCandidate({
+    required this.idxStr,
+    required this.matchCount,
+    required this.isExact,
+    required this.specMap,
+  });
+
+  final String idxStr;
+  final int matchCount;
+  final bool isExact;
+  final Map<String, String> specMap;
+}
+
 /// 纯函数 SKU 解析，供详情页等复用。
 abstract final class ProductSkuResolver {
   static bool isSubOnSale(ProductSub sub) => sub.status == 1;
 
-  /// 自上而下拼接 `spec` → `_index`
-  static String buildIndexFromSelection(
+  static String _safe(String? value) => (value ?? '').trim();
+
+  static List<String> _splitIndex(String? index) => _safe(index)
+      .split('_')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList(growable: false);
+
+  static String _rowAttrIndex(SpecValue row, {Options? fallbackOpt}) {
+    final byRow = _safe(row.attrIndex);
+    if (byRow.isNotEmpty) return byRow;
+    final byOpt = _safe(fallbackOpt?.attrIndex);
+    if (byOpt.isNotEmpty) return byOpt;
+    final spec = _safe(fallbackOpt?.spec);
+    if (spec.isNotEmpty) return spec.substring(0, 1);
+    return '';
+  }
+
+  static Map<String, String> _buildSpecToAttr(Product product) {
+    final map = <String, String>{};
+    for (final group in product.specValue ?? const <SpecValue>[]) {
+      final attr = _rowAttrIndex(group);
+      for (final opt in group.options ?? const <Options>[]) {
+        final spec = _safe(opt.spec);
+        if (spec.isEmpty) continue;
+        if (attr.isNotEmpty) {
+          map[spec] = attr;
+          continue;
+        }
+        map[spec] = spec.substring(0, 1);
+      }
+    }
+    return map;
+  }
+
+  static Map<String, String> specByAttrFromSelection(
     Product product,
     List<Options> selectedOptions,
   ) {
     final rows = product.specValue ?? const <SpecValue>[];
-    final parts = <String>[];
-    for (var i = 0; i < rows.length && i < selectedOptions.length; i++) {
-      final spec = selectedOptions[i].spec?.trim() ?? '';
-      if (spec.isNotEmpty) parts.add(spec);
+    final map = <String, String>{};
+    for (var i = 0; i < rows.length; i++) {
+      if (i >= selectedOptions.length) break;
+      final row = rows[i];
+      final opt = selectedOptions[i];
+      final spec = _safe(opt.spec);
+      if (spec.isEmpty) continue;
+      final key = _rowAttrIndex(row, fallbackOpt: opt);
+      if (key.isEmpty) continue;
+      map[key] = spec;
     }
-    return parts.join('_');
+    return map;
   }
+
+  static Map<String, String> _specMapFromSub(Product product, ProductSub sub) {
+    final specToAttr = _buildSpecToAttr(product);
+    final map = <String, String>{};
+    for (final spec in _splitIndex(sub.sIndex)) {
+      final attr = specToAttr[spec] ?? spec.substring(0, 1);
+      if (map.containsKey(attr)) continue;
+      map[attr] = spec;
+    }
+    return map;
+  }
+
+  static String buildIndexFromSpecByAttr(Map<String, String> specByAttr) {
+    final items =
+        specByAttr.values
+            .map(_safe)
+            .where((e) => e.isNotEmpty)
+            .toList(growable: false)
+          ..sort();
+    return items.join('_');
+  }
+
+  static ProductSub? _findSubByIndex(Product product, String index) {
+    final target = _safe(index);
+    if (target.isEmpty) return null;
+    return (product.productSub ?? const <ProductSub>[]).firstWhereOrNull(
+      (sub) => _safe(sub.sIndex) == target,
+    );
+  }
+
+  static Product? _productById(List<Product> variants, int? productId) {
+    if (productId == null) return null;
+    return variants.firstWhereOrNull((p) => p.id == productId);
+  }
+
+  static Map<String, String> _defaultSpecByAttr(Product product) =>
+      specByAttrFromSelection(product, getDefaultSelection(product));
+
+  /// 自上而下拼接 `spec`，按字典序归一化为 `_index`
+  static String buildIndexFromSelection(
+    Product product,
+    List<Options> selectedOptions,
+  ) => buildIndexFromSpecByAttr(
+    specByAttrFromSelection(product, selectedOptions),
+  );
 
   /// 各维 `option.pid` 交集
   static List<int> intersectPids(List<Options> selectedOptions) {
@@ -130,20 +241,26 @@ abstract final class ProductSkuResolver {
   }
 
   static List<Options> selectionFromSub(Product product, ProductSub sub) {
-    final parts = (sub.sIndex ?? '')
-        .split('_')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList(growable: false);
+    final specByAttr = _specMapFromSub(product, sub);
+    return selectionFromSpecByAttr(product, specByAttr);
+  }
+
+  static List<Options> selectionFromSpecByAttr(
+    Product product,
+    Map<String, String> specByAttr,
+  ) {
     final rows = product.specValue ?? const <SpecValue>[];
-    return List<Options>.generate(rows.length, (i) {
-      final opts = rows[i].options ?? const <Options>[];
+    final out = <Options>[];
+    for (final row in rows) {
+      final opts = row.options ?? const <Options>[];
       if (opts.isEmpty) {
-        throw StateError('Spec row has no options: ${rows[i].name}');
+        continue;
       }
-      final token = i < parts.length ? parts[i] : null;
-      return opts.firstWhereOrNull((o) => o.spec == token) ?? opts.first;
-    }, growable: false);
+      final attr = _rowAttrIndex(row);
+      final token = specByAttr[attr];
+      out.add(opts.firstWhereOrNull((o) => o.spec == token) ?? opts.first);
+    }
+    return out;
   }
 
   /// 切换主产品时：优先 `pid == 产品 id` 的在售 sub，否则第一条在售，否则每维首项
@@ -165,4 +282,174 @@ abstract final class ProductSkuResolver {
 
   static Product? productById(List<Product> variants, int id) =>
       variants.firstWhereOrNull((p) => p.id == id);
+
+  static bool isSpecUnavailable({
+    required Product currentProduct,
+    required int currentProductId,
+    required String specKey,
+  }) {
+    final normalizedSpec = _safe(specKey);
+    if (normalizedSpec.isEmpty) return true;
+    if ((currentProduct.isAttrProduct ?? 0) == 0) return false;
+
+    final validRows = (currentProduct.productSub ?? const <ProductSub>[])
+        .where(
+          (row) => row.pid == currentProductId && _safe(row.sIndex).isNotEmpty,
+        )
+        .toList(growable: false);
+    if (validRows.isEmpty) return true;
+
+    final containing = validRows
+        .where((row) => _splitIndex(row.sIndex).contains(normalizedSpec))
+        .toList(growable: false);
+    if (containing.isEmpty) return true;
+    return !containing.any((row) => row.status == 1);
+  }
+
+  static List<_SpecContainmentCandidate> _getSpecContainments({
+    required Product product,
+    required String specKey,
+    required Map<String, String> selectedSpecByAttr,
+  }) {
+    final targetSpec = _safe(specKey);
+    if (targetSpec.isEmpty) return const <_SpecContainmentCandidate>[];
+
+    final selectedSpecs = selectedSpecByAttr.values
+        .map(_safe)
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+    final currentIndex = buildIndexFromSpecByAttr(selectedSpecByAttr);
+    final availRows = (product.productSub ?? const <ProductSub>[])
+        .where(
+          (row) =>
+              row.status == 1 &&
+              _safe(row.sIndex).isNotEmpty &&
+              _splitIndex(row.sIndex).contains(targetSpec),
+        )
+        .toList(growable: false);
+
+    final candidates = availRows
+        .map((row) {
+          final specs = _splitIndex(row.sIndex);
+          final idx = _safe(row.sIndex);
+          final matchCount = selectedSpecs.where(specs.contains).length;
+          final isExact = currentIndex.isNotEmpty && currentIndex == idx;
+          return _SpecContainmentCandidate(
+            idxStr: idx,
+            matchCount: matchCount,
+            isExact: isExact,
+            specMap: _specMapFromSub(product, row),
+          );
+        })
+        .toList(growable: false);
+
+    candidates.sort((a, b) {
+      if (a.isExact && !b.isExact) return -1;
+      if (!a.isExact && b.isExact) return 1;
+      if (b.matchCount != a.matchCount) {
+        return b.matchCount.compareTo(a.matchCount);
+      }
+      return a.idxStr.compareTo(b.idxStr);
+    });
+    return candidates;
+  }
+
+  static ProductSkuTapSelectionResult? applySpecTapSelection({
+    required int rowIndex,
+    required Options opt,
+    required Product selected,
+    required List<Product> variants,
+    required List<Options>? skuSelectedOptions,
+    required int? skuSelectionOwnerId,
+    required int? selectedProductId,
+  }) {
+    final rows = selected.specValue ?? const <SpecValue>[];
+    if (rowIndex < 0 || rowIndex >= rows.length) return null;
+    final row = rows[rowIndex];
+    final hit = (row.options ?? const <Options>[]).firstWhereOrNull(
+      (o) => o.spec == opt.spec,
+    );
+    if (hit == null) return null;
+
+    final base =
+        (skuSelectedOptions != null &&
+            skuSelectedOptions.length == rows.length &&
+            skuSelectionOwnerId == selected.id)
+        ? List<Options>.from(skuSelectedOptions)
+        : List<Options>.from(getDefaultSelection(selected));
+    base[rowIndex] = hit;
+
+    var currentProduct = _productById(
+      variants,
+      selectedProductId ?? selected.id,
+    );
+    currentProduct ??= selected;
+
+    final clickedSpec = _safe(hit.spec);
+    final clickedAttr = _rowAttrIndex(row, fallbackOpt: hit);
+    var selectedSpecByAttr = specByAttrFromSelection(currentProduct, base);
+    if (clickedAttr.isNotEmpty && clickedSpec.isNotEmpty) {
+      selectedSpecByAttr[clickedAttr] = clickedSpec;
+    }
+
+    // 1) 点击后先尝试按当前组合反推当前产品。
+    var currentSub = _findSubByIndex(
+      currentProduct,
+      buildIndexFromSpecByAttr(selectedSpecByAttr),
+    );
+    final subPid = currentSub?.pid;
+    final bySubPid = _productById(variants, subPid);
+    if (bySubPid != null) {
+      currentProduct = bySubPid;
+      selectedSpecByAttr = specByAttrFromSelection(
+        currentProduct,
+        selectionFromSpecByAttr(currentProduct, selectedSpecByAttr),
+      );
+    }
+
+    // 2) 组合不存在时：回退到当前点击项 pid[0] 对应产品并重置默认组合。
+    currentSub = _findSubByIndex(
+      currentProduct,
+      buildIndexFromSpecByAttr(selectedSpecByAttr),
+    );
+    if (currentSub == null) {
+      final fallbackPid = (hit.pid ?? const <int>[]).firstOrNull;
+      final fallbackProduct = _productById(variants, fallbackPid);
+      if (fallbackProduct != null) {
+        currentProduct = fallbackProduct;
+      }
+      selectedSpecByAttr = _defaultSpecByAttr(currentProduct);
+    }
+
+    // 3) 命中禁用组合时：挑选同规格下最优可售组合。
+    final currentIndex = buildIndexFromSpecByAttr(selectedSpecByAttr);
+    final disabledIndexes = (currentProduct.productSub ?? const <ProductSub>[])
+        .where((row) => row.status == 0)
+        .map((row) => _safe(row.sIndex))
+        .where((idx) => idx.isNotEmpty)
+        .toSet();
+    final isAttrProduct = (currentProduct.isAttrProduct ?? 0) == 1;
+    if (isAttrProduct && disabledIndexes.contains(currentIndex)) {
+      final matches = _getSpecContainments(
+        product: currentProduct,
+        specKey: clickedSpec,
+        selectedSpecByAttr: selectedSpecByAttr,
+      );
+      if (matches.isNotEmpty) {
+        selectedSpecByAttr = Map<String, String>.from(matches.first.specMap);
+      } else {
+        selectedSpecByAttr = _defaultSpecByAttr(currentProduct);
+      }
+    }
+
+    final normalized = selectionFromSpecByAttr(
+      currentProduct,
+      selectedSpecByAttr,
+    );
+    return ProductSkuTapSelectionResult(
+      selectedProductId: currentProduct.id ?? selectedProductId ?? selected.id,
+      skuSelectedOptions: normalized,
+      skuSelectionOwnerId: currentProduct.id,
+    );
+  }
 }

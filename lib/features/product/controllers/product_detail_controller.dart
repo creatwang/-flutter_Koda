@@ -152,54 +152,20 @@ abstract final class ProductDetailController {
     required int? skuSelectionOwnerId,
     required int? selectedProductId,
   }) {
-    final rows = selected.specValue ?? const <SpecValue>[];
-    if (rowIndex < 0 || rowIndex >= rows.length) return null;
-    final row = rows[rowIndex];
-    final hit = (row.options ?? const <Options>[]).firstWhereOrNull(
-      (o) => o.spec == opt.spec,
-    );
-    if (hit == null) return null;
-
-    final base =
-        (skuSelectedOptions != null &&
-            skuSelectedOptions.length == rows.length &&
-            skuSelectionOwnerId == selected.id)
-        ? List<Options>.from(skuSelectedOptions)
-        : List<Options>.from(ProductSkuResolver.getDefaultSelection(selected));
-    base[rowIndex] = hit;
-
-    final activePid = selectedProductId ?? selected.id ?? 0;
-    final resolved = ProductSkuResolver.resolveSubForSelection(
-      selected,
-      base,
-      variants,
-      activePid,
-    );
-
-    final sub = resolved.sub;
-    if (sub != null && sub.pid != null && sub.pid != activePid) {
-      final newPid = sub.pid!;
-      final newProduct =
-          variants.firstWhereOrNull((p) => p.id == newPid) ?? selected;
-      return ProductDetailSkuPickResult(
-        selectedProductId: newPid,
-        skuSelectedOptions: ProductSkuResolver.selectionFromSub(newProduct, sub),
-        skuSelectionOwnerId: newProduct.id,
-      );
-    }
-    if (sub != null && resolved.via == 'pidFallback') {
-      final owner =
-          variants.firstWhereOrNull((p) => p.id == sub.pid) ?? selected;
-      return ProductDetailSkuPickResult(
-        selectedProductId: sub.pid,
-        skuSelectedOptions: ProductSkuResolver.selectionFromSub(owner, sub),
-        skuSelectionOwnerId: owner.id,
-      );
-    }
-    return ProductDetailSkuPickResult(
+    final next = ProductSkuResolver.applySpecTapSelection(
+      rowIndex: rowIndex,
+      opt: opt,
+      selected: selected,
+      variants: variants,
+      skuSelectedOptions: skuSelectedOptions,
+      skuSelectionOwnerId: skuSelectionOwnerId,
       selectedProductId: selectedProductId,
-      skuSelectedOptions: base,
-      skuSelectionOwnerId: selected.id,
+    );
+    if (next == null) return null;
+    return ProductDetailSkuPickResult(
+      selectedProductId: next.selectedProductId,
+      skuSelectedOptions: next.skuSelectedOptions,
+      skuSelectionOwnerId: next.skuSelectionOwnerId,
     );
   }
 

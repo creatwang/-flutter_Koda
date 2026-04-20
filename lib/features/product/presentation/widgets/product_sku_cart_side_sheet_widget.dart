@@ -124,21 +124,21 @@ class _ProductSkuCartSideSheetScaffold extends StatelessWidget {
                       curve: Curves.easeOutCubic,
                     ),
                   ),
-                child: Material(
-                  elevation: 24,
-                  color: const Color(0xFF151515),
-                  shadowColor: Colors.black,
-                  child: SizedBox(
-                    width: width,
-                    height: media.size.height,
-                    child: _ProductSkuCartSideSheetBody(
-                      detail: detail,
-                      showMainImage: showMainImage,
-                      cartLine: cartLine,
-                      mode: mode,
-                      onSubmit: onSubmit,
-                    ),
+              child: Material(
+                elevation: 24,
+                color: const Color(0xFF151515),
+                shadowColor: Colors.black,
+                child: SizedBox(
+                  width: width,
+                  height: media.size.height,
+                  child: _ProductSkuCartSideSheetBody(
+                    detail: detail,
+                    showMainImage: showMainImage,
+                    cartLine: cartLine,
+                    mode: mode,
+                    onSubmit: onSubmit,
                   ),
+                ),
               ),
             ),
           ),
@@ -255,52 +255,21 @@ class _ProductSkuCartSideSheetBodyState
     Product selected,
     List<Product> variants,
   ) {
-    final rows = selected.specValue ?? const <SpecValue>[];
-    if (rowIndex < 0 || rowIndex >= rows.length) return;
-    final row = rows[rowIndex];
-    final hit = (row.options ?? const <Options>[]).firstWhereOrNull(
-      (o) => o.spec == opt.spec,
+    final next = ProductSkuResolver.applySpecTapSelection(
+      rowIndex: rowIndex,
+      opt: opt,
+      selected: selected,
+      variants: variants,
+      skuSelectedOptions: _skuSelectedOptions,
+      skuSelectionOwnerId: _skuSelectionOwnerId,
+      selectedProductId: _selectedProductId,
     );
-    if (hit == null) return;
-
-    final base =
-        (_skuSelectedOptions != null &&
-            _skuSelectedOptions!.length == rows.length &&
-            _skuSelectionOwnerId == selected.id)
-        ? List<Options>.from(_skuSelectedOptions!)
-        : List<Options>.from(ProductSkuResolver.getDefaultSelection(selected));
-    base[rowIndex] = hit;
-
-    final activePid = _selectedProductId ?? selected.id ?? 0;
-    final resolved = ProductSkuResolver.resolveSubForSelection(
-      selected,
-      base,
-      variants,
-      activePid,
-    );
+    if (next == null) return;
 
     setState(() {
-      final sub = resolved.sub;
-      if (sub != null && sub.pid != null && sub.pid != activePid) {
-        final newPid = sub.pid!;
-        _selectedProductId = newPid;
-        final newProduct =
-            variants.firstWhereOrNull((p) => p.id == newPid) ?? selected;
-        _skuSelectedOptions = ProductSkuResolver.selectionFromSub(
-          newProduct,
-          sub,
-        );
-        _skuSelectionOwnerId = newProduct.id;
-      } else if (sub != null && resolved.via == 'pidFallback') {
-        final owner =
-            variants.firstWhereOrNull((p) => p.id == sub.pid) ?? selected;
-        _skuSelectedOptions = ProductSkuResolver.selectionFromSub(owner, sub);
-        _skuSelectionOwnerId = owner.id;
-        _selectedProductId = sub.pid;
-      } else {
-        _skuSelectedOptions = base;
-        _skuSelectionOwnerId = selected.id;
-      }
+      _selectedProductId = next.selectedProductId;
+      _skuSelectedOptions = next.skuSelectedOptions;
+      _skuSelectionOwnerId = next.skuSelectionOwnerId;
       _errorMessage = null;
     });
   }
@@ -483,9 +452,7 @@ class _ProductSkuCartSideSheetBodyState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  height: 8,
-                ),
+                SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -581,68 +548,85 @@ class _ProductSkuCartSideSheetBodyState
                         const SizedBox(height: 10),
                         options.length > 3
                             ? Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.stretch,
-                          children: options
-                              .map((option) {
-                            final spec = option.spec ?? '';
-                            final isSelected =
-                                rowIndex < skuRowSelection.length &&
-                                    (skuRowSelection[rowIndex].spec ??
-                                        '') ==
-                                        spec;
-                            final display =
-                                option.name ??
-                                    option.nameCn ??
-                                    '--';
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 8,
-                              ),
-                              child: _DrawerOptionTile(
-                                label: display,
-                                isSelected: isSelected,
-                                fullWidth: true,
-                                onTap: () => _applySpecOption(
-                                  rowIndex,
-                                  option,
-                                  selected,
-                                  variants,
-                                ),
-                              ),
-                            );
-                          })
-                              .toList(growable: false),
-                        )
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: options
+                                    .map((option) {
+                                      final spec = option.spec ?? '';
+                                      final isSelected =
+                                          rowIndex < skuRowSelection.length &&
+                                          (skuRowSelection[rowIndex].spec ??
+                                                  '') ==
+                                              spec;
+                                      final isUnavailable =
+                                          ProductSkuResolver.isSpecUnavailable(
+                                            currentProduct: selected,
+                                            currentProductId: selectedId,
+                                            specKey: spec,
+                                          );
+                                      final isDisabled =
+                                          isUnavailable && !isSelected;
+                                      final display =
+                                          option.name ?? option.nameCn ?? '--';
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        child: _DrawerOptionTile(
+                                          label: display,
+                                          isSelected: isSelected,
+                                          isDisabled: isDisabled,
+                                          fullWidth: true,
+                                          onTap: isDisabled
+                                              ? null
+                                              : () => _applySpecOption(
+                                                  rowIndex,
+                                                  option,
+                                                  selected,
+                                                  variants,
+                                                ),
+                                        ),
+                                      );
+                                    })
+                                    .toList(growable: false),
+                              )
                             : Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: options
-                              .map((option) {
-                            final spec = option.spec ?? '';
-                            final isSelected =
-                                rowIndex < skuRowSelection.length &&
-                                    (skuRowSelection[rowIndex].spec ??
-                                        '') ==
-                                        spec;
-                            final display =
-                                option.name ??
-                                    option.nameCn ??
-                                    '--';
-                            return _DrawerOptionTile(
-                              label: display,
-                              isSelected: isSelected,
-                              fullWidth: false,
-                              onTap: () => _applySpecOption(
-                                rowIndex,
-                                option,
-                                selected,
-                                variants,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: options
+                                    .map((option) {
+                                      final spec = option.spec ?? '';
+                                      final isSelected =
+                                          rowIndex < skuRowSelection.length &&
+                                          (skuRowSelection[rowIndex].spec ??
+                                                  '') ==
+                                              spec;
+                                      final isUnavailable =
+                                          ProductSkuResolver.isSpecUnavailable(
+                                            currentProduct: selected,
+                                            currentProductId: selectedId,
+                                            specKey: spec,
+                                          );
+                                      final isDisabled =
+                                          isUnavailable && !isSelected;
+                                      final display =
+                                          option.name ?? option.nameCn ?? '--';
+                                      return _DrawerOptionTile(
+                                        label: display,
+                                        isSelected: isSelected,
+                                        isDisabled: isDisabled,
+                                        fullWidth: false,
+                                        onTap: isDisabled
+                                            ? null
+                                            : () => _applySpecOption(
+                                                rowIndex,
+                                                option,
+                                                selected,
+                                                variants,
+                                              ),
+                                      );
+                                    })
+                                    .toList(growable: false),
                               ),
-                            );
-                          })
-                              .toList(growable: false),
-                        ),
                       ],
                     ),
                   );
@@ -703,28 +687,28 @@ class _ProductSkuCartSideSheetBodyState
                   onPressed: !hasMatchedSku || _isSubmitting
                       ? null
                       : () => _onPrimaryPressed(
-                    context,
-                    selected,
-                    variants,
-                    skuRowSelection,
-                    skuResolved,
-                  ),
+                          context,
+                          selected,
+                          variants,
+                          skuRowSelection,
+                          skuResolved,
+                        ),
                   child: _isSubmitting
                       ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : Text(
-                    primaryLabel,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
+                          primaryLabel,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -811,19 +795,29 @@ class _DrawerOptionTile extends StatelessWidget {
   const _DrawerOptionTile({
     required this.label,
     required this.isSelected,
+    required this.isDisabled,
     required this.fullWidth,
     required this.onTap,
   });
 
   final String label;
   final bool isSelected;
+  final bool isDisabled;
   final bool fullWidth;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final bg = isSelected ? Colors.white : _kSkuDrawerChipIdle;
-    final fg = isSelected ? Colors.black : Colors.white;
+    final bg = isSelected
+        ? Colors.white
+        : isDisabled
+        ? _kSkuDrawerChipIdle.withValues(alpha: 0.55)
+        : _kSkuDrawerChipIdle;
+    final fg = isSelected
+        ? Colors.black
+        : isDisabled
+        ? Colors.white54
+        : Colors.white;
     final tile = Material(
       color: bg,
       borderRadius: BorderRadius.circular(8),

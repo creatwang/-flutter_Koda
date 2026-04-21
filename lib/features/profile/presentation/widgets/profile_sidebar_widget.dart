@@ -53,58 +53,76 @@ class ProfileSidebarWidget extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Transform.rotate(
-                          angle: -0.06,
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEDEFF5),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.92),
-                                width: 2.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF3D67B2,
-                                  ).withValues(alpha: 0.42),
-                                  blurRadius: 12,
-                                  spreadRadius: 0.5,
-                                  offset: const Offset(0, 2),
+                        Stack(
+                          children: [
+                            Transform.rotate(
+                              angle: -0.06,
+                              child: DecoratedBox(
+                                position: DecorationPosition.background,
+                                decoration: BoxDecoration(
+                                  color: Color.fromRGBO(113, 112, 110, 0.4),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.35),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: ColoredBox(
-                                color: Colors.black26,
-                                child: avatarUrl.trim().isEmpty
-                                    ? const Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                      )
-                                    : Image.network(
-                                        avatarUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(
-                                              Icons.person,
-                                              color: Colors.white,
-                                            ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(6),
+                                  child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(222, 232, 255, 1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.92),
+                                        width: 1,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF3D67B2,
+                                          ).withValues(alpha: 0.42),
+                                          blurRadius: 12,
+                                          spreadRadius: 0.5,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.35),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: ColoredBox(
+                                        color: Colors.black26,
+                                        child: avatarUrl.trim().isEmpty
+                                            ? const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                        )
+                                            : Image.network(
+                                          avatarUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                          const Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            Positioned(
+                              bottom: 2,
+                              right: 2,
+                              child: Assets.svg.profileSetting.svg(width: 24, height: 24),
+                            )
+                          ],
                         ),
-                        Assets.svg.profileSetting.svg(width: 24, height: 24),
                         const SizedBox(height: 36),
                         Text(
                           profileName.trim().isEmpty ? '--' : profileName,

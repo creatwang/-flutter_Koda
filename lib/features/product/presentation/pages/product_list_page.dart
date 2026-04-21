@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
+import 'package:groe_app_pad/features/product/controllers/product_detail_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_list_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
@@ -248,9 +249,22 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     );
     if (!mounted || code == null || code.trim().isEmpty) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.productScanResult(code))),
-    );
+    Object? loadError;
+    try {
+      final productSubInfo = await ProductDetailController.formatProductDetailScanInfo(code);
+
+    } catch (e) {
+      loadError = e;
+    }
+
+    if (!mounted) return;
+
+    final message = loadError == null
+        ? context.l10n.productScanResult(code)
+        : context.l10n.productDetailLoadFailed('$loadError');
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// 点击收藏。
@@ -296,7 +310,6 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       },
     );
 
-    if (!mounted) return;
     setState(() => _collectSubmitting.remove(productId));
   }
 

@@ -193,10 +193,7 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
 final productDetailProvider =
     FutureProvider.autoDispose.family<ProductDetailDto, int>((ref, id) async {
   final result = await fetchProductDetailService(id);
-  return result.when(
-    success: (data) => data,
-    failure: (exception) => throw exception,
-  );
+  return result.getOrThrow();
 });
 
 /// 当前站点商品分类树。
@@ -204,8 +201,5 @@ final categoryTreeProvider = FutureProvider<List<ProductCategoryTreeDto>>((
   ref,
 ) async {
   final result = await fetchCategoryTreeService();
-  return result.when(
-    success: (data) => data,
-    failure: (exception) => throw exception,
-  );
+  return result.getOrThrow();
 });

@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
 import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
+import 'package:groe_app_pad/features/product/services/product_services.dart';
 
 /// 详情页一次 build 内解析出的选中 SKU、画廊等（无 UI、无 Riverpod）。
 final class ProductDetailResolvedSelection {
@@ -194,5 +195,63 @@ abstract final class ProductDetailController {
 
     if (targetOffset == null) return null;
     return targetOffset.clamp(minScrollExtent, maxScrollExtent);
+  }
+
+  static Map<String, String> queryToObj(String? queryStr) {
+    if (queryStr == null || queryStr.isEmpty) {
+      return <String, String>{};
+    }
+    var iterable = queryStr;
+    if (iterable.contains('?')) {
+      iterable = iterable.split('?').last;
+    }
+    final acc = <String, String>{};
+    for (final curr in iterable.split('&')) {
+      if (curr.isEmpty) continue;
+      final eq = curr.indexOf('=');
+      final key = eq == -1
+          ? Uri.decodeQueryComponent(curr)
+          : Uri.decodeQueryComponent(curr.substring(0, eq));
+      final value = eq == -1
+          ? ''
+          : Uri.decodeQueryComponent(curr.substring(eq + 1));
+      acc[key] = value;
+    }
+    return acc;
+  }
+
+  /// 对应 JS 的 formatProdSub 函数
+  /// 对应 JS 的 formatProdSub 函数逻辑
+  /// 通过 id 筛选 product，并从中寻找 index 匹配的 productSub
+  static ProductSub? formatProdSub({
+    required ProductDetailDto detail,
+    int? id,
+    String? index,
+  }) {
+    if (id == null) return null;
+
+    // 1. 过滤出 id 匹配的 product 列表
+    final productList = detail.product?.where((item) => item.id == id);
+
+    if (productList == null || productList.isEmpty) return null;
+
+    // 2. 使用 expand 平铺所有 productSub，并直接查找匹配 index 的项
+    // firstWhereOrNull 需要 import 'package:collection/collection.dart'; (你文件中已包含)
+    return productList
+        .expand((item) => item.productSub ?? <ProductSub>[])
+        .firstWhereOrNull((sub) => sub.index == index);
+  }
+
+  static Future<ProductSub?> formatProductDetailScanInfo(
+    String? queryStr,
+  ) async {
+    final query = queryToObj(queryStr);
+    final idText = query['id']?.trim();
+    if (idText == null || idText.isEmpty) return null;
+    final id = int.tryParse(idText);
+    if (id == null) return null;
+    final result = await fetchProductDetailService(id);
+    final playload = result.getOrThrow();
+    return formatProdSub(detail: playload, id: id, index: query['index']);
   }
 }

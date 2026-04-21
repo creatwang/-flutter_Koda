@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
+import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 /// 商品与收藏相关接口路径。
@@ -34,6 +35,11 @@ Future<Response<dynamic>> requestProductDetail({
 }) {
   return (client ?? publicDioClient).get(
     ProductRequests.getProductDetail,
+    options: Options(
+      extra: <String, dynamic>{
+        ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
+      },
+    ),
     queryParameters: <String, dynamic>{'id': id},
   );
 }

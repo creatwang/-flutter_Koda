@@ -15,6 +15,12 @@ sealed class ApiResult<T> {
     if (self is ApiSuccess<T>) return success(self.data);
     return failure((self as ApiFailure<T>).exception);
   }
+
+  T getOrThrow() {
+    final self = this;
+    if (self is ApiSuccess<T>) return self.data;
+    throw (self as ApiFailure<T>).exception;
+  }
 }
 
 class ApiSuccess<T> extends ApiResult<T> {

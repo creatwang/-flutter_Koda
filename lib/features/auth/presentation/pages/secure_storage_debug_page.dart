@@ -27,27 +27,24 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
       _isLoading = true;
       _errorMessage = null;
     });
+    Map<String, String>? loadedItems;
+    String? loadErrorMessage;
     try {
       final values = await _storage.readAll();
-      if (!mounted) return;
-      setState(() {
-        _items = Map<String, String>.fromEntries(
-          values.entries.toList()
-            ..sort((a, b) => a.key.compareTo(b.key)),
-        );
-      });
+      loadedItems = Map<String, String>.fromEntries(
+        values.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+      );
     } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = '读取失败: $error';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      loadErrorMessage = '读取失败: $error';
     }
+    if (!mounted) return;
+    setState(() {
+      if (loadedItems != null) {
+        _items = loadedItems!;
+      }
+      _errorMessage = loadErrorMessage;
+      _isLoading = false;
+    });
   }
 
   Future<void> _deleteByKey(String key) async {

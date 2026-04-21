@@ -99,7 +99,6 @@ class _ProfileFavoritesSectionWidgetState
       },
     );
 
-    if (!mounted) return;
     setState(() => _collectSubmitting.remove(productId));
   }
 

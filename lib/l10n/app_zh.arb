@@ -5,6 +5,7 @@
   "commonNoData": "暂无数据",
   "commonRetry": "重试",
   "commonLogout": "退出登录",
+  "splashSessionInitializing": "正在初始化会话…",
   "languageLabel": "语言",
   "languageSystem": "跟随系统",
   "languageChinese": "中文",

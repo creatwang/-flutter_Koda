@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonLogout => 'Sign out';
 
   @override
+  String get splashSessionInitializing => 'Starting session…';
+
+  @override
   String get languageLabel => 'Language';
 
   @override
@@ -166,6 +169,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cartNoMatchedSku => 'No on-sale SKU matched';
+
+  @override
+  String get cartAddBlockedZeroSalesPrice =>
+      'Cannot add to cart when sales price is 0';
 
   @override
   String get cartQuantityLabel => 'Quantity';

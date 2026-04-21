@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 
 class SplashPage extends StatelessWidget {
@@ -6,6 +7,10 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: AppLoadingView(message: '初始化会话...'));
+    return Scaffold(
+      body: AppLoadingView(
+        message: context.l10n.splashSessionInitializing,
+      ),
+    );
   }
 }

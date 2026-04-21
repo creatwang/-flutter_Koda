@@ -128,6 +128,12 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get commonLogout;
 
+  /// No description provided for @splashSessionInitializing.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting session…'**
+  String get splashSessionInitializing;
+
   /// No description provided for @languageLabel.
   ///
   /// In en, this message translates to:
@@ -397,6 +403,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No on-sale SKU matched'**
   String get cartNoMatchedSku;
+
+  /// No description provided for @cartAddBlockedZeroSalesPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot add to cart when sales price is 0'**
+  String get cartAddBlockedZeroSalesPrice;
 
   /// No description provided for @cartQuantityLabel.
   ///

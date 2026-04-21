@@ -24,6 +24,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonLogout => '退出登录';
 
   @override
+  String get splashSessionInitializing => '正在初始化会话…';
+
+  @override
   String get languageLabel => '语言';
 
   @override
@@ -165,6 +168,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cartNoMatchedSku => '未找到在售 SKU';
+
+  @override
+  String get cartAddBlockedZeroSalesPrice => '销售价为 0 时无法加购';
 
   @override
   String get cartQuantityLabel => '数量';

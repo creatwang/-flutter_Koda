@@ -5,6 +5,7 @@
   "commonNoData": "No data",
   "commonRetry": "Retry",
   "commonLogout": "Sign out",
+  "splashSessionInitializing": "Starting session…",
   "languageLabel": "Language",
   "languageSystem": "System",
   "languageChinese": "Chinese",

@@ -121,15 +121,9 @@ class ProductFilterPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingBody(BuildContext context) {
-    final bar = ClipRRect(
-      borderRadius: BorderRadius.circular(3),
-      child: LinearProgressIndicator(
-        minHeight: 4,
-        backgroundColor: Colors.white.withValues(alpha: 0.08),
-        color: ProMaxTokens.iconPrimary.withValues(alpha: 0.85),
-      ),
-    );
+  Widget _buildLoadingBody() {
+    // 与 Profile Settings（[ProfileContentAreaWidget]）顶栏条一致。
+    final bar = LinearProgressIndicator(minHeight: 2);
     if (pinApplyButtonToBottom) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,7 +147,10 @@ class ProductFilterPanel extends StatelessWidget {
           children: [
             _buildHeader(context),
             const SizedBox(height: 12),
-            _buildLoadingBody(context),
+            if (pinApplyButtonToBottom)
+              Expanded(child: _buildLoadingBody())
+            else
+              _buildLoadingBody(),
           ],
         ),
       ),

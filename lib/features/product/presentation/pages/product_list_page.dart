@@ -157,6 +157,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                       child: IgnorePointer(
                         ignoring: _controller.isFilterCollapsed,
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Expanded(
                               child: ProductFilterPanel(

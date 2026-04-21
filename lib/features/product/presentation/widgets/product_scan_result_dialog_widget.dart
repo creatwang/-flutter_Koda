@@ -51,7 +51,7 @@ List<({String label, String value})> _buildSkuDetailLabelValueRows({
         i < skuRowSelection.length ? skuRowSelection[i] : null;
     final resolved = fromMap ?? fromSelection;
     final valueText =
-        (resolved?.nameCn ?? resolved?.name ?? '--').trim();
+        (resolved?.name ?? resolved?.nameCn ?? '--').trim();
     rows.add((
       label: effectiveLabel,
       value: valueText.isNotEmpty ? valueText : '--',

@@ -18,9 +18,12 @@ import 'package:groe_app_pad/features/product/presentation/widgets/product_filte
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_grid_section.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/product_scan_result_dialog_widget.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
+import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 
@@ -249,22 +252,93 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     );
     if (!mounted || code == null || code.trim().isEmpty) return;
 
+    ProductDetailScanResult? scanResult;
     Object? loadError;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        useRootNavigator: true,
+        builder: (dialogContext) {
+          return PopScope(
+            canPop: false,
+            child: Dialog(
+              backgroundColor: Theme.of(dialogContext).colorScheme.surface,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                child: AppLoadingView(),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
     try {
-      final productSubInfo = await ProductDetailController.formatProductDetailScanInfo(code);
-
+      scanResult = await ProductDetailController.formatProductDetailScanInfo(
+        code,
+      );
     } catch (e) {
       loadError = e;
+    } finally {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
 
     if (!mounted) return;
+    if (loadError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.productDetailLoadFailed('$loadError'))),
+      );
+      return;
+    }
+    if (scanResult == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.cartNoMatchedSku)));
+      return;
+    }
+    final added = await showProductScanResultDialog(
+      context: context,
+      detail: scanResult.detail,
+      selected: scanResult.selected,
+      selectedSub: scanResult.selectedSub,
+      skuRowSelection: scanResult.skuRowSelection,
+      onAddToCart: (dialogContext) => _addScannedSkuToCart(
+        dialogContext,
+        scanResult!,
+      ),
+    );
+    if (!mounted || !added) return;
+    final title = scanResult.selected.name ?? scanResult.detail.name ?? '--';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.productAddedToCart(title))),
+    );
+  }
 
-    final message = loadError == null
-        ? context.l10n.productScanResult(code)
-        : context.l10n.productDetailLoadFailed('$loadError');
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  Future<bool> _addScannedSkuToCart(
+    BuildContext dialogContext,
+    ProductDetailScanResult scanResult,
+  ) async {
+    final sub = scanResult.selectedSub;
+    final productId = sub.pid;
+    if (productId == null) return false;
+    final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
+    if (subIndex.isEmpty) return false;
+    final subName = ProductSkuCartHelpers.buildCartSubName(
+      sub: sub,
+      skuRowSelection: scanResult.skuRowSelection,
+    );
+    final space = await resolveSpaceForCartAdd(dialogContext);
+    if (space == null) return false;
+    return ref.read(cartControllerProvider.notifier).createCartItem(
+      productId: productId,
+      subIndex: subIndex,
+      productNum: 1,
+      space: space,
+      subName: subName,
+    );
   }
 
   /// 点击收藏。

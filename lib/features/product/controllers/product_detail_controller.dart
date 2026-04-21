@@ -78,6 +78,22 @@ final class ProductDetailSkuPickResult {
   final int? skuSelectionOwnerId;
 }
 
+final class ProductDetailScanResult {
+  const ProductDetailScanResult({
+    required this.detail,
+    required this.selected,
+    required this.selectedId,
+    required this.skuRowSelection,
+    required this.selectedSub,
+  });
+
+  final ProductDetailDto detail;
+  final Product selected;
+  final int selectedId;
+  final List<Options> skuRowSelection;
+  final ProductSub selectedSub;
+}
+
 /// 商品详情页：纯编排 / 数据整理（无网络、无 Dio）。
 abstract final class ProductDetailController {
   /// 画廊：选中 SKU 的 [Product.subImages] → [ProductDetailDto.subImages] →
@@ -242,7 +258,45 @@ abstract final class ProductDetailController {
         .firstWhereOrNull((sub) => sub.index == index);
   }
 
-  static Future<ProductSub?> formatProductDetailScanInfo(
+  static ProductDetailScanResult? resolveScanResultOrNull({
+    required ProductDetailDto detail,
+    required int productId,
+    String? subIndex,
+  }) {
+    final variants = detail.product ?? const <Product>[];
+    if (variants.isEmpty) return null;
+    final selected =
+        variants.firstWhereOrNull((item) => item.id == productId) ??
+        variants.first;
+    final selectedId = selected.id ?? productId;
+    final normalizedIndex = (subIndex ?? '').trim();
+    ProductSub? selectedSub;
+    if (normalizedIndex.isNotEmpty) {
+      selectedSub = (selected.productSub ?? const <ProductSub>[])
+          .firstWhereOrNull((sub) => sub.index == normalizedIndex);
+    }
+    if (selectedSub == null) {
+      selectedSub = formatProdSub(
+        detail: detail,
+        id: selectedId,
+        index: normalizedIndex,
+      );
+    }
+    if (selectedSub == null) return null;
+    final skuRowSelection = ProductSkuResolver.selectionFromSub(
+      selected,
+      selectedSub,
+    );
+    return ProductDetailScanResult(
+      detail: detail,
+      selected: selected,
+      selectedId: selectedId,
+      skuRowSelection: skuRowSelection,
+      selectedSub: selectedSub,
+    );
+  }
+
+  static Future<ProductDetailScanResult?> formatProductDetailScanInfo(
     String? queryStr,
   ) async {
     final query = queryToObj(queryStr);
@@ -251,7 +305,11 @@ abstract final class ProductDetailController {
     final id = int.tryParse(idText);
     if (id == null) return null;
     final result = await fetchProductDetailService(id);
-    final playload = result.getOrThrow();
-    return formatProdSub(detail: playload, id: id, index: query['index']);
+    final payload = result.getOrThrow();
+    return resolveScanResultOrNull(
+      detail: payload,
+      productId: id,
+      subIndex: query['index'],
+    );
   }
 }

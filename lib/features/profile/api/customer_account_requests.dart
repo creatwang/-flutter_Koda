@@ -85,6 +85,7 @@ Future<Response<dynamic>> requestStoreCustomerCreate({
       'telephone': telephone,
       'terminal': terminal,
     },
+    simpleResponse: false,
     options: Options(
       extra: <String, dynamic>{
         ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,

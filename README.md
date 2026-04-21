@@ -1,5 +1,9 @@
 # flutter pad端商城最佳实践
 
+## 文档
+
+- [Dio 请求选项（extra、simpleResponse、noCache、noRetry）](docs/DIO_OPTIONS.md)
+
 `flutter pub run build_runner build --delete-conflicting-outputs`
 
 `flutter pub get`

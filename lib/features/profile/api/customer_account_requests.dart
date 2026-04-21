@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
+import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 /// 业务员客户账号相关路径（仅 HTTP）。
@@ -58,6 +59,11 @@ Future<Response<dynamic>> requestStoreCustomerUpdate({
       'telephone': telephone,
       'terminal': terminal,
     },
+    options: Options(
+      extra: <String, dynamic>{
+        ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
+      },
+    ),
   );
 }
 
@@ -79,6 +85,11 @@ Future<Response<dynamic>> requestStoreCustomerCreate({
       'telephone': telephone,
       'terminal': terminal,
     },
+    options: Options(
+      extra: <String, dynamic>{
+        ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
+      },
+    ),
   );
 }
 

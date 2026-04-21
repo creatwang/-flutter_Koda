@@ -13,6 +13,9 @@ import 'package:groe_app_pad/features/profile/presentation/widgets/store_custome
 import 'package:groe_app_pad/shared/services/app_message_service.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:groe_app_pad/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
+import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_anim.dart';
+import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_surface.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
 /// 业务员客户列表：表头、列表行（代客登录等逻辑不变）。
@@ -105,40 +108,15 @@ class _ProfileMyCustomersSectionWidgetState
   }
 
   Future<void> _confirmDelete(StoreCustomerItemDto item) async {
-    final ok = await showDialog<bool>(
+    final deleted = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete customer', style: TextStyle(color: Colors.white)),
-        content: Text('Remove ${item.name} (${item.username})?', style: TextStyle(color: Colors.white60)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      barrierDismissible: true,
+      barrierColor: const Color(0xB30A0E14),
+      builder: (_) => _DeleteStoreCustomerDialog(item: item),
     );
-    if (ok != true || !mounted) return;
-    final result = await ref
-        .read(storeCustomersProvider.notifier)
-        .deleteCustomer(item);
-    if (!mounted) return;
-    result.when(
-      success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Deleted')));
-      },
-      failure: (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      },
+    if (deleted != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleted')),
     );
   }
 
@@ -755,6 +733,87 @@ class _CustomerAvatar extends StatelessWidget {
                   errorBuilder: (_, __, ___) => _AvatarFallback(name: name),
                 )
               : _AvatarFallback(name: name),
+        ),
+      ),
+    );
+  }
+}
+
+/// 在弹窗内完成删除（含列表刷新），成功后再关闭；进行中禁用 Cancel、
+/// Delete 显示 loading。
+class _DeleteStoreCustomerDialog extends ConsumerStatefulWidget {
+  const _DeleteStoreCustomerDialog({required this.item});
+
+  final StoreCustomerItemDto item;
+
+  @override
+  ConsumerState<_DeleteStoreCustomerDialog> createState() =>
+      _DeleteStoreCustomerDialogState();
+}
+
+class _DeleteStoreCustomerDialogState
+    extends ConsumerState<_DeleteStoreCustomerDialog> {
+  bool _isDeleting = false;
+
+  Future<void> _onDeletePressed() async {
+    setState(() => _isDeleting = true);
+    final result = await ref
+        .read(storeCustomersProvider.notifier)
+        .deleteCustomer(widget.item);
+    if (!mounted) return;
+    result.when(
+      success: (_) {
+        Navigator.of(context).pop(true);
+      },
+      failure: (e) {
+        setState(() => _isDeleting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    const Color accentDelete = Color(0xFFFF7B6B);
+    return PopScope(
+      canPop: !_isDeleting,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: 28,
+        ),
+        child: MallDialogEntrance(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: MallDialogSurface(
+              child: MallConfirmDialogPanel(
+                title: 'Delete customer',
+                message: 'Remove ${item.name} (${item.username})?',
+                cancelLabel: 'Cancel',
+                confirmLabel: 'Delete',
+                icon: Icons.delete_forever_rounded,
+                accentColor: accentDelete,
+                onCancel: _isDeleting
+                    ? null
+                    : () => Navigator.of(context).pop(false),
+                onConfirm: _isDeleting ? null : _onDeletePressed,
+                confirmChild: _isDeleting
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+          ),
         ),
       ),
     );

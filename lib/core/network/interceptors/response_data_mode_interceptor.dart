@@ -6,6 +6,11 @@ enum ResponseDataMode { origin, simple }
 class ResponseDataModeInterceptor extends Interceptor {
   static const String responseDataModeExtraKey = 'response_data_mode';
 
+  /// 为 `true` 时不调用 [showGlobalErrorMessage]（如表单 / BottomSheet 已展示错误）。
+  /// 会话过期仍走 [showSessionExpiredDialog]，不受此项影响。
+  static const String suppressGlobalErrorMessageExtraKey =
+      'suppress_global_error_message';
+
   ResponseDataModeInterceptor(this.mode);
 
   final ResponseDataMode mode;
@@ -21,7 +26,7 @@ class ResponseDataModeInterceptor extends Interceptor {
         showSessionExpiredDialog(
           message.trim().isEmpty ? '您的登录已过期，请重新登录。' : message,
         );
-      } else {
+      } else if (!_suppressesGlobalError(response.requestOptions)) {
         showGlobalErrorMessage(message);
       }
       handler.reject(
@@ -46,11 +51,15 @@ class ResponseDataModeInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (!_isSessionExpiredCode(_extractCode(err.response?.data))) {
+    if (!_isSessionExpiredCode(_extractCode(err.response?.data)) &&
+        !_suppressesGlobalError(err.requestOptions)) {
       showGlobalErrorMessage(_extractErrorMessage(err));
     }
     handler.next(err);
   }
+
+  bool _suppressesGlobalError(RequestOptions options) =>
+      options.extra[suppressGlobalErrorMessageExtraKey] == true;
 
   ResponseDataMode _resolveRequestMode(RequestOptions options) {
     final override = options.extra[responseDataModeExtraKey];

@@ -9,7 +9,7 @@ import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
 enum StoreCustomerSheetMode { create, edit }
 
-/// 底部表单：新增或编辑客户账号（Username / Password 必填且不少于 6 位）。
+/// 底部表单：新增或编辑客户账号（Username 必填；Password 必填且不少于 6 位）。
 ///
 /// 外壳样式与切换站点底部弹层一致：透明底、可拖拽高度、`#1A1D24` 面板、
 /// 顶边线、拖动手柄与标题区。
@@ -176,8 +176,8 @@ class _StoreCustomerFormSheetBodyState
   bool _validate() {
     final u = _usernameController.text.trim();
     final p = _passwordController.text.trim();
-    if (u.length < 6) {
-      _errorMessage = 'Username or Email must be at least 6 characters.';
+    if (u.isEmpty) {
+      _errorMessage = 'Username or Email is required.';
       return false;
     }
     if (p.length < 6) {
@@ -260,8 +260,8 @@ class _StoreCustomerFormSheetBodyState
                     obscureText: false,
                     errorText:
                         _showValidation &&
-                            _usernameController.text.trim().length < 6
-                        ? 'Min 6 characters'
+                            _usernameController.text.trim().isEmpty
+                        ? 'Required'
                         : null,
                   ),
                   Text(

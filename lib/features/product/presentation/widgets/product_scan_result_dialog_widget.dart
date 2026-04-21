@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
+import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 
 typedef ProductScanResultAddToCartCallback =
@@ -75,10 +76,12 @@ class _ProductScanResultDialogWidgetState
     final imageUrl = (selected.mainImage ?? detail.mainImage ?? '').trim();
     final unitPrice = selectedSub.salesPrice ?? 0;
     final unit = (selected.unit ?? detail.unit ?? '').trim();
-    final specSummary = widget.skuRowSelection
-        .map((opt) => (opt.nameCn ?? opt.name ?? '').trim())
-        .where((name) => name.isNotEmpty)
-        .join(' / ');
+    final specRows = selected.specValue ?? const <SpecValue>[];
+    final specLookup = ProductSkuResolver.buildSpecOptionsLookup(selected);
+    final indexTokens = ProductSkuResolver.splitSpecIndexTokens(
+      ProductSkuResolver.compositeSpecIndex(selectedSub),
+    );
+    final subDisplayName =(selectedSub.name ?? '').trim();
     final specCode = (selectedSub.index ?? selectedSub.sIndex ?? '').trim();
     final referenceCode = (detail.uniqid ?? '').trim();
     final params = (selected.productParam ?? const <ProductParam>[])
@@ -162,32 +165,59 @@ class _ProductScanResultDialogWidgetState
               ),
               const SizedBox(height: 14),
               Text(
-                'SKU',
-                style: theme.textTheme.titleSmall?.copyWith(
+                subDisplayName.isNotEmpty ? subDisplayName : '--',
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 16
                 ),
               ),
-              const SizedBox(height: 8),
-              if (specSummary.isNotEmpty)
-                Text(specSummary, style: theme.textTheme.bodyMedium),
-              if (specCode.isNotEmpty) ...[
-                if (specSummary.isNotEmpty) const SizedBox(height: 4),
-                Text(
-                  'Index: $specCode',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (referenceCode.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Ref. $referenceCode',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              ...specRows.asMap().entries.expand((entry) {
+                final i = entry.key;
+                final group = entry.value;
+                final options = group.options ?? const <Options>[];
+                if (options.isEmpty) return const <Widget>[];
+                final labelEn = (group.name ?? '').trim();
+                final label = labelEn.isNotEmpty
+                    ? labelEn
+                    : (group.nameCn ?? '').trim();
+                final fallbackAttr =
+                    (group.attrIndex ?? '').trim().toUpperCase();
+                final effectiveLabel =
+                    label.isNotEmpty ? label : fallbackAttr;
+                if (effectiveLabel.isEmpty) return const <Widget>[];
+                final token = i < indexTokens.length ? indexTokens[i] : null;
+                final fromMap =
+                    token != null ? specLookup[token] : null;
+                final fromSelection = i < widget.skuRowSelection.length
+                    ? widget.skuRowSelection[i]
+                    : null;
+                final resolved = fromMap ?? fromSelection;
+                final valueText =
+                    (resolved?.nameCn ?? resolved?.name ?? '--').trim();
+                return <Widget>[
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Text(
+                        effectiveLabel,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: Colors.white60,
+                          fontSize: 14
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        valueText.isNotEmpty ? valueText : '--',
+                        style: TextStyle(
+                          color: Colors.white,
+                            fontSize: 14
+                        ),
+                      ),
+                    ],
+                  )
+                ];
+              }),
               if (params.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(

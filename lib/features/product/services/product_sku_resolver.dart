@@ -53,11 +53,32 @@ abstract final class ProductSkuResolver {
 
   static String _safe(String? value) => (value ?? '').trim();
 
-  static List<String> _splitIndex(String? index) => _safe(index)
+  /// 扫码 / 详情组合索引（如 `a0_b0`）拆成各维 `spec` token。
+  static List<String> splitSpecIndexTokens(String? index) => _safe(index)
       .split('_')
       .map((e) => e.trim())
       .where((e) => e.isNotEmpty)
       .toList(growable: false);
+
+  /// 将当前变体下全部 [Options] 以 [Options.spec] 为 key 平铺，便于按 token 取值。
+  static Map<String, Options> buildSpecOptionsLookup(Product product) {
+    final out = <String, Options>{};
+    for (final group in product.specValue ?? const <SpecValue>[]) {
+      for (final opt in group.options ?? const <Options>[]) {
+        final spec = _safe(opt.spec);
+        if (spec.isEmpty) continue;
+        out[spec] = opt;
+      }
+    }
+    return out;
+  }
+
+  /// 优先 `_index`（[ProductSub.sIndex]），否则回退 `index`（与扫码 query 对齐）。
+  static String compositeSpecIndex(ProductSub sub) {
+    final s = _safe(sub.sIndex);
+    if (s.isNotEmpty) return s;
+    return _safe(sub.index);
+  }
 
   static String _rowAttrIndex(SpecValue row, {Options? fallbackOpt}) {
     final byRow = _safe(row.attrIndex);
@@ -108,7 +129,7 @@ abstract final class ProductSkuResolver {
   static Map<String, String> _specMapFromSub(Product product, ProductSub sub) {
     final specToAttr = _buildSpecToAttr(product);
     final map = <String, String>{};
-    for (final spec in _splitIndex(sub.sIndex)) {
+    for (final spec in splitSpecIndexTokens(sub.sIndex)) {
       final attr = specToAttr[spec] ?? spec.substring(0, 1);
       if (map.containsKey(attr)) continue;
       map[attr] = spec;
@@ -300,7 +321,7 @@ abstract final class ProductSkuResolver {
     if (validRows.isEmpty) return true;
 
     final containing = validRows
-        .where((row) => _splitIndex(row.sIndex).contains(normalizedSpec))
+        .where((row) => splitSpecIndexTokens(row.sIndex).contains(normalizedSpec))
         .toList(growable: false);
     if (containing.isEmpty) return true;
     return !containing.any((row) => row.status == 1);
@@ -324,13 +345,13 @@ abstract final class ProductSkuResolver {
           (row) =>
               row.status == 1 &&
               _safe(row.sIndex).isNotEmpty &&
-              _splitIndex(row.sIndex).contains(targetSpec),
+              splitSpecIndexTokens(row.sIndex).contains(targetSpec),
         )
         .toList(growable: false);
 
     final candidates = availRows
         .map((row) {
-          final specs = _splitIndex(row.sIndex);
+          final specs = splitSpecIndexTokens(row.sIndex);
           final idx = _safe(row.sIndex);
           final matchCount = selectedSpecs.where(specs.contains).length;
           final isExact = currentIndex.isNotEmpty && currentIndex == idx;

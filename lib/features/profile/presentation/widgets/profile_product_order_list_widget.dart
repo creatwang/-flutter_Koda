@@ -6,6 +6,8 @@ import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
+import '../../../../gen/assets.gen.dart';
+
 /// 订单中心「我的 / 客户」共用的商品订单列表（与 Order Center Customer 列表一致）。
 class ProfileProductOrderListWidget extends StatelessWidget {
   const ProfileProductOrderListWidget({
@@ -239,7 +241,7 @@ class _DepartmentBlock extends StatelessWidget {
         title:Row( // 使用 Row 配合 MainAxisSize.min 让内容从左对齐并收缩
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.folder_open, size: 18,),
+            const Assets.svg.profileSetting.svg(width: 24, height: 24),
             SizedBox(
               width: 4,
             ),

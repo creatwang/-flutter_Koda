@@ -241,7 +241,7 @@ class _DepartmentBlock extends StatelessWidget {
         title:Row( // 使用 Row 配合 MainAxisSize.min 让内容从左对齐并收缩
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Assets.svg.profileSetting.svg(width: 24, height: 24),
+            Assets.svg.spaceFile.svg(width: 12, height: 10),
             SizedBox(
               width: 4,
             ),

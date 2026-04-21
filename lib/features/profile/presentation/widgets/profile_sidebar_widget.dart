@@ -4,6 +4,8 @@ import 'package:groe_app_pad/features/profile/models/profile_section_meta.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
+import '../../../../gen/assets.gen.dart' show Assets;
+
 class ProfileSidebarWidget extends StatelessWidget {
   const ProfileSidebarWidget({
     super.key,
@@ -102,6 +104,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                             ),
                           ),
                         ),
+                        Assets.svg.profileSetting.svg(width: 24, height: 24),
                         const SizedBox(height: 36),
                         Text(
                           profileName.trim().isEmpty ? '--' : profileName,

@@ -297,6 +297,15 @@ class _ProductSkuCartSideSheetBodyState
       setState(() => _errorMessage = context.l10n.cartNoMatchedSku);
       return;
     }
+    if (widget.mode == ProductSkuCartSheetMode.addToCart) {
+      final salesPrice = sub.salesPrice ?? 0;
+      if (salesPrice <= 0) {
+        setState(
+          () => _errorMessage = context.l10n.cartAddBlockedZeroSalesPrice,
+        );
+        return;
+      }
+    }
     final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
     if (subIndex.isEmpty) {
       setState(() => _errorMessage = context.l10n.cartNoMatchedSku);
@@ -372,6 +381,10 @@ class _ProductSkuCartSideSheetBodyState
     );
     final hasMatchedSku = skuResolved.sub != null;
     final unitPrice = skuResolved.sub?.salesPrice ?? 0.0;
+    final canSubmitAddToCart =
+        hasMatchedSku &&
+        unitPrice > 0 &&
+        widget.mode == ProductSkuCartSheetMode.addToCart;
     final thumbUrl = _thumbUrl(detail, selected);
     final title =
         selected.nameCn ?? selected.name ?? detail.nameCn ?? detail.name ?? '';
@@ -685,7 +698,9 @@ class _ProductSkuCartSideSheetBodyState
                     disabledBackgroundColor: Color(0xFF3A3A3A),
                     disabledForegroundColor: Colors.white38,
                   ),
-                  onPressed: !hasMatchedSku || _isSubmitting
+                  onPressed: (!hasMatchedSku ||
+                          _isSubmitting ||
+                          !canSubmitAddToCart)
                       ? null
                       : () => _onPrimaryPressed(
                           context,

@@ -167,7 +167,9 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   _CartActionButton(
-                    onTap: isAddToCartSubmitting ? null : onAddToCartTap,
+                    onTap: isAddToCartSubmitting || productItem.price <= 0
+                        ? null
+                        : onAddToCartTap,
                     isLoading: isAddToCartSubmitting,
                     compact: true,
                   ),

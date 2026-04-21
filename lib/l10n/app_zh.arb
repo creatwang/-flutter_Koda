@@ -72,6 +72,7 @@
   "cartConfirmAdd": "确认加购",
   "cartConfirmChangeSpec": "确认修改规格",
   "cartNoMatchedSku": "未找到在售 SKU",
+  "cartAddBlockedZeroSalesPrice": "销售价为 0 时无法加购",
   "cartQuantityLabel": "数量",
   "cartChangeSpec": "改规格",
   "cartSkuDrawerClose": "关闭",

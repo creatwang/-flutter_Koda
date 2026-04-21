@@ -46,6 +46,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
     final unitPrice = ProductDetailController.unitPriceFromResolvedSub(
       skuResolved.sub,
     );
+    final canAddToCart = hasMatchedSku && unitPrice > 0;
     final totalPrice = unitPrice * productNum;
     final specRows = selected.specValue ?? const <SpecValue>[];
 
@@ -313,7 +314,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: hasMatchedSku
+            onPressed: canAddToCart
                 ? () async {
                     await onAddToCart();
                   }

@@ -108,8 +108,8 @@ class _ProfileMyCustomersSectionWidgetState
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete customer'),
-        content: Text('Remove ${item.name} (${item.username})?'),
+        title: const Text('Delete customer', style: TextStyle(color: Colors.white)),
+        content: Text('Remove ${item.name} (${item.username})?', style: TextStyle(color: Colors.white60)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),

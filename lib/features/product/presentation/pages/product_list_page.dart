@@ -160,9 +160,10 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                           children: [
                             Expanded(
                               child: ProductFilterPanel(
-                                categories:
-                                    categoryTreeState.asData?.value ??
-                                    const <ProductCategoryTreeDto>[],
+                                categoryTree: categoryTreeState,
+                                onCategoryTreeRetry: () => ref.invalidate(
+                                  categoryTreeProvider,
+                                ),
                                 selectedCategoryId:
                                     _controller.selectedCategoryId,
                                 onCategoryTap: _onCategoryTap,
@@ -538,35 +539,39 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   }
 
   Future<void> _openMobileFilterSheet() async {
-    final categories =
-        ref.read(categoryTreeProvider).asData?.value ??
-        const <ProductCategoryTreeDto>[];
     var selectedCategoryId = _controller.selectedCategoryId;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setModalState) => DismissKeyboardOnTap(
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: ProductFilterPanel(
-                categories: categories,
-                selectedCategoryId: selectedCategoryId,
-                onCategoryTap: (category) {
-                  _controller.toggleCategory(category);
-                  selectedCategoryId = _controller.selectedCategoryId;
-                  _queryBySelectedCategory();
-                  setState(() {});
-                  setModalState(() {});
-                  Navigator.of(context).pop();
-                },
-                onCollapseTap: null,
-                pinApplyButtonToBottom: false,
+      builder: (sheetContext) => Consumer(
+        builder: (context, ref, _) {
+          final categoryTreeState = ref.watch(categoryTreeProvider);
+          return StatefulBuilder(
+            builder: (context, setModalState) => DismissKeyboardOnTap(
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(12),
+                  child: ProductFilterPanel(
+                    categoryTree: categoryTreeState,
+                    onCategoryTreeRetry: () =>
+                        ref.invalidate(categoryTreeProvider),
+                    selectedCategoryId: selectedCategoryId,
+                    onCategoryTap: (category) {
+                      _controller.toggleCategory(category);
+                      selectedCategoryId = _controller.selectedCategoryId;
+                      _queryBySelectedCategory();
+                      setState(() {});
+                      setModalState(() {});
+                      Navigator.of(sheetContext).pop();
+                    },
+                    onCollapseTap: null,
+                    pinApplyButtonToBottom: false,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
+import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
 class ProductFilterPanel extends StatelessWidget {
   const ProductFilterPanel({
-    required this.categories,
+    required this.categoryTree,
+    required this.onCategoryTreeRetry,
     required this.selectedCategoryId,
     required this.onCategoryTap,
     required this.onCollapseTap,
@@ -13,57 +17,15 @@ class ProductFilterPanel extends StatelessWidget {
     super.key,
   });
 
-  final List<ProductCategoryTreeDto> categories;
+  final AsyncValue<List<ProductCategoryTreeDto>> categoryTree;
+  final VoidCallback onCategoryTreeRetry;
   final int? selectedCategoryId;
   final ValueChanged<ProductCategoryTreeDto> onCategoryTap;
   final VoidCallback? onCollapseTap;
   final bool pinApplyButtonToBottom;
 
-  @override
-  Widget build(BuildContext context) {
-    final treeContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: categories.isEmpty
-          ? [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: ProMaxTokens.space3,
-                  vertical: ProMaxTokens.space3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-                child: Text(
-                  'No categories',
-                  style: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ]
-          : categories
-                .map(
-                  (category) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _CategoryTreeNode(
-                      category: category,
-                      selectedCategoryId: selectedCategoryId,
-                      onCategoryTap: onCategoryTap,
-                      depth: 0,
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-    );
-
-    final headerSection = Column(
+  Widget _buildHeader(BuildContext context) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -113,24 +75,131 @@ class ProductFilterPanel extends StatelessWidget {
         ),
       ],
     );
+  }
 
-    return ProMaxGlassCardWidget(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          headerSection,
-          const SizedBox(height: 12),
-          if (pinApplyButtonToBottom)
-            Expanded(
-              child: SingleChildScrollView(
-                child: treeContent,
+  Widget _buildCategoryList(List<ProductCategoryTreeDto> categories) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: categories.isEmpty
+          ? [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: ProMaxTokens.space3,
+                  vertical: ProMaxTokens.space3,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Text(
+                  'No categories',
+                  style: TextStyle(
+                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            )
-          else
-            treeContent,
-        ],
+            ]
+          : categories
+                .map(
+                  (category) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _CategoryTreeNode(
+                      category: category,
+                      selectedCategoryId: selectedCategoryId,
+                      onCategoryTap: onCategoryTap,
+                      depth: 0,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+    );
+  }
+
+  Widget _buildLoadingBody(BuildContext context) {
+    final bar = ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: LinearProgressIndicator(
+        minHeight: 4,
+        backgroundColor: Colors.white.withValues(alpha: 0.08),
+        color: ProMaxTokens.iconPrimary.withValues(alpha: 0.85),
       ),
+    );
+    if (pinApplyButtonToBottom) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          bar,
+          const Expanded(child: SizedBox.shrink()),
+        ],
+      );
+    }
+    return bar;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return categoryTree.when(
+      skipLoadingOnReload: true,
+      loading: () => ProMaxGlassCardWidget(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: 12),
+            _buildLoadingBody(context),
+          ],
+        ),
+      ),
+      error: (err, _) => ProMaxGlassCardWidget(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: 12),
+            if (pinApplyButtonToBottom)
+              Expanded(
+                child: AppErrorView(
+                  message: context.l10n.productLoadFailed('$err'),
+                  onRetry: onCategoryTreeRetry,
+                ),
+              )
+            else
+              AppErrorView(
+                message: context.l10n.productLoadFailed('$err'),
+                onRetry: onCategoryTreeRetry,
+              ),
+          ],
+        ),
+      ),
+      data: (categories) {
+        final treeContent = _buildCategoryList(categories);
+        return ProMaxGlassCardWidget(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 12),
+              if (pinApplyButtonToBottom)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: treeContent,
+                  ),
+                )
+              else
+                treeContent,
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -326,7 +395,8 @@ class _CategoryTreeNodeState extends State<_CategoryTreeNode> {
                               padding: const EdgeInsets.only(bottom: 6),
                               child: _CategoryTreeNode(
                                 category: child,
-                                selectedCategoryId: widget.selectedCategoryId,
+                                selectedCategoryId:
+                                    widget.selectedCategoryId,
                                 onCategoryTap: widget.onCategoryTap,
                                 depth: childDepth,
                               ),

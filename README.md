@@ -1,35 +1,170 @@
-# flutter pad端商城最佳实践
+# groe_app_pad（Flutter Pad 端商城）
 
 ## 文档
 
 - [Dio 请求选项（extra、simpleResponse、noCache、noRetry）](docs/DIO_OPTIONS.md)
 
-`flutter pub run build_runner build --delete-conflicting-outputs`
+---
 
-`flutter pub get`
-`flutter pub run build_runner -w`
+## 业务约定
 
-修改国际化之后
+- **站点维度**：仅**商品**与**首页装修**相关接口会按 `company_id` 区分站点；其它模块不按站点拆分（以实际接口为准）。
+
+---
+
+## 国际化（ARB）
+
+配置见根目录 `l10n.yaml`（`arb-dir`、`template-arb-file` 等）。
+
+修改 `lib/l10n/*.arb` 后执行：
+
+```bash
 flutter gen-l10n
-dart run build_runner
-打包
+```
+
+生成物在 `.dart_tool/flutter_gen/gen_l10n/`，通过 `flutter: generate: true` 参与编译；若 IDE 未刷新，可执行一次 `flutter pub get`。
+
+---
+
+## 代码生成（build_runner / FlutterGen）
+
+本项目在 `pubspec.yaml` 中配置了 **FlutterGen**（`flutter_gen_runner`），与 Freezed 等共用 **build_runner**。
+
+| 场景 | 命令 |
+| --- | --- |
+| 单次生成（推荐，避免冲突文件报错） | `dart run build_runner build --delete-conflicting-outputs` |
+| 监听文件变化持续生成 | `dart run build_runner watch --delete-conflicting-outputs` |
+
+修改 **静态资源声明**（`pubspec.yaml` → `flutter.assets`）或 **FlutterGen 配置**（`pubspec.yaml` → `flutter_gen`）后，需要重新跑上述命令以更新 `lib/gen/`（例如 `assets.gen.dart`）。
+
+**修改国际化后若还需更新其它生成代码**，可依次执行：
+
+```bash
+flutter gen-l10n
+dart run build_runner build --delete-conflicting-outputs
+```
+
+---
+
+## FlutterGen：资源与 SVG
+
+### 配置位置（本项目）
+
+- 资源目录：在 `pubspec.yaml` 的 `flutter.assets` 中声明（如 `assets/images/`、`assets/svg/`）。
+- FlutterGen：同文件末尾 `flutter_gen:` 段，例如 `output: lib/gen/`、`integrations.flutter_svg: true`。
+
+开启 `flutter_svg` 集成后，会为 SVG 生成 `SvgGenImage`，普通位图仍为 `AssetGenImage`。
+
+### 使用方式
+
+```dart
+import 'package:groe_app_pad/gen/assets.gen.dart';
+
+// 位图
+Assets.images.empty.image(width: 120, fit: BoxFit.contain);
+
+// SVG（需已配置 integrations.flutter_svg）
+Assets.svg.profileSetting.svg(width: 24, height: 24);
+```
+
+新增文件：放入已声明的目录 → 运行 `dart run build_runner build --delete-conflicting-outputs` → 使用 `Assets` 上新生成的 getter。
+
+---
+
+## 发版打包（Release APK）
+
+遇到依赖或生成物异常时，可按需「深度清理」后再打：
+
+```bash
 flutter clean
-删 android/.gradle 和 项目根 .dart_tool（可选）
-重新拉依赖并打包
+```
+
+可选（Gradle / Dart 工具缓存，磁盘不足或顽固报错时再删）：
+
+- 删除 `android/.gradle`
+- 删除项目根目录 `.dart_tool`
+
+然后重新拉依赖并打包：
+
+```bash
 flutter pub get
 flutter build apk --release
+```
 
+需要切换后端地址时，可使用（示例）：
 
-只有产品和首页装修会区分站点company_id
+```bash
+flutter build apk --release --dart-define=BASE_URL=https://your-api.example.com/api
+```
 
+关闭 Debug 下的网络追踪日志（仍受 `kDebugMode` 限制，Release 默认无控制台输出）：
 
-清理缓存
- 
+```bash
+flutter run --dart-define=NET_TRACE_ENABLED=false
+```
 
-添加静态资源
-单次
-dart run build_runner build
-监听
-dart run build_runner watch --delete-conflicting-outputs
-#过滤日志
-hit 是缓存日志
+---
+
+## 清理缓存（含义区分）
+
+| 类型 | 说明 |
+| --- | --- |
+| **GET 内存缓存** | `MemoryCacheInterceptor` 对成功 GET 的短期内存缓存；业务侧可通过 `DioClient` 的 `clearAllMemoryCaches` / `evictMemoryCacheByPrefix` 清理（见 `lib/core/network/dio_client.dart`）。 |
+| **Flutter / Gradle 构建缓存** | `flutter clean`，必要时再删 `android/.gradle`、根目录 `.dart_tool`。 |
+| **网络日志** | 由 `Env.netTraceEnabled` 与 `kDebugMode` 控制，见下文。 |
+
+---
+
+## 网络日志说明与过滤
+
+仅在 **Debug** 且 **`Env.netTraceEnabled == true`**（默认 `true`，可用 `--dart-define=NET_TRACE_ENABLED=false` 关闭）时，`debugPrint` 输出下列前缀。
+
+### `[NET][TRACE]`（`RequestTraceInterceptor`）
+
+| 片段 | 含义 |
+| --- | --- |
+| `[REQ]` | 请求发出：`method`、`path`、脱敏后的 `headers`、`query`。 |
+| `[RES]` | 响应返回：`statusCode`、`path`、耗时 `(Nms)`；若带 **`(cache)`** 表示本次响应来自内存缓存短路，未走真实 HTTP。 |
+| `[ERR]` | 请求失败：`DioException` 类型、`method`、`path`、耗时、错误 `message`。 |
+
+同一请求用 **`requestId`**（日志里 `[NET][TRACE][<id>]` 段）串联 REQ / RES / ERR。
+
+### `[NET][CACHE]`（`MemoryCacheInterceptor`）
+
+| 关键字 | 含义 |
+| --- | --- |
+| **`hit`** | 在 TTL 内命中内存缓存，**直接返回缓存体**，不发网络请求；日志中带 `key=...`（路径 + query）。 |
+| **`miss`** | 未命中缓存，继续走真实请求。 |
+| **`expired`** | 键曾存在但已超过 TTL，已删除该条并走网络。 |
+| **`bypass`** | 非 GET 或本次带 `noCache`，**不读**缓存（GET 成功后仍可能 `save` 写入）。 |
+| **`save`** | 成功 GET 后写入/覆盖缓存条目。 |
+| **`skip save`** | 未写入缓存（非 GET 或非成功响应等）。 |
+
+### 过滤示例
+
+只关心缓存相关：
+
+```bash
+# macOS / Linux（grep）
+flutter run 2>&1 | grep "\[NET\]\[CACHE\]"
+
+# Windows PowerShell
+flutter run 2>&1 | Select-String "\[NET\]\[CACHE\]"
+```
+
+只关心追踪行：
+
+```bash
+flutter run 2>&1 | grep "\[NET\]\[TRACE\]"
+```
+
+---
+
+## 常用命令速查
+
+```bash
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter gen-l10n
+flutter build apk --release
+```

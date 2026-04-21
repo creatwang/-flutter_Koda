@@ -17,9 +17,9 @@ const double _kScanDialogRadius = 12;
 const double _kScanOuterPadding = 22;
 const double _kScanLabelColumnWidth = 118;
 const double _kScanImageHeight = 215;
-const double _kScanFooterGap = 12;
-const double _kScanButtonHeight = 48;
-const double _kScanButtonRadius = 8;
+const double _kScanFooterGap = 24;
+const double _kScanButtonHeight = 40;
+const double _kScanButtonRadius = 6;
 
 List<({String label, String value})> _buildSkuDetailLabelValueRows({
   required Product selected,
@@ -32,7 +32,6 @@ List<({String label, String value})> _buildSkuDetailLabelValueRows({
     ProductSkuResolver.compositeSpecIndex(selectedSub),
   );
   final rows = <({String label, String value})>[];
-  final productName = (selectedSub.name  ?? selectedSub.nameCn ?? '').trim();
 
   for (var i = 0; i < specRows.length; i++) {
     final group = specRows[i];
@@ -253,21 +252,21 @@ class _ProductScanResultDialogWidgetState
                                 color: Colors.white.withValues(alpha: 0.12),
                               ),
                             ),
-                            ...params.asMap().entries.map((e) {
+                            /*...params.asMap().entries.map((e) {
                               final item = e.value;
                               return _ProductScanDetailRow(
                                 label: (item.name ?? '').trim(),
                                 value: (item.value ?? '').trim(),
                                 paddingTop: e.key == 0 ? 14 : 12,
                               );
-                            }),
+                            }),*/
                           ],
                         ],
                       ),
                     ),
                     Positioned(
-                      top: 20,
-                      right: 20,
+                      top: 12,
+                      right: 12,
                       child: _ProductScanCloseControl(
                         enabled: !_isSubmitting,
                         onTap: () => Navigator.of(context).pop(),

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +21,6 @@ import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_c
 import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
 import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 
@@ -252,36 +249,75 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     );
     if (!mounted || code == null || code.trim().isEmpty) return;
 
+    // 扫码页关闭后再挂 loading，避免与返回动画叠在一起。
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
     ProductDetailScanResult? scanResult;
     Object? loadError;
-    unawaited(
-      showDialog<void>(
+    var loadingRouteShown = false;
+    try {
+      showGeneralDialog<void>(
         context: context,
         barrierDismissible: false,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.transparent,
+        transitionDuration: Duration.zero,
         useRootNavigator: true,
-        builder: (dialogContext) {
+        pageBuilder: (
+          BuildContext overlayContext,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+        ) {
+          final scheme = Theme.of(overlayContext).colorScheme;
           return PopScope(
             canPop: false,
-            child: Dialog(
-              backgroundColor: Theme.of(dialogContext).colorScheme.surface,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-                child: AppLoadingView(),
+            child: SizedBox.expand(
+              child: Material(
+                type: MaterialType.transparency,
+                child: ColoredBox(
+                  color: scheme.scrim.withValues(alpha: 0.42),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: scheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          overlayContext.l10n.commonLoading,
+                          style: Theme.of(overlayContext).textTheme.bodyLarge
+                              ?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           );
         },
-      ),
-    );
-    await Future<void>.delayed(Duration.zero);
-    try {
+      );
+      loadingRouteShown = true;
+      await WidgetsBinding.instance.endOfFrame;
+
       scanResult = await ProductDetailController.formatProductDetailScanInfo(
         code,
       );
     } catch (e) {
       loadError = e;
     } finally {
-      if (context.mounted) {
+      if (loadingRouteShown && context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
     }

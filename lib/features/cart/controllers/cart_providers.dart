@@ -4,9 +4,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
+import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_export_result_dto.dart';
 import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
 import 'package:groe_app_pad/features/cart/services/cart_services.dart';
 
@@ -22,9 +25,7 @@ bool _isAuthenticatedBySession(Session? session) {
 
 /// 角标与购物车页总件数：由当前购物车列表汇总，**不**请求 `/store/cart/num`。
 final cartListBadgeCountProvider = Provider<int>((ref) {
-  return _badgeSumFromCartList(
-    ref.watch(cartControllerProvider).asData?.value,
-  );
+  return _badgeSumFromCartList(ref.watch(cartControllerProvider).asData?.value);
 });
 
 /// 个人中心侧栏 CART NUM：仅在打开 Profile 时请求 `/store/cart/num` 写入快照；
@@ -56,10 +57,7 @@ class ProfileCartServerNumNotifier extends Notifier<int?> {
     }
     final result = await fetchCartTotalNumService();
     if (!ref.mounted) return;
-    result.when(
-      success: (n) => state = n,
-      failure: (_) => state = null,
-    );
+    result.when(success: (n) => state = n, failure: (_) => state = null);
   }
 
   void clearSnapshot() => state = null;
@@ -266,10 +264,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     return true;
   }
 
-  Future<bool> clearSiteCart(
-    int companyId, {
-    bool shouldRefresh = true,
-  }) async {
+  Future<bool> clearSiteCart(int companyId, {bool shouldRefresh = true}) async {
     if (!_isAuthenticated()) return false;
     final result = await clearCartBySiteService(companyId: companyId);
     return result.when(
@@ -330,10 +325,32 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       companyIds: companyIds,
       cart: cart,
     );
-    return result.when(
-      success: (_) => true,
-      failure: (_) => false,
-    );
+    return result.when(success: (_) => true, failure: (_) => false);
+  }
+
+  Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfig() async {
+    if (!_isAuthenticated()) {
+      return ApiFailure(AppException('Please sign in first.'));
+    }
+    return fetchQuotationConfigService();
+  }
+
+  Future<ApiResult<CartQuotationExportResultDto>> exportQuotation({
+    required Map<String, dynamic> formData,
+  }) async {
+    if (!_isAuthenticated()) {
+      return ApiFailure(AppException('Please sign in first.'));
+    }
+    return exportQuotationService(formData: formData);
+  }
+
+  Future<ApiResult<String>> previewQuotation({
+    required Map<String, dynamic> formData,
+  }) async {
+    if (!_isAuthenticated()) {
+      return ApiFailure(AppException('Please sign in first.'));
+    }
+    return previewQuotationService(formData: formData);
   }
 
   Future<bool> _applySelection({
@@ -374,8 +391,9 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
 
 int _badgeSumFromCartList(List<CartListDto>? cartData) {
   if (cartData == null) return 0;
-  return _allProducts(cartData)
-      .fold<int>(0, (sum, item) => sum + item.productNum);
+  return _allProducts(
+    cartData,
+  ).fold<int>(0, (sum, item) => sum + item.productNum);
 }
 
 List<CartProductDto> _allProducts(List<CartListDto> source) {

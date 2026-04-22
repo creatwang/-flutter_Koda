@@ -1,8 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/features/cart/api/cart_requests.dart';
 import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_export_result_dto.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// 购物车网络结果解析与 [AppException] 映射（调用 `cart_requests`）。
 
@@ -158,10 +165,7 @@ Future<ApiResult<void>> createOrderBySitesService({
   required List<Map<String, dynamic>> cart,
 }) async {
   try {
-    await requestCreateOrderBySites(
-      companyIds: companyIds,
-      cart: cart,
-    );
+    await requestCreateOrderBySites(companyIds: companyIds, cart: cart);
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(
@@ -254,4 +258,208 @@ Future<ApiResult<void>> changeCartItemSpecService({
   } catch (e) {
     return ApiFailure(AppException(e.toString()));
   }
+}
+
+/// 获取报价单导出弹窗配置。
+Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
+  try {
+    final response = await requestQuotationConfig();
+    final dynamic data = response.data;
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid quotation config response format',
+      );
+    }
+    final map = Map<String, dynamic>.from(data);
+    final code = map['code'];
+    if (code is num && code != 0) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message:
+            map['message']?.toString() ?? 'Quotation config request failed',
+      );
+    }
+    if (code is String && code != '0' && code.trim() != '0') {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message:
+            map['message']?.toString() ?? 'Quotation config request failed',
+      );
+    }
+    final dynamic resultNode = map['result'];
+    final resultMap = resultNode is Map
+        ? Map<String, dynamic>.from(resultNode)
+        : <String, dynamic>{};
+    return ApiSuccess(CartQuotationConfigDto.fromJson(resultMap));
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Fetch quotation config failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+/// 发送报价单导出请求并保存为本地 Excel 文件。
+Future<ApiResult<CartQuotationExportResultDto>> exportQuotationService({
+  required Map<String, dynamic> formData,
+}) async {
+  try {
+    final response = await requestExportQuotation(formData: formData);
+    final bytes = _extractBytes(response.data);
+    if (bytes == null || bytes.isEmpty) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Export quotation response is empty',
+      );
+    }
+    final contentType = _extractContentType(response);
+    if (_looksLikeJsonResponse(contentType, bytes)) {
+      final jsonMap = _parseJsonBytes(bytes);
+      final message = _extractExportErrorMessage(jsonMap);
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: message,
+      );
+    }
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final fileName = 'quotation_$timestamp.xlsx';
+    final directory = await _resolveExportDirectory();
+    final file = File('${directory.path}${Platform.pathSeparator}$fileName');
+    await file.writeAsBytes(bytes, flush: true);
+    return ApiSuccess(
+      CartQuotationExportResultDto(fileName: fileName, filePath: file.path),
+    );
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Export quotation failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+/// 预览报价单，返回可直接加载的 Office 在线预览 URL。
+Future<ApiResult<String>> previewQuotationService({
+  required Map<String, dynamic> formData,
+}) async {
+  try {
+    final response = await requestExportQuotationPreview(formData: formData);
+    final dynamic data = response.data;
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Invalid preview response format',
+      );
+    }
+    final map = Map<String, dynamic>.from(data);
+    final code = map['code'];
+    if (code is num && code != 0) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: _extractExportErrorMessage(map),
+      );
+    }
+    if (code is String && code != '0' && code.trim() != '0') {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: _extractExportErrorMessage(map),
+      );
+    }
+    final rawResult = map['result']?.toString().trim() ?? '';
+    if (rawResult.isEmpty) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        error: 'Preview url is empty',
+      );
+    }
+    final previewUrl = _buildOfficePreviewUrl(rawResult);
+    return ApiSuccess(previewUrl);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Preview quotation failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+Uint8List? _extractBytes(dynamic data) {
+  if (data is Uint8List) return data;
+  if (data is List<int>) return Uint8List.fromList(data);
+  if (data is List) {
+    return Uint8List.fromList(data.whereType<int>().toList(growable: false));
+  }
+  if (data is String) return Uint8List.fromList(utf8.encode(data));
+  return null;
+}
+
+String _extractContentType(Response<dynamic> response) {
+  final value = response.headers.value(Headers.contentTypeHeader);
+  if (value == null) return '';
+  return value.toLowerCase();
+}
+
+bool _looksLikeJsonResponse(String contentType, Uint8List bytes) {
+  if (contentType.contains('application/json') ||
+      contentType.contains('text/json')) {
+    return true;
+  }
+  if (bytes.isEmpty) return false;
+  final first = bytes.first;
+  return first == 123 || first == 91;
+}
+
+Map<String, dynamic> _parseJsonBytes(Uint8List bytes) {
+  try {
+    final text = utf8.decode(bytes);
+    final decoded = jsonDecode(text);
+    if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) return decoded.cast<String, dynamic>();
+  } catch (_) {
+    return const <String, dynamic>{};
+  }
+  return const <String, dynamic>{};
+}
+
+String _extractExportErrorMessage(Map<String, dynamic> jsonMap) {
+  final errMsgNode = jsonMap['errMsg'];
+  if (errMsgNode is List) {
+    final firstNonEmpty = errMsgNode
+        .map((item) => item?.toString().trim() ?? '')
+        .firstWhere((item) => item.isNotEmpty, orElse: () => '');
+    if (firstNonEmpty.isNotEmpty) return firstNonEmpty;
+  }
+  final message = jsonMap['message']?.toString().trim() ?? '';
+  if (message.isNotEmpty) return message;
+  return 'Export quotation failed';
+}
+
+String _buildOfficePreviewUrl(String fileUrl) {
+  final encoded = Uri.encodeComponent(fileUrl);
+  return 'https://view.officeapps.live.com/op/view.aspx?src=$encoded';
+}
+
+Future<Directory> _resolveExportDirectory() async {
+  if (!kIsWeb) {
+    final downloads = await getDownloadsDirectory();
+    if (downloads != null) {
+      await downloads.create(recursive: true);
+      return downloads;
+    }
+  }
+  final documents = await getApplicationDocumentsDirectory();
+  await documents.create(recursive: true);
+  return documents;
 }

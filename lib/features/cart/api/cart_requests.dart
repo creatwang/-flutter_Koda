@@ -15,6 +15,8 @@ class CartRequests {
   static const String createBySitesPath = '/store/order/createBySites';
   static const String deletePath = '/store/cart/del';
   static const String clearPath = '/store/cart/clear';
+  static const String quotationConfigPath = '/store/quotationConfig';
+  static const String exportQuotationPath = '/store/cart/exportQuotation';
 }
 
 /// 购物车商品总件数（需鉴权）。
@@ -98,10 +100,7 @@ Future<Response<dynamic>> requestCreateOrderBySites({
 }) {
   return (client ?? protectedDioClient).post(
     CartRequests.createBySitesPath,
-    data: <String, dynamic>{
-      'company_ids': companyIds,
-      'cart': cart,
-    },
+    data: <String, dynamic>{'company_ids': companyIds, 'cart': cart},
   );
 }
 
@@ -115,6 +114,44 @@ Future<Response<dynamic>> requestCartClear({
   return (client ?? protectedDioClient).post(
     CartRequests.clearPath,
     data: <String, dynamic>{'company_id': companyId},
+  );
+}
+
+/// 获取报价单导出配置（需鉴权）。
+Future<Response<dynamic>> requestQuotationConfig({DioClient? client}) {
+  return (client ?? protectedDioClient).get(
+    CartRequests.quotationConfigPath,
+    simpleResponse: false,
+    options: Options(extra: <String, dynamic>{'noCache': true}),
+  );
+}
+
+/// 导出报价单（需鉴权）。
+Future<Response<dynamic>> requestExportQuotation({
+  required Map<String, dynamic> formData,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.exportQuotationPath,
+    data: formData,
+    simpleResponse: false,
+    options: Options(
+      responseType: ResponseType.bytes,
+      extra: <String, dynamic>{'noCache': true},
+    ),
+  );
+}
+
+/// 预览报价单（需鉴权）。
+Future<Response<dynamic>> requestExportQuotationPreview({
+  required Map<String, dynamic> formData,
+  DioClient? client,
+}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.exportQuotationPath,
+    data: <String, dynamic>{...formData, 'response_type': 1},
+    simpleResponse: false,
+    options: Options(extra: <String, dynamic>{'noCache': true}),
   );
 }
 

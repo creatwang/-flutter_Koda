@@ -1,14 +1,20 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:groe_app_pad/shared/widgets/dialog/show_mall_confirm_dialog.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:groe_app_pad/features/cart/models/cart_quotation_export_result_dto.dart';
+import 'package:groe_app_pad/features/cart/presentation/widgets/cart_quotation_form_bottom_sheet_widget.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
@@ -34,6 +40,8 @@ class _CartPageState extends ConsumerState<CartPage> {
   final Set<int> _pendingSiteIds = <int>{};
   bool _isClearingAll = false;
   bool _isCheckingOut = false;
+  bool _isExportingQuotationConfig = false;
+  String? _exportQuotationErrorMessage;
   final NumberFormat _amountFormatter = NumberFormat('#,##0.##');
 
   @override
@@ -46,13 +54,9 @@ class _CartPageState extends ConsumerState<CartPage> {
     final canExportQuotation =
         ref.watch(canExportQuotationProvider).asData?.value ?? false;
     return cartState.when(
-      loading: () => const HomeMainContentSlot(
-        child: AppLoadingView(),
-      ),
+      loading: () => const HomeMainContentSlot(child: AppLoadingView()),
       error: (error, _) => HomeMainContentSlot(
-        child: AppErrorView(
-          message: l10n.cartLoadFailed(error.toString()),
-        ),
+        child: AppErrorView(message: l10n.cartLoadFailed(error.toString())),
       ),
       data: (groups) {
         final sites = groups
@@ -72,6 +76,8 @@ class _CartPageState extends ConsumerState<CartPage> {
           selectedAmount: selectedAmount,
           totalCount: totalCount,
           canExportQuotation: canExportQuotation,
+          isExportingQuotationConfig: _isExportingQuotationConfig,
+          exportQuotationErrorMessage: _exportQuotationErrorMessage,
         );
 
         return HomeMainContentSlot(
@@ -111,27 +117,18 @@ class _CartPageState extends ConsumerState<CartPage> {
                 )
               : Column(
                   children: [
-                    Expanded(
-                      flex: 5,
-                      child: listPanel,
-                    ),
+                    Expanded(flex: 5, child: listPanel),
                     Expanded(
                       flex: 2,
                       child: SafeArea(
                         top: false,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            16,
-                            10,
-                            16,
-                            16,
-                          ),
+                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
                           child: LayoutBuilder(
                             builder: (context, viewport) {
                               return SingleChildScrollView(
                                 keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior
-                                        .onDrag,
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(
                                     minHeight: viewport.maxHeight,
@@ -225,6 +222,8 @@ class _CartPageState extends ConsumerState<CartPage> {
     required double selectedAmount,
     required int totalCount,
     required bool canExportQuotation,
+    required bool isExportingQuotationConfig,
+    required String? exportQuotationErrorMessage,
   }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -331,21 +330,46 @@ class _CartPageState extends ConsumerState<CartPage> {
             ],
           ),
         ),
-        if (canExportQuotation) ...[
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white70,
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+        Column(
+          children: [
+            if (canExportQuotation) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: selectedCount <= 0 || isExportingQuotationConfig
+                      ? null
+                      : _onExportQuotation,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+                  ),
+                  icon: isExportingQuotationConfig
+                      ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                      : const Icon(Icons.ios_share_outlined, size: 16),
+                  label: Text(isExportingQuotationConfig ? 'Loading...' : 'Export'),
+                ),
               ),
-              icon: const Icon(Icons.ios_share_outlined, size: 16),
-              label: const Text('Export'),
-            ),
-          ),
-        ],
+              if (exportQuotationErrorMessage != null) ...[
+                const SizedBox(height: 8),
+                SelectableText.rich(
+                  TextSpan(
+                    text: exportQuotationErrorMessage,
+                    style: const TextStyle(
+                      color: Color(0xFFFF6E76),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ]
+          ],
+        ),
       ],
     );
   }
@@ -371,8 +395,8 @@ class _CartPageState extends ConsumerState<CartPage> {
 
   Future<void> _onClearAll() async {
     final messenger = ScaffoldMessenger.of(context);
-    final current = ref.read(cartControllerProvider).asData?.value ??
-        const <CartListDto>[];
+    final current =
+        ref.read(cartControllerProvider).asData?.value ?? const <CartListDto>[];
     final selectedIds = current
         .expand((group) => group.items)
         .expand((site) => site.cart.items)
@@ -390,7 +414,7 @@ class _CartPageState extends ConsumerState<CartPage> {
           : 'Clear entire shortlist?',
       message: hasSelectedItems
           ? '${selectedIds.length} selected lines will be removed from '
-              'your shortlist.'
+                'your shortlist.'
           : 'This clears all cart lines currently loaded for your sites.',
       confirmLabel: hasSelectedItems ? 'Remove' : 'Clear all',
       icon: hasSelectedItems
@@ -456,10 +480,7 @@ class _CartPageState extends ConsumerState<CartPage> {
       item.id,
       () => ref
           .read(cartControllerProvider.notifier)
-          .changeProductQuantity(
-            cartId: item.id,
-            productNum: nextProductNum,
-          ),
+          .changeProductQuantity(cartId: item.id, productNum: nextProductNum),
     );
   }
 
@@ -494,7 +515,9 @@ class _CartPageState extends ConsumerState<CartPage> {
         onSubmit: (sheetContext, payload) async {
           final space = await resolveSpaceForCartAdd(sheetContext);
           if (space == null) return false;
-          return ref.read(cartControllerProvider.notifier).changeCartItemSpec(
+          return ref
+              .read(cartControllerProvider.notifier)
+              .changeCartItemSpec(
                 cartItemId: item.id,
                 productId: payload.apiProductId,
                 subIndex: payload.subIndex,
@@ -506,9 +529,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.productDetailLoadFailed('$e')),
-        ),
+        SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
       );
     } finally {
       if (mounted) {
@@ -547,6 +568,80 @@ class _CartPageState extends ConsumerState<CartPage> {
     messenger.showSnackBar(
       const SnackBar(content: Text('Order created successfully')),
     );
+  }
+
+  Future<void> _onExportQuotation() async {
+    if (_isExportingQuotationConfig) return;
+    setState(() {
+      _isExportingQuotationConfig = true;
+      _exportQuotationErrorMessage = null;
+    });
+    final ApiResult<CartQuotationConfigDto> result = await ref
+        .read(cartControllerProvider.notifier)
+        .fetchQuotationConfig();
+    if (!mounted) return;
+    setState(() => _isExportingQuotationConfig = false);
+    if (result is ApiFailure<CartQuotationConfigDto>) {
+      setState(() {
+        _exportQuotationErrorMessage = result.exception.message;
+      });
+      return;
+    }
+    final config = (result as ApiSuccess<CartQuotationConfigDto>).data;
+    if (config.formData.isEmpty) {
+      setState(() {
+        _exportQuotationErrorMessage = 'Export form config is empty.';
+      });
+      return;
+    }
+    final values = await showCartQuotationFormBottomSheet(
+      context: context,
+      fields: config.formData,
+      onPreview: _onPreviewQuotation,
+    );
+    if (!mounted || values == null) return;
+    log('quotation export form values: $values', name: 'cart.export.quotation');
+    setState(() {
+      _isExportingQuotationConfig = true;
+      _exportQuotationErrorMessage = null;
+    });
+    final exportResult = await ref
+        .read(cartControllerProvider.notifier)
+        .exportQuotation(formData: values);
+    if (!mounted) return;
+    setState(() => _isExportingQuotationConfig = false);
+    if (exportResult is ApiFailure<CartQuotationExportResultDto>) {
+      setState(() {
+        _exportQuotationErrorMessage = exportResult.exception.message;
+      });
+      return;
+    }
+    final exportData =
+        (exportResult as ApiSuccess<CartQuotationExportResultDto>).data;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Quotation exported: ${exportData.fileName}\n${exportData.filePath}',
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _onPreviewQuotation(Map<String, dynamic> formData) async {
+    final result = await ref
+        .read(cartControllerProvider.notifier)
+        .previewQuotation(formData: formData);
+    if (result is ApiFailure<String>) {
+      return result.exception.message;
+    }
+    final previewUrl = (result as ApiSuccess<String>).data;
+    if (!mounted) return null;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _CartQuotationPreviewPage(previewUrl: previewUrl),
+      ),
+    );
+    return null;
   }
 
   Future<bool> _runItemAction(
@@ -599,7 +694,6 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
     return result == true;
   }
-
 }
 
 class _CartSiteSection extends StatelessWidget {
@@ -625,7 +719,7 @@ class _CartSiteSection extends StatelessWidget {
   final Future<bool> Function(bool selected) onToggleSiteSelected;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
   final Future<bool> Function(CartProductDto item, int nextProductNum)
-      onChangeQuantity;
+  onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
@@ -636,11 +730,6 @@ class _CartSiteSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allProducts = site.cart.items.expand((space) => space.list).toList();
-    final hasItems = allProducts.isNotEmpty;
-    final allSelected =
-        hasItems && allProducts.every((item) => item.isSelected);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -650,7 +739,7 @@ class _CartSiteSection extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-              /*  Center(
+                /*  Center(
                   child: SizedBox(
                     width: 20,
                     height: 20,
@@ -760,7 +849,7 @@ class _CartSpaceSection extends StatelessWidget {
   final VoidCallback onToggleExpanded;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
   final Future<bool> Function(CartProductDto item, int nextProductNum)
-      onChangeQuantity;
+  onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
@@ -827,8 +916,7 @@ class _CartSpaceSection extends StatelessWidget {
                         onRemarkChanged: onRemarkChanged,
                         onChangeSpec: onChangeSpec,
                         isBusy: isItemBusy(item.id),
-                        isRemoveActionLoading:
-                            isRemoveActionLoading(item.id),
+                        isRemoveActionLoading: isRemoveActionLoading(item.id),
                         isChangeSpecLoading: isChangeSpecLoading(item.id),
                       ),
                     )
@@ -860,7 +948,7 @@ class _CartProductTile extends StatefulWidget {
   final CartProductDto item;
   final Future<bool> Function(int itemId, bool selected) onToggleItemSelected;
   final Future<bool> Function(CartProductDto item, int nextProductNum)
-      onChangeQuantity;
+  onChangeQuantity;
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
@@ -920,7 +1008,9 @@ class _CartProductTileState extends State<_CartProductTile> {
   void _startContinuousAdjust(int delta) {
     if (widget.isBusy) return;
     _stopContinuousAdjust();
-    _quantityPressTimer = Timer.periodic(const Duration(milliseconds: 220), (_) {
+    _quantityPressTimer = Timer.periodic(const Duration(milliseconds: 220), (
+      _,
+    ) {
       unawaited(_changeQuantityByDelta(delta));
     });
   }
@@ -947,10 +1037,8 @@ class _CartProductTileState extends State<_CartProductTile> {
               value: widget.item.isSelected,
               onChanged: widget.isBusy
                   ? null
-                  : (selected) => widget.onToggleItemSelected(
-                        widget.item.id,
-                        selected,
-                      ),
+                  : (selected) =>
+                        widget.onToggleItemSelected(widget.item.id, selected),
             ),
             SizedBox(width: 10),
             ClipRRect(
@@ -1096,9 +1184,9 @@ class _CartProductTileState extends State<_CartProductTile> {
                                   controller: _remarkController,
                                   focusNode: _safeRemarkFocusNode,
                                   scrollPadding: EdgeInsets.only(
-                                    bottom: 24 +
-                                        MediaQuery.viewInsetsOf(context)
-                                            .bottom,
+                                    bottom:
+                                        24 +
+                                        MediaQuery.viewInsetsOf(context).bottom,
                                   ),
                                   onChanged: (value) => widget.onRemarkChanged(
                                     widget.item.id,
@@ -1156,9 +1244,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white.withValues(
-                                    alpha: 0.75,
-                                  ),
+                                  color: Colors.white.withValues(alpha: 0.75),
                                 ),
                               )
                             : const Icon(Icons.delete_outline, size: 14),
@@ -1185,9 +1271,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white.withValues(
-                                    alpha: 0.75,
-                                  ),
+                                  color: Colors.white.withValues(alpha: 0.75),
                                 ),
                               )
                             : const Icon(Icons.tune, size: 14),
@@ -1236,8 +1320,9 @@ class _QuantityControlButton extends StatelessWidget {
       onLongPressEnd: enabled && onLongPressEnd != null
           ? (_) => onLongPressEnd!()
           : null,
-      onLongPressCancel:
-          enabled && onLongPressEnd != null ? onLongPressEnd : null,
+      onLongPressCancel: enabled && onLongPressEnd != null
+          ? onLongPressEnd
+          : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: 22,
@@ -1288,6 +1373,129 @@ class _SummaryRow extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _CartQuotationPreviewPage extends StatefulWidget {
+  const _CartQuotationPreviewPage({required this.previewUrl});
+
+  final String previewUrl;
+
+  @override
+  State<_CartQuotationPreviewPage> createState() =>
+      _CartQuotationPreviewPageState();
+}
+
+class _CartQuotationPreviewPageState extends State<_CartQuotationPreviewPage> {
+  WebViewController? _controller;
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageStarted: (_) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = true;
+                _loadError = null;
+              });
+            },
+            onPageFinished: (_) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = false;
+              });
+            },
+            onWebResourceError: (error) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = false;
+                _loadError = error.description;
+              });
+            },
+          ),
+        )
+        ..loadRequest(Uri.parse(widget.previewUrl));
+    } catch (e) {
+      _loadError = e.toString();
+      _isLoading = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quotation Preview'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_controller == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SelectableText.rich(
+            TextSpan(
+              text: _loadError ?? 'Preview is not available on this device.',
+              style: const TextStyle(
+                color: Color(0xFFFF6E76),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Stack(
+      children: [
+        WebViewWidget(controller: _controller!),
+        if (_isLoading)
+          const Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            ),
+          ),
+        if (_loadError != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            top: 12,
+            child: Material(
+              color: const Color(0xDD3A2022),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: SelectableText.rich(
+                  TextSpan(
+                    text: _loadError,
+                    style: const TextStyle(
+                      color: Color(0xFFFFB5BB),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

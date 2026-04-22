@@ -14,6 +14,7 @@ import 'package:groe_app_pad/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
 import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:groe_app_pad/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:groe_app_pad/theme/pro_max_tokens.dart';
 
 import '../../models/cart_list_dto.dart';
@@ -649,7 +650,7 @@ class _CartSiteSection extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
+              /*  Center(
                   child: SizedBox(
                     width: 20,
                     height: 20,
@@ -669,7 +670,7 @@ class _CartSiteSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 8),*/
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -942,22 +943,14 @@ class _CartProductTileState extends State<_CartProductTile> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Transform.scale(
-              scale: 0.8,
-              child: Checkbox(
-                value: widget.item.isSelected,
-                onChanged: widget.isBusy
-                    ? null
-                    : (value) => widget.onToggleItemSelected(
+            SmallCheckSquareCheckboxWidget(
+              value: widget.item.isSelected,
+              onChanged: widget.isBusy
+                  ? null
+                  : (selected) => widget.onToggleItemSelected(
                         widget.item.id,
-                        value ?? false,
+                        selected,
                       ),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: const VisualDensity(
-                  horizontal: -4,
-                  vertical: -4,
-                ),
-              ),
             ),
             SizedBox(width: 10),
             ClipRRect(

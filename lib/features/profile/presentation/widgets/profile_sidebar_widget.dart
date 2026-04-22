@@ -54,6 +54,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Stack(
+                          clipBehavior: Clip.none,
                           children: [
                             Transform.rotate(
                               angle: -0.06,
@@ -117,9 +118,9 @@ class ProfileSidebarWidget extends StatelessWidget {
                               ),
                             ),
                             Positioned(
-                              bottom: 2,
-                              right: 2,
-                              child: Assets.svg.profileSetting.svg(width: 24, height: 24),
+                              bottom: 0,
+                              right: -6,
+                              child: Assets.svg.profileSetting.svg(width: 30, height: 30),
                             )
                           ],
                         ),

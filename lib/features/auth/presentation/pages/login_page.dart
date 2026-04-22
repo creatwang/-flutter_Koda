@@ -159,7 +159,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 80),
                       Text(
                         _isRegister ? l10n.authRegisterHeading : l10n.authLoginHeading,
                         style: TextStyle(
@@ -168,7 +168,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                     /*后面该代码不要删除下面注释的代码*/
+                     /* const SizedBox(height: 4),
                       Row(
                         children: [
                           Text(
@@ -198,7 +199,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ),
                         ],
-                      ),
+                      ),*/
                       const SizedBox(height: 12),
                       const SizedBox(height: 28),
                       _fieldLabel('EMAIL ADDRESS'),
@@ -295,7 +296,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               : Text(_isRegister ? l10n.authRegisterAction : l10n.loginAction),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                     /* const SizedBox(height: 24),
                       Container(
                         height: 1,
                         color: Colors.white.withValues(alpha: 0.22),
@@ -320,7 +321,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             fontSize: 10,
                           ),
                         ),
-                      ),
+                      ),*/
                     ],
                   ),
                 ),

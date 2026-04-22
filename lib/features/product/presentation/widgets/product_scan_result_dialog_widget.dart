@@ -162,7 +162,7 @@ class _ProductScanResultDialogWidgetState
 
     final mq = MediaQuery.sizeOf(context);
     final panelW = (mq.width - 48).clamp(300.0, 430.0);
-    final bodyH = (mq.height * 0.76).clamp(380.0, 720.0);
+    final bodyH = (mq.height * 0.70).clamp(380.0, 720.0);
     final innerW = panelW - _kScanOuterPadding * 2;
 
     return Dialog(
@@ -197,8 +197,8 @@ class _ProductScanResultDialogWidgetState
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: ColoredBox(
-                              color: Colors.white.withValues(alpha: 0.08),
+                            child: Container(
+                              // color: Colors.white.withValues(alpha: 0.08),
                               child: SizedBox(
                                 height: _kScanImageHeight,
                                 width: innerW,
@@ -243,7 +243,7 @@ class _ProductScanResultDialogWidgetState
                               paddingTop: e.key == 0 ? 18 : 14,
                             );
                           }),
-                          if (params.isNotEmpty) ...[
+                         /* if (params.isNotEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.only(top: 18),
                               child: Divider(
@@ -252,15 +252,15 @@ class _ProductScanResultDialogWidgetState
                                 color: Colors.white.withValues(alpha: 0.12),
                               ),
                             ),
-                            /*...params.asMap().entries.map((e) {
+                           ...params.asMap().entries.map((e) {
                               final item = e.value;
                               return _ProductScanDetailRow(
                                 label: (item.name ?? '').trim(),
                                 value: (item.value ?? '').trim(),
                                 paddingTop: e.key == 0 ? 14 : 12,
                               );
-                            }),*/
-                          ],
+                            }),
+                          ],*/
                         ],
                       ),
                     ),

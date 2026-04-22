@@ -23,6 +23,9 @@ class ProductItem {
   final double maxPrice;
   final double price;
 
+  /// 与后端 `is_hot` 一致；**严格等于 1** 时展示「NEW COLLECTION」等标识。
+  bool get showsNewCollectionTag => int.tryParse(isHot.trim()) == 1;
+
   factory ProductItem.fromJson(Map<String, dynamic> json) {
     return ProductItem(
       id: _asInt(json['id']) ?? 0,

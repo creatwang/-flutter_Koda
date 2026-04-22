@@ -81,10 +81,11 @@ class _DraggableScanFabState extends State<DraggableScanFab> {
                 onPanEnd: (_) => _onFabDragEnd(canvasSize),
                 child: Tooltip(
                   message: widget.tooltip,
-                  child: FloatingActionButton(
+                  child: FloatingActionButton.small(
                     heroTag: 'product_scan_qr_fab',
+                    backgroundColor: Colors.black,
                     onPressed: widget.onTap,
-                    child: const Icon(Icons.qr_code_scanner_rounded),
+                    child: const Icon(Icons.qr_code_scanner_rounded, size: 20,),
                   ),
                 ),
               ),

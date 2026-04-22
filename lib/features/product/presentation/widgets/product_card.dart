@@ -65,30 +65,31 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'NEW COLLECTION',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 8.5,
-                                letterSpacing: 0.4,
-                              ),
+                    if (productItem.showsNewCollectionTag)
+                      Positioned(
+                        top: 6,
+                        left: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'NEW COLLECTION',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 8.5,
+                                  letterSpacing: 0.4,
+                                ),
+                          ),
                         ),
                       ),
-                    ),
                     Positioned(
                       top: 6,
                       right: 6,

@@ -1,13 +1,16 @@
 import 'dart:ui';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:groe_app_pad/app/providers/locale_provider.dart';
 import 'package:groe_app_pad/app/providers/theme_provider.dart';
+import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/app/router/app_router.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:groe_app_pad/features/product/presentation/widgets/global_product_scan_fab_widget.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
@@ -116,6 +119,10 @@ class _AppShellState extends ConsumerState<AppShell>
       supportedLocales: const [Locale('en'), Locale('zh')],
       routerConfig: router,
       builder: (context, child) {
+        final currentPath = router.routeInformationProvider.value.uri.path;
+        final showGlobalScanFab = currentPath != AppRoutes.login;
+        final globalScanFabBottomOffset =
+            (kDebugMode && currentPath == AppRoutes.home) ? 146.0 : 14.0;
         // iPad/桌面保持固定最大宽度，小屏按 1024 设计稿等比缩放。
         final content = ResponsiveBreakpoints.builder(
           child: Builder(
@@ -193,6 +200,11 @@ class _AppShellState extends ConsumerState<AppShell>
               ),
             ),
             content,
+            if (showGlobalScanFab)
+              GlobalProductScanFabWidget(
+                key: ValueKey('scan-fab-$globalScanFabBottomOffset'),
+                bottomOffset: globalScanFabBottomOffset,
+              ),
             /*     Positioned(
               right: 14,
               bottom: 14,

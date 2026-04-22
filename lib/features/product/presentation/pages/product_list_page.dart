@@ -4,21 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/product/controllers/product_detail_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_list_controller.dart';
 import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
 import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
 import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
 import 'package:groe_app_pad/features/product/models/product_item.dart';
-import 'package:groe_app_pad/features/product/presentation/pages/qr_scan_page.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/draggable_scan_fab.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_filter_panel.dart';
 import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_grid_section.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_scan_result_dialog_widget.dart';
 import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
 import 'package:groe_app_pad/features/product/services/product_services.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
 import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
@@ -135,10 +130,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
               : (_useCollapsedGridColumns ? 4 : 3))
         : 2;
 
-    return Stack(
-      children: [
-        HomeMainContentSlot(
-          child: Padding(
+    return HomeMainContentSlot(
+      child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: isLandscape ? 34 : 0,
             ),
@@ -213,14 +206,6 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
             ],
           ),
           ),
-        ),
-        Positioned.fill(
-          child: DraggableScanFab(
-            tooltip: context.l10n.productScanTooltip,
-            onTap: _onScanQrTap,
-          ),
-        ),
-      ],
     );
   }
 
@@ -232,151 +217,6 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     ref
         .read(productsProvider.notifier)
         .applySort(sort: query.sort, orderBy: query.orderBy);
-  }
-
-  Future<void> _onScanQrTap() async {
-    _cancelInFlightAddToCartFlow();
-    final session = ref.read(sessionControllerProvider).asData?.value;
-    if (session?.isAuthenticated != true) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.productScanRequireLogin)),
-      );
-      context.go(AppRoutes.login);
-      return;
-    }
-
-    final code = await Navigator.of(context).push<String>(
-      MaterialPageRoute<String>(builder: (_) => const QrScanPage()),
-    );
-    if (!mounted || code == null || code.trim().isEmpty) return;
-
-    // 扫码页关闭后再挂 loading，避免与返回动画叠在一起。
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
-
-    ProductDetailScanResult? scanResult;
-    Object? loadError;
-    var loadingRouteShown = false;
-    try {
-      showGeneralDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        barrierLabel:
-            MaterialLocalizations.of(context).modalBarrierDismissLabel,
-        barrierColor: Colors.transparent,
-        transitionDuration: Duration.zero,
-        useRootNavigator: true,
-        pageBuilder: (
-          BuildContext overlayContext,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          final scheme = Theme.of(overlayContext).colorScheme;
-          return PopScope(
-            canPop: false,
-            child: SizedBox.expand(
-              child: Material(
-                type: MaterialType.transparency,
-                child: ColoredBox(
-                  color: scheme.scrim.withValues(alpha: 0.65),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: scheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          overlayContext.l10n.commonLoading,
-                          style: Theme.of(overlayContext).textTheme.bodyLarge
-                              ?.copyWith(
-                            color: scheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-      loadingRouteShown = true;
-      await WidgetsBinding.instance.endOfFrame;
-
-      scanResult = await ProductDetailController.formatProductDetailScanInfo(
-        code,
-      );
-    } catch (e) {
-      loadError = e;
-    } finally {
-      if (loadingRouteShown && context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-    }
-
-    if (!mounted) return;
-    if (loadError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.productDetailLoadFailed('$loadError'))),
-      );
-      return;
-    }
-    if (scanResult == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.cartNoMatchedSku)));
-      return;
-    }
-    final added = await showProductScanResultDialog(
-      context: context,
-      detail: scanResult.detail,
-      selected: scanResult.selected,
-      selectedSub: scanResult.selectedSub,
-      skuRowSelection: scanResult.skuRowSelection,
-      onAddToCart: (dialogContext) => _addScannedSkuToCart(
-        dialogContext,
-        scanResult!,
-      ),
-    );
-    if (!mounted || !added) return;
-    final title = scanResult.selected.name ?? scanResult.detail.name ?? '--';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.productAddedToCart(title))),
-    );
-  }
-
-  Future<bool> _addScannedSkuToCart(
-    BuildContext dialogContext,
-    ProductDetailScanResult scanResult,
-  ) async {
-    final sub = scanResult.selectedSub;
-    final productId = sub.pid;
-    if (productId == null) return false;
-    final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
-    if (subIndex.isEmpty) return false;
-    final subName = ProductSkuCartHelpers.buildCartSubName(
-      sub: sub,
-      skuRowSelection: scanResult.skuRowSelection,
-    );
-    final space = await resolveSpaceForCartAdd(dialogContext);
-    if (space == null) return false;
-    return ref.read(cartControllerProvider.notifier).createCartItem(
-      productId: productId,
-      subIndex: subIndex,
-      productNum: 1,
-      space: space,
-      subName: subName,
-    );
   }
 
   /// 点击收藏。

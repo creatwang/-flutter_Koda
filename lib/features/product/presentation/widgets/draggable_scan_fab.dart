@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 class DraggableScanFab extends StatefulWidget {
   const DraggableScanFab({
-    required this.tooltip,
     required this.onTap,
+    this.initialBottomOffset = _fabMargin,
     super.key,
   });
 
-  final String tooltip;
   final VoidCallback onTap;
+  final double initialBottomOffset;
+
+  static const double _fabMargin = 20;
 
   @override
   State<DraggableScanFab> createState() => _DraggableScanFabState();
@@ -16,15 +18,25 @@ class DraggableScanFab extends StatefulWidget {
 
 class _DraggableScanFabState extends State<DraggableScanFab> {
   static const double _fabSize = 56;
-  static const double _fabMargin = 20;
+  static const double _fabMargin = DraggableScanFab._fabMargin;
 
   Offset? _fabOffset;
   bool _fabDragging = false;
 
+  @override
+  void didUpdateWidget(covariant DraggableScanFab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialBottomOffset != widget.initialBottomOffset) {
+      // 配置变更后重置锚点，避免沿用历史拖拽坐标导致位置不更新。
+      _fabOffset = null;
+    }
+  }
+
   Offset _defaultFabOffset(Size size) {
     final maxX = _maxFabX(size);
-    final maxY = _maxFabY(size);
-    return Offset(maxX, maxY);
+    final requestedTop = size.height - _fabSize - widget.initialBottomOffset;
+    final defaultTop = requestedTop.clamp(_fabMargin, _maxFabY(size));
+    return Offset(maxX, defaultTop);
   }
 
   double _maxFabX(Size size) {
@@ -77,18 +89,16 @@ class _DraggableScanFabState extends State<DraggableScanFab> {
               top: fabOffset.dy,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
+                onTap: widget.onTap,
                 onPanUpdate: (details) => _onFabDragUpdate(details, canvasSize),
                 onPanEnd: (_) => _onFabDragEnd(canvasSize),
-                child: Tooltip(
-                  message: widget.tooltip,
-                  child: FloatingActionButton.small(
-                    heroTag: 'product_scan_qr_fab',
-                    backgroundColor: Colors.black,
-                    onPressed: widget.onTap,
-                    child: const Icon(Icons.qr_code_scanner_rounded, size: 20,),
-                  ),
+                child: FloatingActionButton.small(
+                  heroTag: 'product_scan_qr_fab',
+                  backgroundColor: Colors.black,
+                  onPressed: widget.onTap,
+                  child: const Icon(Icons.qr_code_scanner_rounded, size: 20),
                 ),
-              ),
+              )
             ),
           ],
         );

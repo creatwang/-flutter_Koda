@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:groe_app_pad/core/network/dio_client.dart';
+import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
 import 'package:groe_app_pad/core/platform_services/network_clients.dart';
 
 /// 认证与站点原始接口路径（不含业务解析）。
@@ -8,6 +9,9 @@ class AuthRequests {
 
   /// `POST /store/user/login`
   static const String loginPath = '/store/user/login';
+
+  /// `POST /store/user/register`
+  static const String registerPath = '/store/user/register';
 
   /// `POST /store/user/logout`（开放接口，无需 token）。
   static const String logoutPath = '/store/user/logout';
@@ -32,6 +36,31 @@ Future<Response<dynamic>> requestAuthLogin({
       'password': password,
       'terminal': 3,
     },
+  );
+}
+
+/// 用户注册（开放接口）。
+///
+/// 默认抑制全局错误提示，由登录页自行展示 [SnackBar]。
+Future<Response<dynamic>> requestAuthRegister({
+  required String username,
+  required String password,
+  required String passwordConfirm,
+  DioClient? client,
+}) {
+  return (client ?? publicDioClient).post(
+    AuthRequests.registerPath,
+    data: <String, dynamic>{
+      'terminal': 5,
+      'username': username,
+      'password': password,
+      'passwordConfirm': passwordConfirm,
+    },
+    options: Options(
+      extra: <String, dynamic>{
+        ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
+      },
+    ),
   );
 }
 

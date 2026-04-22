@@ -38,7 +38,9 @@
   "authRegisterAction": "创建账户",
   "loginFailed": "登录失败，请检查账号密码",
   "authPasswordMismatch": "两次密码不一致",
-  "authRegisterSuccessDemo": "注册流程演示成功，请使用登录继续",
+  "authRegisterUsernameRequired": "请输入用户名",
+  "authRegisterPasswordMinLength": "密码至少 6 位",
+  "authRegisterFailed": "注册失败，请稍后重试",
   "productLoadFailed": "商品加载失败: {error}",
   "@productLoadFailed": {
     "placeholders": {

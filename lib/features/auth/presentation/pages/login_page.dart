@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:groe_app_pad/app/router/app_routes.dart';
+import 'package:groe_app_pad/core/result/app_exception.dart';
+import 'package:groe_app_pad/features/auth/controllers/login_remember_providers.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 import 'package:groe_app_pad/l10n/app_localizations.dart';
 import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
@@ -17,15 +19,36 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  // DummyJSON 演示账号，便于本地直接验证登录流程。
-  final _usernameController = TextEditingController(text: '17614764201');
-  final _passwordController = TextEditingController(text: '123456');
-  final _confirmPasswordController = TextEditingController(text: '123456');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _rememberMe = true;
   bool _isRegister = false;
 
   static const String _heroImageUrl =
       'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=80';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hydrateRememberedForm();
+    });
+  }
+
+  Future<void> _hydrateRememberedForm() async {
+    final dto = await ref.read(rememberedLoginFormProvider.future);
+    if (!mounted || dto == null) return;
+    setState(() {
+      _usernameController.text = dto.username;
+      if (dto.hasSavedPassword) {
+        _passwordController.text = dto.password ?? '';
+        _rememberMe = true;
+      } else {
+        _rememberMe = false;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -232,7 +255,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 (_) => Colors.white.withValues(alpha: 0.95),
                               ),
                               checkColor: Colors.black,
-                              side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
                               onChanged: (value) {
                                 setState(() => _rememberMe = value ?? false);
                               },
@@ -309,22 +334,60 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _handleSubmit(BuildContext context, AppLocalizations l10n) async {
     if (_isRegister) {
-      if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text.trim();
+      final confirm = _confirmPasswordController.text.trim();
+      if (username.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.authRegisterUsernameRequired)),
+        );
+        return;
+      }
+      if (password.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.authRegisterPasswordMinLength)),
+        );
+        return;
+      }
+      if (confirm.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.authRegisterPasswordMinLength)),
+        );
+        return;
+      }
+      if (password != confirm) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.authPasswordMismatch)),
         );
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.authRegisterSuccessDemo)),
-      );
-      setState(() => _isRegister = false);
+      final ok = await ref.read(sessionControllerProvider.notifier).register(
+            username: username,
+            password: password,
+            passwordConfirm: confirm,
+            shouldRememberPassword: _rememberMe,
+          );
+      if (!context.mounted) return;
+      if (ok) {
+        context.go(AppRoutes.home);
+      } else {
+        final message = ref.read(sessionControllerProvider).maybeWhen(
+              error: (e, _) => e is AppException ? e.message : null,
+              orElse: () => null,
+            );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message ?? l10n.authRegisterFailed),
+          ),
+        );
+      }
       return;
     }
 
     final ok = await ref.read(sessionControllerProvider.notifier).signIn(
           username: _usernameController.text.trim(),
           password: _passwordController.text.trim(),
+          shouldRememberPassword: _rememberMe,
         );
     if (!context.mounted) return;
     if (ok) {

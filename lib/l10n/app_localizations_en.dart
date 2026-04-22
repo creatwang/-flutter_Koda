@@ -104,8 +104,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authPasswordMismatch => 'Passwords do not match.';
 
   @override
-  String get authRegisterSuccessDemo =>
-      'Register demo completed. Please sign in to continue.';
+  String get authRegisterUsernameRequired => 'Please enter a username.';
+
+  @override
+  String get authRegisterPasswordMinLength =>
+      'Password must be at least 6 characters.';
+
+  @override
+  String get authRegisterFailed => 'Registration failed. Please try again.';
 
   @override
   String productLoadFailed(Object error) {

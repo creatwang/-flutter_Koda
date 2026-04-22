@@ -38,7 +38,9 @@
   "authRegisterAction": "Create account",
   "loginFailed": "Sign in failed. Please check your credentials.",
   "authPasswordMismatch": "Passwords do not match.",
-  "authRegisterSuccessDemo": "Register demo completed. Please sign in to continue.",
+  "authRegisterUsernameRequired": "Please enter a username.",
+  "authRegisterPasswordMinLength": "Password must be at least 6 characters.",
+  "authRegisterFailed": "Registration failed. Please try again.",
   "productLoadFailed": "Failed to load products: {error}",
   "@productLoadFailed": {
     "placeholders": {

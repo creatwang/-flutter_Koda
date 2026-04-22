@@ -284,11 +284,23 @@ abstract class AppLocalizations {
   /// **'Passwords do not match.'**
   String get authPasswordMismatch;
 
-  /// No description provided for @authRegisterSuccessDemo.
+  /// No description provided for @authRegisterUsernameRequired.
   ///
   /// In en, this message translates to:
-  /// **'Register demo completed. Please sign in to continue.'**
-  String get authRegisterSuccessDemo;
+  /// **'Please enter a username.'**
+  String get authRegisterUsernameRequired;
+
+  /// No description provided for @authRegisterPasswordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get authRegisterPasswordMinLength;
+
+  /// No description provided for @authRegisterFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration failed. Please try again.'**
+  String get authRegisterFailed;
 
   /// No description provided for @productLoadFailed.
   ///

@@ -8,6 +8,7 @@ import 'package:groe_app_pad/core/storage/token_pair.dart';
 import 'package:groe_app_pad/features/auth/models/session.dart';
 import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
 import 'package:groe_app_pad/features/auth/controllers/main_user_providers.dart';
+import 'package:groe_app_pad/features/auth/services/auth_register_services.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
 import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
 import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
@@ -18,6 +19,7 @@ import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart
 import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
 import 'package:groe_app_pad/features/profile/services/profile_services.dart';
 
+import 'login_remember_providers.dart';
 import 'store_company_providers.dart';
 
 /// 会话：登录态、[Session] 同步、站点切换、前后台刷新编排。
@@ -43,9 +45,12 @@ class SessionController extends AsyncNotifier<Session> {
   }
 
   /// 用户名密码登录；成功则 [state] 为已认证会话。
+  ///
+  /// [shouldRememberPassword]：为 `true` 时在成功后将密码写入安全存储。
   Future<bool> signIn({
     required String username,
     required String password,
+    bool shouldRememberPassword = false,
   }) async {
     state = const AsyncLoading();
     final result = await ref.read(authLoginServiceProvider)(
@@ -53,23 +58,63 @@ class SessionController extends AsyncNotifier<Session> {
       password: password,
     );
 
-    return result.when(
-      success: (TokenPair pair) {
-        state = AsyncData(
-          Session(
-            isAuthenticated: true,
-            token: pair.token,
-            companyId: pair.companyId,
-          ),
-        );
-        _invalidateAfterStoreContextChanged();
-        return true;
-      },
-      failure: (exception) {
-        state = AsyncError(exception, StackTrace.current);
-        return false;
-      },
+    if (result is ApiSuccess<TokenPair>) {
+      final pair = result.data;
+      await ref.read(persistRememberedLoginFormProvider)(
+        username: username,
+        password: password,
+        shouldRememberPassword: shouldRememberPassword,
+      );
+      state = AsyncData(
+        Session(
+          isAuthenticated: true,
+          token: pair.token,
+          companyId: pair.companyId,
+        ),
+      );
+      _invalidateAfterStoreContextChanged();
+      return true;
+    }
+    final failure = result as ApiFailure<TokenPair>;
+    state = AsyncError(failure.exception, StackTrace.current);
+    return false;
+  }
+
+  /// 注册成功后的数据格式与登录一致；落盘后直接视为已登录。
+  ///
+  /// [shouldRememberPassword] 仅在接口与持久化会话**均成功之后**写入安全存储。
+  Future<bool> register({
+    required String username,
+    required String password,
+    required String passwordConfirm,
+    bool shouldRememberPassword = false,
+  }) async {
+    state = const AsyncLoading();
+    final result = await ref.read(authRegisterServiceProvider)(
+      username: username,
+      password: password,
+      passwordConfirm: passwordConfirm,
     );
+    if (result is ApiSuccess<TokenPair>) {
+      final pair = result.data;
+      await ref.read(persistRememberedLoginFormProvider)(
+        username: username,
+        password: password,
+        shouldRememberPassword: shouldRememberPassword,
+      );
+      state = AsyncData(
+        Session(
+          isAuthenticated: true,
+          token: pair.token,
+          companyId: pair.companyId,
+        ),
+      );
+      _invalidateAfterStoreContextChanged();
+      return true;
+    }
+    final failure = result as ApiFailure<TokenPair>;
+    state = AsyncError(failure.exception, StackTrace.current);
+    return false;
   }
 
   /// 切换到指定门店/站点（已登录）。

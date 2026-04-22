@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:groe_app_pad/core/result/api_result.dart';
 import 'package:groe_app_pad/core/result/app_exception.dart';
 import 'package:groe_app_pad/core/storage/token_pair.dart';
+import 'package:groe_app_pad/features/auth/controllers/login_remember_providers.dart';
 import 'package:groe_app_pad/features/auth/services/auth_services.dart';
 import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
 
@@ -11,6 +12,7 @@ void main() {
     test('登录成功：不打网络也能测流程', () async {
       final container = ProviderContainer(
         overrides: [
+          authReadTokenServiceProvider.overrideWithValue(() async => null),
           authLoginServiceProvider.overrideWithValue(
             ({required username, required password}) async {
               const pair = TokenPair(accessToken: 'access_1', refreshToken: 'refresh_1');
@@ -18,6 +20,13 @@ void main() {
             },
           ),
           authClearTokenServiceProvider.overrideWithValue(() async {}),
+          persistRememberedLoginFormProvider.overrideWithValue(
+            ({
+              required username,
+              required password,
+              required shouldRememberPassword,
+            }) async {},
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -45,6 +54,13 @@ void main() {
           ),
           authReadTokenServiceProvider.overrideWithValue(() async => null),
           authClearTokenServiceProvider.overrideWithValue(() async {}),
+          persistRememberedLoginFormProvider.overrideWithValue(
+            ({
+              required username,
+              required password,
+              required shouldRememberPassword,
+            }) async {},
+          ),
         ],
       );
       addTearDown(container.dispose);

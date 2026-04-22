@@ -104,7 +104,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authPasswordMismatch => '两次密码不一致';
 
   @override
-  String get authRegisterSuccessDemo => '注册流程演示成功，请使用登录继续';
+  String get authRegisterUsernameRequired => '请输入用户名';
+
+  @override
+  String get authRegisterPasswordMinLength => '密码至少 6 位';
+
+  @override
+  String get authRegisterFailed => '注册失败，请稍后重试';
 
   @override
   String productLoadFailed(Object error) {

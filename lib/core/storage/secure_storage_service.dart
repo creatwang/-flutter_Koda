@@ -13,6 +13,8 @@ class SecureStorageService {
   static const _mainUserInfo = 'main_user_info';
   static const _tokenMap = 'token_map';
   static const _companyId = 'company_id';
+  static const _rememberedLoginUsername = 'remembered_login_username';
+  static const _rememberedLoginPassword = 'remembered_login_password';
 
   final FlutterSecureStorage _storage;
 
@@ -109,6 +111,25 @@ class SecureStorageService {
     await _storage.delete(key: _mainUserInfo);
     await _storage.delete(key: _tokenMap);
     await _storage.delete(key: _companyId);
+    // 登出不清「记住的登录表单」，便于再次登录。
+  }
+
+  Future<void> saveRememberedLoginUsername(String username) async {
+    await _storage.write(key: _rememberedLoginUsername, value: username);
+  }
+
+  Future<String?> readRememberedLoginUsername() async =>
+      _storage.read(key: _rememberedLoginUsername);
+
+  Future<void> saveRememberedLoginPassword(String password) async {
+    await _storage.write(key: _rememberedLoginPassword, value: password);
+  }
+
+  Future<String?> readRememberedLoginPassword() async =>
+      _storage.read(key: _rememberedLoginPassword);
+
+  Future<void> deleteRememberedLoginPassword() async {
+    await _storage.delete(key: _rememberedLoginPassword);
   }
 
   Future<Map<String, dynamic>> _readTokenMap() async {

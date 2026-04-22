@@ -279,7 +279,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
               child: Material(
                 type: MaterialType.transparency,
                 child: ColoredBox(
-                  color: scheme.scrim.withValues(alpha: 0.42),
+                  color: scheme.scrim.withValues(alpha: 0.65),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

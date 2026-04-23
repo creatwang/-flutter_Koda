@@ -84,9 +84,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
         return SingleChildScrollView(
           padding: EdgeInsets.only(bottom: viewInsetsBottom),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -135,7 +133,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                               controller: fullNameController,
                               obscureText: false,
                               onTap: () => _ensureFieldVisible(context),
-                              errorText: showValidation &&
+                              errorText:
+                                  showValidation &&
                                       fullNameController.text.trim().isEmpty
                                   ? 'Required'
                                   : null,
@@ -191,7 +190,9 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                                     : DecoratedBox(
                                         decoration: BoxDecoration(
                                           color: const Color(0x26FF6E76),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                           border: Border.all(
                                             color: const Color(0x55FF7F86),
                                           ),
@@ -215,7 +216,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                                                     style: const TextStyle(
                                                       color: Color(0xFFFFC8CB),
                                                       fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                   maxLines: 1,
@@ -256,7 +258,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 ProMaxGlassCardWidget(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                   child: Column(
@@ -325,7 +327,9 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                       Text(
                         'Manage your active session and sign-in account.',
                         style: TextStyle(
-                          color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
+                          color: ProMaxTokens.textSecondary.withValues(
+                            alpha: 0.92,
+                          ),
                           fontSize: 12,
                         ),
                       ),

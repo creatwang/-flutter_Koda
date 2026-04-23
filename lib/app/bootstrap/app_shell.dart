@@ -1,16 +1,13 @@
 import 'dart:ui';
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/app/providers/locale_provider.dart';
 import 'package:george_pick_mate/app/providers/theme_provider.dart';
-import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/app/router/app_router.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
-import 'package:george_pick_mate/features/product/presentation/widgets/global_product_scan_fab_widget.dart';
 import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
@@ -120,9 +117,7 @@ class _AppShellState extends ConsumerState<AppShell>
       routerConfig: router,
       builder: (context, child) {
         final currentPath = router.routeInformationProvider.value.uri.path;
-        final showGlobalScanFab = currentPath != AppRoutes.login;
-        final globalScanFabBottomOffset =
-            (kDebugMode && currentPath == AppRoutes.home) ? 146.0 : 14.0;
+        const globalScanFabBottomOffset = 14.0;
         // iPad/桌面保持固定最大宽度，小屏按 1024 设计稿等比缩放。
         final content = ResponsiveBreakpoints.builder(
           child: Builder(
@@ -131,7 +126,7 @@ class _AppShellState extends ConsumerState<AppShell>
               return MaxWidthBox(
                 maxWidth: 1400,
                 child: ClipRect(
-                    child: ResponsiveScaledBox(
+                  child: ResponsiveScaledBox(
                     // < 600：按 1024 基准做等比缩放（开启）
                     // >= 600：不做全局等比缩放（关闭）
                     width: enableScale ? 1024 : null,
@@ -200,11 +195,6 @@ class _AppShellState extends ConsumerState<AppShell>
               ),
             ),
             content,
-            if (showGlobalScanFab)
-              GlobalProductScanFabWidget(
-                key: ValueKey('scan-fab-$globalScanFabBottomOffset'),
-                bottomOffset: globalScanFabBottomOffset,
-              ),
             /*     Positioned(
               right: 14,
               bottom: 14,

@@ -11,6 +11,8 @@ import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 
+import '../../../../gen/assets.gen.dart';
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -70,7 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         body: DecoratedBox(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: const NetworkImage(_heroImageUrl),
+              image: Assets.images.logoHeroW.provider(),
               fit: BoxFit.cover,
               onError: (_, __) {},
             ),
@@ -93,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: const NetworkImage(_heroImageUrl),
+                                image: Assets.images.logoHeroW.provider(),
                                 fit: BoxFit.cover,
                                 onError: (_, __) {},
                               ),

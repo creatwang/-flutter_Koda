@@ -81,7 +81,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SingleChildScrollView(
+        return Container(
           padding: EdgeInsets.only(bottom: viewInsetsBottom),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -98,7 +98,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                ProMaxGlassCardWidget(
+                Expanded(child: ProMaxGlassCardWidget(
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,8 +134,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                               obscureText: false,
                               onTap: () => _ensureFieldVisible(context),
                               errorText:
-                                  showValidation &&
-                                      fullNameController.text.trim().isEmpty
+                              showValidation &&
+                                  fullNameController.text.trim().isEmpty
                                   ? 'Required'
                                   : null,
                             ),
@@ -188,45 +188,45 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                                 child: validationMessage == null
                                     ? const SizedBox.shrink()
                                     : DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0x26FF6E76),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: const Color(0x55FF7F86),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0x26FF6E76),
+                                    borderRadius: BorderRadius.circular(
+                                      6,
+                                    ),
+                                    border: Border.all(
+                                      color: const Color(0x55FF7F86),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline_rounded,
+                                          size: 14,
+                                          color: Color(0xFFFFA9AD),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: SelectableText.rich(
+                                            TextSpan(
+                                              text: validationMessage!,
+                                              style: const TextStyle(
+                                                color: Color(0xFFFFC8CB),
+                                                fontSize: 12,
+                                                fontWeight:
+                                                FontWeight.w600,
+                                              ),
+                                            ),
+                                            maxLines: 1,
                                           ),
                                         ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.error_outline_rounded,
-                                                size: 14,
-                                                color: Color(0xFFFFA9AD),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Expanded(
-                                                child: SelectableText.rich(
-                                                  TextSpan(
-                                                    text: validationMessage!,
-                                                    style: const TextStyle(
-                                                      color: Color(0xFFFFC8CB),
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                  maxLines: 1,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -244,12 +244,12 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                               ),
                               child: isSavingSettings
                                   ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                                   : const Text('Save Changes'),
                             ),
                           ],
@@ -257,7 +257,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
+                )),
                 const SizedBox(height: 18),
                 ProMaxGlassCardWidget(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),

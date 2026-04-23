@@ -2,21 +2,21 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
-import 'package:groe_app_pad/features/profile/controllers/my_customer_user_orders_providers.dart';
-import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
-import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
-import 'package:groe_app_pad/shared/services/app_message_service.dart';
-import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_surface.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
+import 'package:george_pick_mate/features/profile/controllers/my_customer_user_orders_providers.dart';
+import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
+import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
+import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 业务员客户列表：表头、列表行（代客登录等逻辑不变）。
 class ProfileMyCustomersSectionWidget extends ConsumerStatefulWidget {

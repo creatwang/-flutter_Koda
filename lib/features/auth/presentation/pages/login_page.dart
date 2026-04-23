@@ -3,13 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/controllers/login_remember_providers.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/l10n/app_localizations.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/controllers/login_remember_providers.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +23,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _rememberMe = true;
-  bool _isRegister = false;
+  final bool _isRegister = false;
 
   static const String _heroImageUrl =
       'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=80';
@@ -264,11 +264,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               },
                             ),
                           ),
-                          Text(
-                            l10n.authRememberMe,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.82),
-                              fontSize: 11.5,
+                          Expanded(
+                            child: Text(
+                              l10n.authRememberMe,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.82),
+                                fontSize: 11.5,
+                              ),
                             ),
                           ),
                         ],

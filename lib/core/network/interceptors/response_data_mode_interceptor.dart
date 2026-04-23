@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/shared/services/app_message_service.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 enum ResponseDataMode { origin, simple }
 

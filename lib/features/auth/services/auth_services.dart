@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/core/storage/token_pair.dart';
-import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
-import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/core/storage/token_pair.dart';
+import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
+import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
 
 import '../models/user_info_bean.dart';
 
-export 'package:groe_app_pad/core/platform_services/network_clients.dart'
+export 'package:george_pick_mate/core/platform_services/network_clients.dart'
     show
         AuthRefreshService,
         AuthReadTokenService,

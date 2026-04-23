@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
-import 'package:groe_app_pad/features/product/services/product_services.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/features/product/services/product_services.dart';
 
 /// 详情页一次 build 内解析出的选中 SKU、画廊等（无 UI、无 Riverpod）。
 final class ProductDetailResolvedSelection {
@@ -275,13 +275,11 @@ abstract final class ProductDetailController {
       selectedSub = (selected.productSub ?? const <ProductSub>[])
           .firstWhereOrNull((sub) => sub.index == normalizedIndex);
     }
-    if (selectedSub == null) {
-      selectedSub = formatProdSub(
-        detail: detail,
-        id: selectedId,
-        index: normalizedIndex,
-      );
-    }
+    selectedSub ??= formatProdSub(
+      detail: detail,
+      id: selectedId,
+      index: normalizedIndex,
+    );
     if (selectedSub == null) return null;
     final skuRowSelection = ProductSkuResolver.selectionFromSub(
       selected,

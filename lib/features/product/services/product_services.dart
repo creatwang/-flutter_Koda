@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/product/api/product_requests.dart';
-import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_fav_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/product/api/product_requests.dart';
+import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_fav_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_item.dart';
 
 /// 商品列表、收藏、分类、详情等业务封装（依赖当前站点 `companyId`）。
 class FavoriteProductsPageResult {

@@ -1,20 +1,20 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
-import 'package:groe_app_pad/features/product/controllers/product_detail_controller.dart';
-import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_detail_main_section_widget.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_technical_data_panel.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
-import 'package:groe_app_pad/gen/assets.gen.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
-import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
+import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_main_section_widget.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_technical_data_panel.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
+import 'package:george_pick_mate/gen/assets.gen.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
+import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 
 class ProductDetailPage extends ConsumerStatefulWidget {
   const ProductDetailPage({required this.productId, super.key});

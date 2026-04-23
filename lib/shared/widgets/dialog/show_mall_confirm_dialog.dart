@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
 
 /// 统一确认弹窗。按钮文案为英文；标题与正文由调用方传入（可为英文）。
 Future<bool?> showMallConfirmDialog({

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/profile/models/profile_content_section.dart';
-import 'package:groe_app_pad/features/profile/models/profile_section_meta.dart';
-import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
+import 'package:george_pick_mate/features/profile/models/profile_section_meta.dart';
+import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 import '../../../../gen/assets.gen.dart' show Assets;
 

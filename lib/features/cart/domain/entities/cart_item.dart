@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/features/product/models/product_item.dart';
+import 'package:george_pick_mate/features/product/models/product_item.dart';
 
 class CartItem {
   const CartItem({required this.productItem, required this.quantity});

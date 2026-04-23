@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 typedef ProductScanResultAddToCartCallback =
     Future<bool> Function(BuildContext dialogContext);
@@ -138,13 +138,6 @@ class _ProductScanResultDialogWidgetState
       selectedSub: selectedSub,
       skuRowSelection: widget.skuRowSelection,
     );
-    final params = (selected.productParam ?? const <ProductParam>[])
-        .where(
-          (item) =>
-              (item.name ?? '').trim().isNotEmpty &&
-              (item.value ?? '').trim().isNotEmpty,
-        )
-        .toList(growable: false);
 
     final detailRows = <({String label, String value})>[...skuRows];
     if (unitPrice > 0) {
@@ -197,33 +190,30 @@ class _ProductScanResultDialogWidgetState
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              // color: Colors.white.withValues(alpha: 0.08),
-                              child: SizedBox(
-                                height: _kScanImageHeight,
-                                width: innerW,
-                                child: imageUrl.isEmpty
-                                    ? const Center(
-                                        child: Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: Colors.white38,
-                                          size: 48,
-                                        ),
-                                      )
-                                    : Image.network(
-                                        imageUrl,
-                                        width: innerW,
-                                        height: _kScanImageHeight,
-                                        fit: BoxFit.contain,
-                                        alignment: Alignment.center,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(
-                                          Icons.broken_image_outlined,
-                                          color: Colors.white38,
-                                          size: 48,
-                                        ),
+                            child: SizedBox(
+                              height: _kScanImageHeight,
+                              width: innerW,
+                              child: imageUrl.isEmpty
+                                  ? const Center(
+                                      child: Icon(
+                                        Icons.image_not_supported_outlined,
+                                        color: Colors.white38,
+                                        size: 48,
                                       ),
-                              ),
+                                    )
+                                  : Image.network(
+                                      imageUrl,
+                                      width: innerW,
+                                      height: _kScanImageHeight,
+                                      fit: BoxFit.contain,
+                                      alignment: Alignment.center,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(
+                                        Icons.broken_image_outlined,
+                                        color: Colors.white38,
+                                        size: 48,
+                                      ),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 20),

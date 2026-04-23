@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/profile/models/profile_content_section.dart';
+import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
 
 /// 个人中心侧栏一项：分区、展示文案与图标。
 final class ProfileSectionMeta {

@@ -1,4 +1,4 @@
-# groe_app_pad（Flutter Pad 端商城）
+# george_pick_mate（Flutter Pad 端选品助手）
 
 ## 文档
 
@@ -58,7 +58,7 @@ dart run build_runner build --delete-conflicting-outputs
 ### 使用方式
 
 ```dart
-import 'package:groe_app_pad/gen/assets.gen.dart';
+import 'package:george_pick_mate/gen/assets.gen.dart';
 
 // 位图
 Assets.images.empty.image(width: 120, fit: BoxFit.contain);
@@ -112,6 +112,57 @@ flutter run --dart-define=NET_TRACE_ENABLED=false
 | **GET 内存缓存** | `MemoryCacheInterceptor` 对成功 GET 的短期内存缓存；业务侧可通过 `DioClient` 的 `clearAllMemoryCaches` / `evictMemoryCacheByPrefix` 清理（见 `lib/core/network/dio_client.dart`）。 |
 | **Flutter / Gradle 构建缓存** | `flutter clean`，必要时再删 `android/.gradle`、根目录 `.dart_tool`。 |
 | **网络日志** | 由 `Env.netTraceEnabled` 与 `kDebugMode` 控制，见下文。 |
+
+---
+
+## Windows Kotlin `different roots` 排查（C: / D: 跨盘）
+
+当报错包含 `Daemon compilation failed`、`Could not close incremental caches`、
+`this and base files have different roots` 时，通常是：
+
+- 工程在 `D:`（如 `D:/webstormProject/...`）
+- Pub 缓存在 `C:`（如 `C:/Users/<you>/AppData/Local/Pub/Cache`）
+- Kotlin 增量编译在处理插件源码相对路径时触发跨盘异常
+
+### 1) 先检查当前项目是否仍在用 C 盘缓存
+
+```powershell
+Select-String -Path .dart_tool\package_config.json -Pattern '"pubCache"'
+```
+
+若输出是 `C:/Users/.../Pub/Cache`，就会持续触发该问题。
+
+### 2) 迁移到同盘缓存（推荐）
+
+```powershell
+# 仅需执行一次（用户级环境变量）
+setx PUB_CACHE "D:\pub_cache"
+```
+
+重开终端后，在项目根目录执行：
+
+```powershell
+flutter clean
+Remove-Item -Recurse -Force .dart_tool, build, android\.gradle -ErrorAction SilentlyContinue
+flutter pub get --offline
+flutter run
+```
+
+再次检查：
+
+```powershell
+Select-String -Path .dart_tool\package_config.json -Pattern '"pubCache"'
+```
+
+应显示 `D:/pub_cache`。
+
+### 3) 临时兜底（不推荐长期）
+
+若短期无法迁移缓存，可在 `android/gradle.properties` 临时关闭 Kotlin 增量编译：
+
+```properties
+kotlin.incremental=false
+```
 
 ---
 

@@ -3,8 +3,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
-import 'package:groe_app_pad/features/profile/services/profile_services.dart';
+import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/features/profile/services/profile_services.dart';
 
 /// 订单列表一屏数据与分页元信息。
 class ProfileOrderListState {

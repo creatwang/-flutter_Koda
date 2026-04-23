@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 
 class ProductTechnicalDataPanel extends StatelessWidget {
   const ProductTechnicalDataPanel({

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _cartStorageKey = 'cart_lists_by_site_v1';

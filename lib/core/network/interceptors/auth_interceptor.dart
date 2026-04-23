@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:groe_app_pad/core/config/env.dart';
-import 'package:groe_app_pad/core/storage/secure_storage_service.dart';
+import 'package:george_pick_mate/core/config/env.dart';
+import 'package:george_pick_mate/core/storage/secure_storage_service.dart';
 
 /// 认证头注入拦截器：
 /// - 在请求发出前读取本地 accessToken

@@ -3,15 +3,15 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/auth/models/session.dart';
-import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
-import 'package:groe_app_pad/features/cart/models/cart_quotation_config_dto.dart';
-import 'package:groe_app_pad/features/cart/models/cart_quotation_export_result_dto.dart';
-import 'package:groe_app_pad/features/cart/services/cart_persistence_services.dart';
-import 'package:groe_app_pad/features/cart/services/cart_services.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/auth/models/session.dart';
+import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
+import 'package:george_pick_mate/features/cart/services/cart_persistence_services.dart';
+import 'package:george_pick_mate/features/cart/services/cart_services.dart';
 
 /// 购物车主状态（监听会话以在站点切换时自动刷新）。
 final cartControllerProvider =

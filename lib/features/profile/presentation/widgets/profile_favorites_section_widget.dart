@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/cart/presentation/widgets/cart_space_input_dialog.dart';
-import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/product/controllers/product_providers.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
-import 'package:groe_app_pad/features/product/services/product_services.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
+import 'package:george_pick_mate/features/product/models/product_item.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_card.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
+import 'package:george_pick_mate/features/product/services/product_services.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 
 class ProfileFavoritesSectionWidget extends ConsumerStatefulWidget {
   const ProfileFavoritesSectionWidget({super.key});

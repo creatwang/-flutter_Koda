@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/auth/services/store_company_services.dart';
+import 'package:george_pick_mate/features/auth/services/store_company_services.dart';
 
 /// 可选门店/站点列表（开放接口 [fetchStoreCompanyItemsService]），
 /// [Ref.invalidate] 可在切换成功后刷新。

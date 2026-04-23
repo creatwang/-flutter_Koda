@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/core/result/app_exception.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
 
 sealed class ApiResult<T> {
   const ApiResult();

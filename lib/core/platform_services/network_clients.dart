@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:groe_app_pad/core/config/env.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/network/interceptors/memory_cache_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/request_trace_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/retry_interceptor.dart';
-import 'package:groe_app_pad/core/storage/secure_storage_service.dart';
+import 'package:george_pick_mate/core/config/env.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/network/interceptors/memory_cache_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/request_trace_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/retry_interceptor.dart';
+import 'package:george_pick_mate/core/storage/secure_storage_service.dart';
 
 import '../network/interceptors/auth_interceptor.dart';
 import '../result/api_result.dart';

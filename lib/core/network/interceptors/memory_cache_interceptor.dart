@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:groe_app_pad/core/config/env.dart';
+import 'package:george_pick_mate/core/config/env.dart';
 
 /// 内存缓存拦截器（仅 GET）：
 /// - 请求阶段：命中缓存则直接返回，不再发网络请求

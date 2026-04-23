@@ -1,8 +1,8 @@
 // 将已鉴权的 [UserInfoBase] 落盘为当前会话（与登录/切店一致）。
 
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/features/auth/services/site_info_services.dart';
 
 /// 写入用户信息、当前 [companyId]、[tokenMap] 并同步站点缓存。
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/app/providers/locale_provider.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/app/providers/locale_provider.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class LocaleDropdown extends ConsumerWidget {
   const LocaleDropdown({super.key});

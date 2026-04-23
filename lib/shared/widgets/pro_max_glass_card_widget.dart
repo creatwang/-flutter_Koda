@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 class ProMaxGlassCardWidget extends StatelessWidget {
   const ProMaxGlassCardWidget({

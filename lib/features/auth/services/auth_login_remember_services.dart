@@ -1,5 +1,5 @@
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/features/auth/models/remembered_login_form_dto.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/features/auth/models/remembered_login_form_dto.dart';
 
 /// 读取上次登录表单（用户名在成功登录后常存；密码仅勾选记住时存在）。
 Future<RememberedLoginFormDto?> readRememberedLoginFormService() async {

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
 /// 商品与收藏相关接口路径。
 class ProductRequests {

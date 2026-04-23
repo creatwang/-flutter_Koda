@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/profile/api/customer_account_requests.dart';
-import 'package:groe_app_pad/features/profile/models/paginated_store_customers_state.dart';
-import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/features/profile/api/customer_account_requests.dart';
+import 'package:george_pick_mate/features/profile/models/paginated_store_customers_state.dart';
+import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
 
 const String _storeCustomerListCachePrefix =
     '${CustomerAccountRequests.customerListPath}?';

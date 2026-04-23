@@ -1,10 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/cart/models/cart_list_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 const Color _kSkuDrawerChipIdle = Color(0xFF2E2E2E);
 const Color _kSkuDrawerQtyMinus = Color(0xFF404040);

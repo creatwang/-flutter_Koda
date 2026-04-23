@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// Profile 右侧 Settings / My Customers / Order Center / Favorites
 /// 共用的顶栏：左侧大标题 + 右侧可选 [trailing]。

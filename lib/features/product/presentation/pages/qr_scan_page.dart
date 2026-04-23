@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class QrScanPage extends StatefulWidget {
   const QrScanPage({super.key});

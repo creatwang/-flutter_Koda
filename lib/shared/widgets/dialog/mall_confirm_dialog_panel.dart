@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 商城统一确认弹窗的内容区（图标、标题、正文、双按钮）。
 ///

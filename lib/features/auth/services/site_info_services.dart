@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
-import 'package:groe_app_pad/features/auth/models/site_info_dto.dart';
-import 'package:groe_app_pad/shared/business_plugin/business_plugin_services.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
+import 'package:george_pick_mate/features/auth/models/site_info_dto.dart';
+import 'package:george_pick_mate/shared/business_plugin/business_plugin_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _siteInfoStorageKey = 'site_info_v1';

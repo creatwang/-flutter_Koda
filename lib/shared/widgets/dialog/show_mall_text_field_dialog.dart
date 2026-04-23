@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_surface.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 单行输入弹窗（如 Space）。取消返回 `null`；确定返回去首尾空格后的文本。
 Future<String?> showMallTextFieldDialog({

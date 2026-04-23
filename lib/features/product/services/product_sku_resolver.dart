@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 
 /// 与前端 SKU 选择页一致的解析逻辑：
 /// 1）按各维选中 `spec` 自上而下拼接 `_index`

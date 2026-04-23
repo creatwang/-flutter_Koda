@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/core/storage/token_pair.dart';
+import 'package:george_pick_mate/core/storage/token_pair.dart';
 
 class AuthTokenDto {
   const AuthTokenDto({

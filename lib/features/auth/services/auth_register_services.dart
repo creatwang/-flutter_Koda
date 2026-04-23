@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/core/storage/token_pair.dart';
-import 'package:groe_app_pad/features/auth/api/auth_requests.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/core/storage/token_pair.dart';
+import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
 
 /// 注册并落盘会话（与登录成功后的持久化一致）。
 typedef AuthRegisterService =

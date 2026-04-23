@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 
 /// 加购/改规格时 `space` 默认值（站点 `product_addcart_space == 0` 时使用）。
 const String kCartSpaceDefault = 'default';

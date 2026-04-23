@@ -3,10 +3,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/features/profile/services/profile_services.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/features/profile/services/profile_services.dart';
 
 /// 当前用户资料（优先读本地缓存，再拉远端）。
 final profileUserInfoProvider =

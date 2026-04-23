@@ -40,7 +40,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
     if (!mounted) return;
     setState(() {
       if (loadedItems != null) {
-        _items = loadedItems!;
+        _items = loadedItems;
       }
       _errorMessage = loadErrorMessage;
       _isLoading = false;

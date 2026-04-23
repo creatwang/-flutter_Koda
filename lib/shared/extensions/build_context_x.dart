@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/l10n/app_localizations.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 extension BuildContextX on BuildContext {

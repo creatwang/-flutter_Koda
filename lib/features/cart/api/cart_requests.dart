@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
 /// 购物车与下单相关接口路径。
 class CartRequests {

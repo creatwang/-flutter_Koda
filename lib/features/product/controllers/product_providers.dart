@@ -3,10 +3,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
-import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/services/product_services.dart';
+import 'package:george_pick_mate/features/product/models/paginated_products_state.dart';
+import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/services/product_services.dart';
 
 /// 商品列表分页（含排序、分类筛选状态）。
 final productsProvider =

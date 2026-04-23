@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/profile/models/profile_content_section.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_section_header_widget.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_settings_panel_widget.dart';
-import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_section_header_widget.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_settings_panel_widget.dart';
+import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 class ProfileContentAreaWidget extends StatelessWidget {
   const ProfileContentAreaWidget({

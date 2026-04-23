@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/core/storage/token_pair.dart';
-import 'package:groe_app_pad/features/auth/controllers/login_remember_providers.dart';
-import 'package:groe_app_pad/features/auth/services/auth_services.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/core/storage/token_pair.dart';
+import 'package:george_pick_mate/features/auth/controllers/login_remember_providers.dart';
+import 'package:george_pick_mate/features/auth/services/auth_services.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 
 void main() {
   group('SessionController + FakeAuthApi', () {

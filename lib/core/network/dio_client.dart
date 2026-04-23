@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/interceptors/memory_cache_interceptor.dart';
-import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/memory_cache_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
 
 class DioClient {
   DioClient(this._dio);

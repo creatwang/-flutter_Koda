@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class AppErrorView extends StatelessWidget {
   const AppErrorView({required this.message, super.key, this.onRetry});

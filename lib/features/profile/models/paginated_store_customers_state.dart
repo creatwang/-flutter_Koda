@@ -1,4 +1,4 @@
-import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
 
 /// 客户列表分页状态。
 class PaginatedStoreCustomersState {

@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/cart/presentation/pages/cart_page.dart';
-import 'package:groe_app_pad/features/cart/controllers/cart_providers.dart';
-import 'package:groe_app_pad/features/profile/presentation/pages/profile_page.dart';
-import 'package:groe_app_pad/features/product/presentation/pages/product_list_page.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/adaptive_scaffold.dart';
-import 'package:groe_app_pad/shared/widgets/frosted_bottom_menu.dart';
-import 'package:groe_app_pad/shared/widgets/header_menu_button.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/cart/presentation/pages/cart_page.dart';
+import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/profile/presentation/pages/profile_page.dart';
+import 'package:george_pick_mate/features/product/presentation/pages/product_list_page.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
+import 'package:george_pick_mate/shared/widgets/frosted_bottom_menu.dart';
+import 'package:george_pick_mate/shared/widgets/header_menu_button.dart';
 
 import '../../../product/presentation/pages/product_category_page.dart';
 

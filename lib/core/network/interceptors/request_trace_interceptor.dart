@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:groe_app_pad/core/config/env.dart';
+import 'package:george_pick_mate/core/config/env.dart';
 
 /// 请求链路追踪拦截器：
 /// - 给每次请求生成唯一 requestId，便于前后端联调定位

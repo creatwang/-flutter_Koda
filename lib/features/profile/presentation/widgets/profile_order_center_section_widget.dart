@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
+import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
 
 enum ProfileOrderTab { my, customer }
 

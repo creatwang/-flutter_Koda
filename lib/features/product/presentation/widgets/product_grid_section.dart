@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/product/models/paginated_products_state.dart';
-import 'package:groe_app_pad/features/product/models/product_item.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_card.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/features/product/models/paginated_products_state.dart';
+import 'package:george_pick_mate/features/product/models/product_item.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_card.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 
 class ProductGridSection extends StatelessWidget {
   const ProductGridSection({

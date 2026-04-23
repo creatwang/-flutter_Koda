@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/product/models/product_detail_dto.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_detail_card_decoration.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_detail_info_panel_widget.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_detail_media_panel_widget.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_resolver.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_card_decoration.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_info_panel_widget.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_media_panel_widget.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductDetailMainSection extends StatelessWidget {
   const ProductDetailMainSection({

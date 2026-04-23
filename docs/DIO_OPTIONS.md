@@ -55,7 +55,7 @@ BottomSheet 已展示同一错误，可对该请求设置：
 
 ```dart
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
+import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
 
 options: Options(
   extra: <String, dynamic>{

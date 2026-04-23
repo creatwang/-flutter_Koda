@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/profile/api/profile_requests.dart';
-import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/features/profile/api/profile_requests.dart';
+import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
 
 /// 个人中心：用户信息、订单列表等业务封装与响应适配。
 Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/profile/controllers/profile_providers.dart';
-import 'package:groe_app_pad/features/profile/presentation/widgets/profile_settings_form_validators.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
+import 'package:george_pick_mate/features/profile/presentation/widgets/profile_settings_form_validators.dart';
 
 /// 个人中心页：设置校验与会话相关编排（无 Widget）。
 abstract final class ProfilePageController {

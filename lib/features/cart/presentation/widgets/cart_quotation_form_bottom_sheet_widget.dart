@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/cart/models/cart_quotation_config_dto.dart';
-import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 Future<Map<String, dynamic>?> showCartQuotationFormBottomSheet({
   required BuildContext context,

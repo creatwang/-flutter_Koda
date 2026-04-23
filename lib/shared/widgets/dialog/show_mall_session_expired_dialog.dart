@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/mall_dialog_surface.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 登录失效等阻塞提示，单主按钮（英文）。
 Future<void> showMallSessionExpiredDialog({

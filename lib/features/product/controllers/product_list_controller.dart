@@ -1,5 +1,5 @@
-import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_list_sort_header.dart';
+import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_list_sort_header.dart';
 
 /// 商品列表页纯 UI 状态：侧栏分类、排序、侧栏折叠（无网络逻辑）。
 class ProductListController {

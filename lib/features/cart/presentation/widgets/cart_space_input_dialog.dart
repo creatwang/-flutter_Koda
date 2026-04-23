@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
-import 'package:groe_app_pad/features/product/services/product_sku_cart_helpers.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/dialog/show_mall_text_field_dialog.dart';
+import 'package:george_pick_mate/features/auth/services/site_info_services.dart';
+import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_mall_text_field_dialog.dart';
 
 /// 站点 `product_addcart_space == 1` 时收集用户输入的 `space`。
 /// 取消返回 `null`，确定返回非空字符串。

@@ -3,8 +3,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
-import 'package:groe_app_pad/features/profile/services/profile_services.dart';
+import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
+import 'package:george_pick_mate/features/profile/services/profile_services.dart';
 
 /// 非空时 [myCustomerUserOrdersProvider] 按该 `user_id` 请求订单列表。
 final myCustomerOrdersViewUserIdProvider = NotifierProvider.autoDispose<

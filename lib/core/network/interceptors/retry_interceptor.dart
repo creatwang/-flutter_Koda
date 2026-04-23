@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:groe_app_pad/core/config/env.dart';
+import 'package:george_pick_mate/core/config/env.dart';
 
 /// 网络重试拦截器（仅幂等 GET）：
 /// - 对网络错误/5xx 做有限重试

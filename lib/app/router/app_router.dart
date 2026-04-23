@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:groe_app_pad/app/router/app_routes.dart';
-import 'package:groe_app_pad/features/auth/presentation/pages/login_page.dart';
-import 'package:groe_app_pad/features/auth/presentation/pages/secure_storage_debug_page.dart';
-import 'package:groe_app_pad/features/auth/presentation/pages/splash_page.dart';
-import 'package:groe_app_pad/features/home/presentation/pages/home_page.dart';
-import 'package:groe_app_pad/features/product/presentation/pages/product_detail_page.dart';
+import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/auth/presentation/pages/login_page.dart';
+import 'package:george_pick_mate/features/auth/presentation/pages/secure_storage_debug_page.dart';
+import 'package:george_pick_mate/features/auth/presentation/pages/splash_page.dart';
+import 'package:george_pick_mate/features/home/presentation/pages/home_page.dart';
+import 'package:george_pick_mate/features/product/presentation/pages/product_detail_page.dart';
 
 GoRouter buildAppRouter({
   required bool isLoading,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/profile/controllers/profile_order_providers.dart';
-import 'package:groe_app_pad/features/profile/models/product_order_list_dto.dart';
-import 'package:groe_app_pad/shared/widgets/app_empty_view.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
+import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 import '../../../../gen/assets.gen.dart';
 

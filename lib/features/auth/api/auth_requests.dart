@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/network/interceptors/response_data_mode_interceptor.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
 /// 认证与站点原始接口路径（不含业务解析）。
 class AuthRequests {

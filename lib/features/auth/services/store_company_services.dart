@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:groe_app_pad/core/network/dio_client.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/core/result/app_exception.dart';
-import 'package:groe_app_pad/features/auth/api/store_company_requests.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
-import 'package:groe_app_pad/features/auth/services/auth_session_snapshot_services.dart';
-import 'package:groe_app_pad/features/auth/services/site_info_services.dart';
+import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/features/auth/api/store_company_requests.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
+import 'package:george_pick_mate/features/auth/services/site_info_services.dart';
 
 // 门店列表与切换店铺：开放列表解析、切换后会话落盘。
 

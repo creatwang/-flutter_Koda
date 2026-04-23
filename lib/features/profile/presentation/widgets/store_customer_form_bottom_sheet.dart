@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/features/profile/controllers/customer_account_providers.dart';
-import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
-import 'package:groe_app_pad/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
-import 'package:groe_app_pad/shared/widgets/pro_max_input_field_widget.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
+import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
+import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 enum StoreCustomerSheetMode { create, edit }
 

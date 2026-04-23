@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/app/providers/theme_provider.dart';
-import 'package:groe_app_pad/theme/app_colors.dart';
+import 'package:george_pick_mate/app/providers/theme_provider.dart';
+import 'package:george_pick_mate/theme/app_colors.dart';
 
 ThemeData buildAppTheme(AppThemeMode mode) {
   final isDark = mode == AppThemeMode.dark;

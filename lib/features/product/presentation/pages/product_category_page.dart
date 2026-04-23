@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:groe_app_pad/gen/assets.gen.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/gen/assets.gen.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class ProductCategoryPage extends StatefulWidget {

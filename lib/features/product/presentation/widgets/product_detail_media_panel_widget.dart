@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/features/product/presentation/widgets/product_detail_card_decoration.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_card_decoration.dart';
 
 class ProductDetailMediaPanel extends StatelessWidget {
   const ProductDetailMediaPanel({

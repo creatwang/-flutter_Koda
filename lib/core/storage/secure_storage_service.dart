@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:groe_app_pad/core/storage/token_pair.dart';
-import 'package:groe_app_pad/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/core/storage/token_pair.dart';
+import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 
 class SecureStorageService {
   SecureStorageService(this._storage);

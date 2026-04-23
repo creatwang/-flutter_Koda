@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});

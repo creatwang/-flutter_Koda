@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/features/product/models/product_category_tree_dto.dart';
-import 'package:groe_app_pad/shared/extensions/build_context_x.dart';
-import 'package:groe_app_pad/shared/widgets/app_error_view.dart';
-import 'package:groe_app_pad/shared/widgets/pro_max_glass_card_widget.dart';
-import 'package:groe_app_pad/theme/pro_max_tokens.dart';
+import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
+import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
+import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 class ProductFilterPanel extends StatelessWidget {
   const ProductFilterPanel({

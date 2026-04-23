@@ -3,13 +3,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:groe_app_pad/core/platform_services/network_clients.dart';
-import 'package:groe_app_pad/core/result/api_result.dart';
-import 'package:groe_app_pad/features/auth/controllers/session_providers.dart';
-import 'package:groe_app_pad/features/auth/models/session.dart';
-import 'package:groe_app_pad/features/profile/models/paginated_store_customers_state.dart';
-import 'package:groe_app_pad/features/profile/models/store_customer_item_dto.dart';
-import 'package:groe_app_pad/features/profile/services/customer_account_services.dart';
+import 'package:george_pick_mate/core/platform_services/network_clients.dart';
+import 'package:george_pick_mate/core/result/api_result.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/auth/models/session.dart';
+import 'package:george_pick_mate/features/profile/models/paginated_store_customers_state.dart';
+import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/features/profile/services/customer_account_services.dart';
 
 /// 客户列表（业务员；依赖会话 `companyId` + `token`，且 `is_auth_account`）。
 final storeCustomersProvider =

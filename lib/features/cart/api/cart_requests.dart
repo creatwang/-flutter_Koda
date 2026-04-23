@@ -149,7 +149,7 @@ Future<Response<dynamic>> requestExportQuotationPreview({
 }) {
   return (client ?? protectedDioClient).post(
     CartRequests.exportQuotationPath,
-    data: <String, dynamic>{...formData, 'response_type': 1},
+    data: <String, dynamic> {...formData, 'response_type': 1},
     simpleResponse: false,
     options: Options(extra: <String, dynamic>{'noCache': true}),
   );

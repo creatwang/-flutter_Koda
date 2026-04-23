@@ -342,16 +342,20 @@ class _CartPageState extends ConsumerState<CartPage> {
                       : _onExportQuotation,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.28),
+                    ),
                   ),
                   icon: isExportingQuotationConfig
                       ? const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.ios_share_outlined, size: 16),
-                  label: Text(isExportingQuotationConfig ? 'Loading...' : 'Export'),
+                  label: Text(
+                    isExportingQuotationConfig ? 'Loading...' : 'Export',
+                  ),
                 ),
               ),
               if (exportQuotationErrorMessage != null) ...[
@@ -367,7 +371,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                   ),
                 ),
               ],
-            ]
+            ],
           ],
         ),
       ],
@@ -1393,6 +1397,18 @@ class _CartQuotationPreviewPageState extends State<_CartQuotationPreviewPage> {
   bool _isLoading = true;
   String? _loadError;
 
+  bool _shouldIgnoreWebResourceError(WebResourceError error) {
+    final isMainFrame = error.isForMainFrame;
+    if (isMainFrame == false) {
+      return true;
+    }
+    final description = error.description.toLowerCase();
+    if (description.contains('preloaded using link preload')) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1416,6 +1432,14 @@ class _CartQuotationPreviewPageState extends State<_CartQuotationPreviewPage> {
             },
             onWebResourceError: (error) {
               if (!mounted) return;
+              if (_shouldIgnoreWebResourceError(error)) {
+                log(
+                  'Quotation preview ignored web error: '
+                  '${error.description}',
+                  name: 'cart.quotation.preview',
+                );
+                return;
+              }
               setState(() {
                 _isLoading = false;
                 _loadError = error.description;

@@ -246,24 +246,6 @@ class _CartQuotationFormSheetBodyState
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: _previewing || _submitting ? null : _onPreview,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white70,
-                      minimumSize: const Size(double.infinity, 48),
-                      side: const BorderSide(color: Color(0x55FFFFFF)),
-                    ),
-                    child: _previewing
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Preview'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
                   child: FilledButton(
                     onPressed: _submitting || _previewing ? null : _onDone,
                     style: FilledButton.styleFrom(
@@ -280,7 +262,25 @@ class _CartQuotationFormSheetBodyState
                               color: Color(0xFFF4C77A),
                             ),
                           )
-                        : const Text('Done'),
+                        : const Text('Submit'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _previewing || _submitting ? null : _onPreview,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      minimumSize: const Size(double.infinity, 48),
+                      side: const BorderSide(color: Color(0x55FFFFFF)),
+                    ),
+                    child: _previewing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Preview'),
                   ),
                 ),
               ],

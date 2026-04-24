@@ -81,6 +81,15 @@ final cartSelectedCountProvider = Provider<int>((ref) {
       .fold<int>(0, (sum, item) => sum + item.productNum);
 });
 
+/// 预订单列表中选中行的件数之和（口径同 [cartSelectedCountProvider]）。
+final preOrderSelectedCountProvider = Provider<int>((ref) {
+  final cartData = ref.watch(preOrderCartControllerProvider).asData?.value;
+  if (cartData == null) return 0;
+  return _allProducts(cartData)
+      .where((item) => item.isSelected)
+      .fold<int>(0, (sum, item) => sum + item.productNum);
+});
+
 /// 选中行金额小计（单价 × 数量）。
 final cartSelectedAmountProvider = Provider<double>((ref) {
   final cartData = ref.watch(cartControllerProvider).asData?.value;
@@ -109,7 +118,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     final cached = _persistCartListLocally
         ? await readCartListFromLocal()
         : const <CartListDto>[];
-    final result = await fetchCartListBySiteService(smStatus: listSmStatus);
+    final result = await fetchCartListBySiteService(smStatus: 0);
     if (result is ApiSuccess<List<CartListDto>>) {
       final latest = result.data;
       if (_persistCartListLocally) {
@@ -127,7 +136,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       return;
     }
     final result = await fetchCartListBySiteService(
-      smStatus: listSmStatus,
+      smStatus: 0,
     );
     result.when(
       success: (data) {

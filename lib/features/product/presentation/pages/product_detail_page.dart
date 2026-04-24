@@ -218,7 +218,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, size: 16),
             label: Text(
-              l10n.productDetailBackToList,
+             'Back to Product List',
               style: const TextStyle(color: Colors.white),
             ),
           ),

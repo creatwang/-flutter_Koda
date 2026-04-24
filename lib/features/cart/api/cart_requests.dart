@@ -6,7 +6,8 @@ import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 class CartRequests {
   CartRequests._();
 
-  static const String listBySitePath = '/store/cart/listsBySite';
+  // static const String listBySitePath = '/store/cart/listsBySite';
+  static const String listBySitePath = '/store/cart/listsByDept';
   static const String numPath = '/store/cart/num';
   static const String selectedPath = '/store/cart/selected';
   static const String changePath = '/store/cart/change';

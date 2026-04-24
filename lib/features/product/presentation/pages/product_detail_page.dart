@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
@@ -29,6 +29,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   int? _selectedProductId;
   int _selectedImageIndex = 0;
   int _productNum = 1;
+  bool _isAddToCartSubmitting = false;
+  bool _isBuyNowSubmitting = false;
   List<Options>? _skuSelectedOptions;
   int? _skuSelectionOwnerId;
   bool _skuBootstrapped = false;
@@ -51,6 +53,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       _skuSelectionOwnerId = null;
       _skuBootstrapped = false;
       _productNum = 1;
+      _isAddToCartSubmitting = false;
+      _isBuyNowSubmitting = false;
     }
   }
 
@@ -187,6 +191,8 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       onBuyNow: () => _onBuyNow(resolved),
                       onAddToCart: () =>
                           _onAddToCart(context, detail, resolved),
+                      isBuyNowSubmitting: _isBuyNowSubmitting,
+                      isAddToCartSubmitting: _isAddToCartSubmitting,
                     ),
                     const SizedBox(height: 16),
                     ProductTechnicalDataPanel(
@@ -222,14 +228,22 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   }
 
   Future<void> _onBuyNow(ProductDetailResolvedSelection resolved) async {
-    final ok = await _submitCartCreate(
-      qty: _productNum,
-      resolvedSub: resolved.skuResolved.sub,
-      skuRowSelection: resolved.skuRowSelection,
-    );
-    if (!mounted) return;
-    if (ok) {
-      context.go(AppRoutes.homeWithTab('cart'));
+    if (_isBuyNowSubmitting) return;
+    setState(() => _isBuyNowSubmitting = true);
+    try {
+      final ok = await _submitCartCreate(
+        qty: _productNum,
+        resolvedSub: resolved.skuResolved.sub,
+        skuRowSelection: resolved.skuRowSelection,
+      );
+      if (!mounted) return;
+      if (ok) {
+        context.go(AppRoutes.homeWithTab('cart'));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBuyNowSubmitting = false);
+      }
     }
   }
 
@@ -238,19 +252,27 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     ProductDetailDto detail,
     ProductDetailResolvedSelection resolved,
   ) async {
+    if (_isAddToCartSubmitting) return;
     final title = resolved.selected.name ?? detail.name ?? '--';
-    final ok = await _submitCartCreate(
-      qty: _productNum,
-      resolvedSub: resolved.skuResolved.sub,
-      skuRowSelection: resolved.skuRowSelection,
-    );
-    if (!context.mounted) return;
-    if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.productAddedToCart(title)),
-        ),
+    setState(() => _isAddToCartSubmitting = true);
+    try {
+      final ok = await _submitCartCreate(
+        qty: _productNum,
+        resolvedSub: resolved.skuResolved.sub,
+        skuRowSelection: resolved.skuRowSelection,
       );
+      if (!context.mounted) return;
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.productAddedToCart(title)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAddToCartSubmitting = false);
+      }
     }
   }
 

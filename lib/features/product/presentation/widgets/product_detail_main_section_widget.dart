@@ -28,6 +28,8 @@ class ProductDetailMainSection extends StatelessWidget {
     required this.onIncrementQty,
     required this.onBuyNow,
     required this.onAddToCart,
+    required this.isBuyNowSubmitting,
+    required this.isAddToCartSubmitting,
   });
 
   final ProductDetailDto detail;
@@ -49,6 +51,8 @@ class ProductDetailMainSection extends StatelessWidget {
   final VoidCallback onIncrementQty;
   final Future<void> Function() onBuyNow;
   final Future<void> Function() onAddToCart;
+  final bool isBuyNowSubmitting;
+  final bool isAddToCartSubmitting;
 
   static const double _panelGap = 18;
   static const double _mediaAspectRatio = 1.3;
@@ -96,6 +100,8 @@ class ProductDetailMainSection extends StatelessWidget {
                 onIncrementQty: onIncrementQty,
                 onBuyNow: onBuyNow,
                 onAddToCart: onAddToCart,
+                isBuyNowSubmitting: isBuyNowSubmitting,
+                isAddToCartSubmitting: isAddToCartSubmitting,
               ),
             ),
           ),
@@ -148,6 +154,8 @@ class ProductDetailMainSection extends StatelessWidget {
                       onIncrementQty: onIncrementQty,
                       onBuyNow: onBuyNow,
                       onAddToCart: onAddToCart,
+                      isBuyNowSubmitting: isBuyNowSubmitting,
+                      isAddToCartSubmitting: isAddToCartSubmitting,
                     ),
                   ),
                 ),

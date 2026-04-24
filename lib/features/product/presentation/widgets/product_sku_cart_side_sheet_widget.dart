@@ -332,10 +332,7 @@ class _ProductSkuCartSideSheetBodyState
       ),
     );
     if (!context.mounted) return;
-    setState(() => _isSubmitting = false);
-    if (ok) {
-      Navigator.of(context).pop(true);
-    }
+    Navigator.of(context, rootNavigator: true).pop(ok);
   }
 
   @override
@@ -709,22 +706,29 @@ class _ProductSkuCartSideSheetBodyState
                           skuRowSelection,
                           skuResolved,
                         ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        primaryLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (_isSubmitting) ...[
+                        const SizedBox(width: 8),
+                        const SizedBox(
+                          height: 14,
+                          width: 14,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
-                        )
-                      : Text(
-                          primaryLabel,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
                         ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ],

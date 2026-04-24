@@ -12,6 +12,7 @@ import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
 import 'package:george_pick_mate/features/cart/services/cart_persistence_services.dart';
 import 'package:george_pick_mate/features/cart/services/cart_services.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 /// 购物车主状态（监听会话以在站点切换时自动刷新）。
 final cartControllerProvider =
@@ -125,8 +126,18 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required String space,
     required String subName,
   }) async {
-    if (!_isAuthenticated()) return false;
-    if (productNum < 1) return false;
+    if (!_isAuthenticated()) {
+      Future<void>.microtask(
+        () => showGlobalErrorMessage('Please sign in first.'),
+      );
+      return false;
+    }
+    if (productNum < 1) {
+      Future<void>.microtask(
+        () => showGlobalErrorMessage('Invalid product quantity.'),
+      );
+      return false;
+    }
     final result = await createCartItemService(
       productId: productId,
       subIndex: subIndex,
@@ -139,7 +150,12 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
         unawaited(refresh());
         return true;
       },
-      failure: (_) => false,
+      failure: (exception) {
+        Future<void>.microtask(
+          () => showGlobalErrorMessage(exception.message),
+        );
+        return false;
+      },
     );
   }
 

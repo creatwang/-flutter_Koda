@@ -228,7 +228,7 @@ Future<ApiResult<void>> createCartItemService({
       if (code is num && code == 100000) {
         return ApiFailure(
             AppException(
-              payload['message']?.toString() ?? 'Add to cart failed',
+              'There are still unordered items in the shopping cart',
               code: code.toString(),
             )
           );

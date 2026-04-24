@@ -21,6 +21,8 @@ class ProductDetailInfoPanel extends StatelessWidget {
     required this.onIncrementQty,
     required this.onBuyNow,
     required this.onAddToCart,
+    required this.isBuyNowSubmitting,
+    required this.isAddToCartSubmitting,
   });
 
   final ProductDetailDto detail;
@@ -36,6 +38,8 @@ class ProductDetailInfoPanel extends StatelessWidget {
   final VoidCallback onIncrementQty;
   final Future<void> Function() onBuyNow;
   final Future<void> Function() onAddToCart;
+  final bool isBuyNowSubmitting;
+  final bool isAddToCartSubmitting;
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +296,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           width: double.infinity,
           child: FilledButton(
             onPressed: hasMatchedSku
+                    && !isBuyNowSubmitting
                 ? () async {
                     await onBuyNow();
                   }
@@ -304,9 +309,25 @@ class ProductDetailInfoPanel extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            child: Text(
-              l10n.productDetailBuyNow,
-              style: const TextStyle(fontSize: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.productDetailBuyNow,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                if (isBuyNowSubmitting) ...[
+                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -315,6 +336,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           width: double.infinity,
           child: FilledButton(
             onPressed: canAddToCart
+                    && !isAddToCartSubmitting
                 ? () async {
                     await onAddToCart();
                   }
@@ -327,9 +349,25 @@ class ProductDetailInfoPanel extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            child: Text(
-              context.l10n.addToCart,
-              style: const TextStyle(fontSize: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.l10n.addToCart,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                if (isAddToCartSubmitting) ...[
+                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color.fromRGBO(58, 72, 91, 1),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

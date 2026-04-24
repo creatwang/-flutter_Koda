@@ -118,7 +118,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     final cached = _persistCartListLocally
         ? await readCartListFromLocal()
         : const <CartListDto>[];
-    final result = await fetchCartListBySiteService(smStatus: 0);
+    final result = await fetchCartListBySiteService(smStatus: listSmStatus);
     if (result is ApiSuccess<List<CartListDto>>) {
       final latest = result.data;
       if (_persistCartListLocally) {
@@ -136,7 +136,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       return;
     }
     final result = await fetchCartListBySiteService(
-      smStatus: 0,
+      smStatus: listSmStatus,
     );
     result.when(
       success: (data) {

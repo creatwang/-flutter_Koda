@@ -155,9 +155,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                             Expanded(
                               child: ProductFilterPanel(
                                 categoryTree: categoryTreeState,
-                                onCategoryTreeRetry: () => ref.invalidate(
-                                  categoryTreeProvider,
-                                ),
+                                onCategoryTreeRetry: () =>
+                                    ref.refresh(categoryTreeProvider),
                                 selectedCategoryId:
                                     _controller.selectedCategoryId,
                                 onCategoryTap: _onCategoryTap,
@@ -395,7 +394,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                   child: ProductFilterPanel(
                     categoryTree: categoryTreeState,
                     onCategoryTreeRetry: () =>
-                        ref.invalidate(categoryTreeProvider),
+                        ref.refresh(categoryTreeProvider),
                     selectedCategoryId: selectedCategoryId,
                     onCategoryTap: (category) {
                       _controller.toggleCategory(category);

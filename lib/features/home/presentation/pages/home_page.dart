@@ -67,7 +67,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     return switch (tab) {
       'cart' => HomeSection.cart,
       'profile' => HomeSection.profile,
-      _ => HomeSection.products,
+      'products' => HomeSection.products,
+      _ => HomeSection.start,
     };
   }
 
@@ -91,6 +92,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return AdaptiveScaffold(
       title: l10n.appTitle,
       automaticallyImplyLeading: false,
+      extendBody: _section == HomeSection.start,
       actions: [
         HeaderMenuButton(
           label: 'Home',
@@ -184,7 +186,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: SafeArea(bottom: false, child: body),
+      body: SafeArea(
+        top: _section != HomeSection.start,
+        bottom: false,
+        child: body,
+      ),
       bottomBarVisibility: AdaptiveBottomBarVisibility.always,
       bottomNavigationBar: FrostedBottomMenu(
         items: [

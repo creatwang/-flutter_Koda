@@ -19,6 +19,7 @@ class AdaptiveScaffold extends StatelessWidget {
     this.automaticallyImplyLeading = true,
     this.bottomNavigationBar,
     this.bottomBarVisibility = AdaptiveBottomBarVisibility.always,
+    this.extendBody = false,
   });
 
   final String title;
@@ -30,6 +31,7 @@ class AdaptiveScaffold extends StatelessWidget {
   final bool automaticallyImplyLeading;
   final Widget? bottomNavigationBar;
   final AdaptiveBottomBarVisibility bottomBarVisibility;
+  final bool extendBody;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +45,7 @@ class AdaptiveScaffold extends StatelessWidget {
         bottom: bottom,
         shadowColor: Colors.grey,
       ),*/
+      extendBody: extendBody,
       floatingActionButton: floatingActionButton,
       body: body,
       bottomNavigationBar: resolvedBottomBar,

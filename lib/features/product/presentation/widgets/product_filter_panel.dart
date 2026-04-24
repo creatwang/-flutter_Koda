@@ -139,7 +139,7 @@ class ProductFilterPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return categoryTree.when(
-      skipLoadingOnReload: true,
+      skipLoadingOnReload: false,
       loading: () => ProMaxGlassCardWidget(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
         child: Column(

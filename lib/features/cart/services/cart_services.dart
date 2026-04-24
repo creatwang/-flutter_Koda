@@ -209,13 +209,31 @@ Future<ApiResult<void>> createCartItemService({
   required String subName,
 }) async {
   try {
-    await requestCartCreate(
+    final response = await requestCartCreate(
       productId: productId,
       subIndex: subIndex,
       productNum: productNum,
       space: space,
       subName: subName,
     );
+    final payload = response.data;
+    if (payload is! Map) {
+      return ApiFailure(
+        AppException(
+          'Add to cart failed',
+          code: response.statusCode?.toString(),
+        ),);
+    } else {
+      final code = payload['code'];
+      if (code is num && code == 100000) {
+        return ApiFailure(
+            AppException(
+              payload['message']?.toString() ?? 'Add to cart failed',
+              code: code.toString(),
+            )
+          );
+        }
+      }
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(

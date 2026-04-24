@@ -19,14 +19,35 @@ class ResponseDataModeInterceptor extends Interceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final requestMode = _resolveRequestMode(response.requestOptions);
     final data = response.data;
-    if (data is Map<String, dynamic> && _isBusinessError(data)) {
+    if (data is Map<String, dynamic>) {
       final code = data['code'];
-      final message = _extractBusinessMessage(data);
       if (_isSessionExpiredCode(code)) {
+        final message = _extractBusinessMessage(data);
         showSessionExpiredDialog(
           message.trim().isEmpty ? '您的登录已过期，请重新登录。' : message,
         );
-      } else if (!_suppressesGlobalError(response.requestOptions)) {
+        handler.reject(
+          DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            type: DioExceptionType.badResponse,
+            error: message,
+            message: message,
+          ),
+        );
+        return;
+      }
+    }
+
+    // origin 模式透传原始业务响应（包含 code/message），由调用方自行判断。
+    if (requestMode != ResponseDataMode.simple) {
+      handler.next(response);
+      return;
+    }
+
+    if (data is Map<String, dynamic> && _isBusinessError(data)) {
+      final message = _extractBusinessMessage(data);
+      if (!_suppressesGlobalError(response.requestOptions)) {
         showGlobalErrorMessage(message);
       }
       handler.reject(

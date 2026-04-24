@@ -169,12 +169,15 @@ Future<Response<dynamic>> requestCartCreate({
 }) {
   return (client ?? protectedDioClient).post(
     CartRequests.createPath,
+    simpleResponse: false,
     data: <String, dynamic>{
       'product_id': productId,
       'sub_index': subIndex,
       'product_num': productNum,
       'space': space,
       'sub_name': subName,
+      /// 1、检测购物车是否存在未预下单的产品
+      'sm_check': 1,
     },
   );
 }

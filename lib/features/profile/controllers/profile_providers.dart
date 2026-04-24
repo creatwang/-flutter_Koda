@@ -18,6 +18,9 @@ final profileUserInfoProvider =
 class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
   @override
   FutureOr<UserInfoBase> build() async {
+    final companyId = await secureStorageService.getCompanyId();
+    if (companyId == null) return UserInfoBase();
+
     final cached = await _readCachedProfile();
     if (cached != null) return cached;
 
@@ -36,6 +39,11 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
 
   /// 强制从接口拉取并覆盖缓存。
   Future<void> refresh() async {
+    final companyId = await secureStorageService.getCompanyId();
+    if (companyId == null) {
+      state = AsyncData(UserInfoBase());
+      return;
+    }
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final result = await fetchUserInfoService();

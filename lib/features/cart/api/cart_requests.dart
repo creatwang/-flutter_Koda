@@ -36,13 +36,15 @@ Future<Response<dynamic>> requestCartNum({DioClient? client}) {
 /// [client]：可选，默认 [protectedDioClient]。
 Future<Response<dynamic>> requestCartListBySite({
   DioClient? client,
-  bool bypassMemoryCache = false,
+  int? smStatus = 0,
 }) {
   return (client ?? protectedDioClient).get(
     CartRequests.listBySitePath,
-    options: bypassMemoryCache
-        ? Options(extra: <String, dynamic>{'noCache': true})
-        : null,
+    queryParameters: <String, dynamic>{
+      'sm_status': smStatus,
+      'smStatus': smStatus,
+    },
+    options: Options(extra: <String, dynamic>{'noCache': true})
   );
 }
 

@@ -20,6 +20,14 @@ final cartControllerProvider =
       CartController.new,
     );
 
+/// 预订单列表与操作（`sm_status=1`），与 [CartController] 共用接口实现。
+///
+/// `autoDispose`：离开预订单页后释放，再次进入会重新执行 [build] 拉列表。
+final preOrderCartControllerProvider =
+    AsyncNotifierProvider.autoDispose(
+      PreOrderCartController.new,
+    );
+
 bool _isAuthenticatedBySession(Session? session) {
   return session?.isAuthenticated == true;
 }
@@ -84,6 +92,11 @@ final cartSelectedAmountProvider = Provider<double>((ref) {
 
 /// 购物车业务入口：与 [cart_services] 交互并维护乐观更新。
 class CartController extends AsyncNotifier<List<CartListDto>> {
+  /// 列表拉取参数 `sm_status`：`0` 购物车，`1` 预订单。
+  int get listSmStatus => 0;
+
+  bool get _persistCartListLocally => listSmStatus == 0;
+
   @override
   FutureOr<List<CartListDto>> build() async {
     // 仅依赖 [sessionControllerProvider]：会话/站点变化会触发本 build
@@ -93,11 +106,15 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       return const <CartListDto>[];
     }
 
-    final cached = await readCartListFromLocal();
-    final result = await fetchCartListBySiteService();
+    final cached = _persistCartListLocally
+        ? await readCartListFromLocal()
+        : const <CartListDto>[];
+    final result = await fetchCartListBySiteService(smStatus: listSmStatus);
     if (result is ApiSuccess<List<CartListDto>>) {
       final latest = result.data;
-      unawaited(saveCartListToLocal(items: latest));
+      if (_persistCartListLocally) {
+        unawaited(saveCartListToLocal(items: latest));
+      }
       return latest;
     }
     if (cached.isNotEmpty) return cached;
@@ -109,11 +126,15 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       state = const AsyncData(<CartListDto>[]);
       return;
     }
-    final result = await fetchCartListBySiteService(bypassMemoryCache: true);
+    final result = await fetchCartListBySiteService(
+      smStatus: listSmStatus,
+    );
     result.when(
       success: (data) {
         state = AsyncData(data);
-        unawaited(saveCartListToLocal(items: data));
+        if (_persistCartListLocally) {
+          unawaited(saveCartListToLocal(items: data));
+        }
       },
       failure: (_) {},
     );
@@ -224,7 +245,9 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     );
     return result.when(
       success: (_) {
-        unawaited(saveCartListToLocal(items: next));
+        if (_persistCartListLocally) {
+          unawaited(saveCartListToLocal(items: next));
+        }
         return true;
       },
       failure: (_) {
@@ -276,7 +299,9 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       (item) => item.id == cartId ? item.copyWith(remark: remark) : item,
     );
     state = AsyncData(next);
-    unawaited(saveCartListToLocal(items: next));
+    if (_persistCartListLocally) {
+      unawaited(saveCartListToLocal(items: next));
+    }
     return true;
   }
 
@@ -389,7 +414,9 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     );
     return result.when(
       success: (_) {
-        unawaited(saveCartListToLocal(items: next));
+        if (_persistCartListLocally) {
+          unawaited(saveCartListToLocal(items: next));
+        }
         return true;
       },
       failure: (_) {
@@ -403,6 +430,11 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     final session = ref.read(sessionControllerProvider).asData?.value;
     return _isAuthenticatedBySession(session);
   }
+}
+
+class PreOrderCartController extends CartController {
+  @override
+  int get listSmStatus => 1;
 }
 
 int _badgeSumFromCartList(List<CartListDto>? cartData) {

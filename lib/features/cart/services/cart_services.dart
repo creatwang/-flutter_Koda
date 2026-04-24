@@ -64,11 +64,11 @@ Future<ApiResult<int>> fetchCartTotalNumService() async {
 }
 
 Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
-  bool bypassMemoryCache = false,
+  int? smStatus = 0,
 }) async {
   try {
     final response = await requestCartListBySite(
-      bypassMemoryCache: bypassMemoryCache,
+      smStatus: smStatus,
     );
     final data = response.data;
     final rawList = switch (data) {

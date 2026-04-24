@@ -5,6 +5,7 @@ import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/auth/presentation/pages/login_page.dart';
 import 'package:george_pick_mate/features/auth/presentation/pages/secure_storage_debug_page.dart';
 import 'package:george_pick_mate/features/auth/presentation/pages/splash_page.dart';
+import 'package:george_pick_mate/features/cart/presentation/pages/pre_order_page.dart';
 import 'package:george_pick_mate/features/home/presentation/pages/home_page.dart';
 import 'package:george_pick_mate/features/product/presentation/pages/product_detail_page.dart';
 
@@ -33,6 +34,10 @@ GoRouter buildAppRouter({
         builder: (_, state) => ProductDetailPage(
           productId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.preOrder,
+        builder: (_, __) => const PreOrderPage(),
       ),
       if (kDebugMode)
         GoRoute(

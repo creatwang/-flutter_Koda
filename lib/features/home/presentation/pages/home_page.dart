@@ -10,7 +10,7 @@ import 'package:george_pick_mate/features/cart/presentation/pages/cart_page.dart
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/profile/presentation/pages/profile_page.dart';
 import 'package:george_pick_mate/features/product/presentation/pages/product_list_page.dart';
-import 'package:george_pick_mate/features/product/presentation/widgets/product_scan_fab_flow.dart';
+import 'package:george_pick_mate/features/product/presentation/widgets/global_product_scan_fab_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/frosted_bottom_menu.dart';
@@ -162,34 +162,24 @@ class _HomePageState extends ConsumerState<HomePage> {
               : const Icon(Icons.logout),
         ),
       ],
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (kDebugMode) ...[
-            FloatingActionButton.small(
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton.small(
               heroTag: 'home_secure_storage_debug_fab',
               tooltip: 'Secure Storage Debug',
               onPressed: () => context.push(AppRoutes.secureStorageDebug),
               child: const Icon(Icons.bug_report_outlined),
-            ),
-            const SizedBox(height: 8),
-          ],
-          FloatingActionButton.small(
-            heroTag: 'product_scan_qr_home_fab',
-            tooltip: l10n.productScanTooltip,
-            backgroundColor: Colors.black,
-            onPressed: () async {
-              await runProductQrScanFlow(ref: ref, context: context);
-            },
-            child: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+            )
+          : null,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          SafeArea(
+            top: _section != HomeSection.start,
+            bottom: false,
+            child: body,
           ),
+          const GlobalProductScanFabWidget(bottomOffset: 14),
         ],
-      ),
-      body: SafeArea(
-        top: _section != HomeSection.start,
-        bottom: false,
-        child: body,
       ),
       bottomBarVisibility: AdaptiveBottomBarVisibility.always,
       bottomNavigationBar: FrostedBottomMenu(

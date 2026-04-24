@@ -1,158 +1,103 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:george_pick_mate/app/router/app_routes.dart';
-import 'package:george_pick_mate/core/result/api_result.dart';
-import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
-import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
-import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
-import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
-import 'package:george_pick_mate/features/cart/presentation/widgets/cart_quotation_form_bottom_sheet_widget.dart';
+import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
-import 'package:intl/intl.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
-import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
+import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
-import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
+import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-import '../../models/cart_list_dto.dart';
-
-class CartPage extends ConsumerStatefulWidget {
-  const CartPage({super.key});
+/// 预订单：列表交互与购物车一致，样式可自行在本文件调整。
+class PreOrderPage extends ConsumerStatefulWidget {
+  const PreOrderPage({super.key});
 
   @override
-  ConsumerState<CartPage> createState() => _CartPageState();
+  ConsumerState<PreOrderPage> createState() => _PreOrderPageState();
 }
 
-class _CartPageState extends ConsumerState<CartPage> {
+class _PreOrderPageState extends ConsumerState<PreOrderPage> {
   final Set<String> _collapsedSpaceKeys = <String>{};
   final Set<int> _pendingItemIds = <int>{};
   final Set<int> _removeActionLoadingItemIds = <int>{};
   final Set<int> _changeSpecLoadingItemIds = <int>{};
   final Set<int> _pendingSiteIds = <int>{};
-  bool _isClearingAll = false;
-  bool _isCheckingOut = false;
-  bool _isExportingQuotationConfig = false;
-  String? _exportQuotationErrorMessage;
-  final NumberFormat _amountFormatter = NumberFormat('#,##0.##');
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final cartState = ref.watch(cartControllerProvider);
-    final totalCount = ref.watch(cartListBadgeCountProvider);
-    final selectedCount = ref.watch(cartSelectedCountProvider);
-    final selectedAmount = ref.watch(cartSelectedAmountProvider);
-    final canExportQuotation =
-        ref.watch(canExportQuotationProvider).asData?.value ?? false;
-    return cartState.when(
-      loading: () => const HomeMainContentSlot(child: AppLoadingView()),
-      error: (error, _) => HomeMainContentSlot(
-        child: AppErrorView(message: l10n.cartLoadFailed(error.toString())),
-      ),
-      data: (groups) {
-        final sites = groups
-            .expand((group) => group.items)
-            .toList(growable: false);
-        if (sites.isEmpty) {
-          return HomeMainContentSlot(
-            child: AppEmptyView(message: l10n.cartEmpty),
-          );
-        }
-
-        final isWide = MediaQuery.sizeOf(context).width >= 1120;
-        final listPanel = _buildCuratedListPanel(context, sites);
-        final summaryPanel = _buildSummaryPanel(
-          context,
-          selectedCount: selectedCount,
-          selectedAmount: selectedAmount,
-          totalCount: totalCount,
-          canExportQuotation: canExportQuotation,
-          isExportingQuotationConfig: _isExportingQuotationConfig,
-          exportQuotationErrorMessage: _exportQuotationErrorMessage,
-        );
-
-        return HomeMainContentSlot(
-          child: isWide
-              ? LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 7, child: listPanel),
-                        const SizedBox(width: 18),
-                        SizedBox(
-                          width: 330,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight: constraints.maxHeight,
-                            ),
-                            child: LayoutBuilder(
-                              builder: (context, viewport) {
-                                return SingleChildScrollView(
-                                  keyboardDismissBehavior:
-                                      ScrollViewKeyboardDismissBehavior.onDrag,
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minHeight: viewport.maxHeight,
-                                    ),
-                                    child: summaryPanel,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                )
-              : Column(
-                  children: [
-                    Expanded(flex: 5, child: listPanel),
-                    Expanded(
-                      flex: 2,
-                      child: SafeArea(
-                        top: false,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                          child: LayoutBuilder(
-                            builder: (context, viewport) {
-                              return SingleChildScrollView(
-                                keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior.onDrag,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minHeight: viewport.maxHeight,
-                                  ),
-                                  child: summaryPanel,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+    final pre = ref.watch(preOrderCartControllerProvider);
+    return AdaptiveScaffold(
+      title: 'Pre Order',
+      bottomBarVisibility: AdaptiveBottomBarVisibility.never,
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            HomeMainContentSlot(
+              child: pre.when(
+                loading: () => const AppLoadingView(),
+                error: (error, _) => AppErrorView(
+                  message: 'Pre order load failed: $error',
+                  onRetry: () => ref
+                      .read(preOrderCartControllerProvider.notifier)
+                      .refresh(),
                 ),
-        );
-      },
+                data: (groups) {
+                  final sites = groups
+                      .expand((group) => group.items)
+                      .toList(growable: false);
+                  if (sites.isEmpty) {
+                    return const AppEmptyView(message: 'No pre-order items');
+                  }
+                  return Column(
+                    children: [
+                      const SizedBox(height: 48),
+                      Expanded(
+                        child: _buildCuratedListPanel(context, sites),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              left: 18,
+              top: 12,
+              child: FilledButton.icon(
+                style: ButtonStyle(
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                  backgroundColor: WidgetStateProperty.all(
+                    const Color.fromRGBO(129, 119, 110, 1),
+                  ),
+                ),
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back, size: 16),
+                label: const Text(
+                  'Back',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildCuratedListPanel(BuildContext context, List<CartSiteDto> sites) {
     return RefreshIndicator(
-      onRefresh: () => ref.read(cartControllerProvider.notifier).refresh(),
+      onRefresh: () =>
+          ref.read(preOrderCartControllerProvider.notifier).refresh(),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.3),
@@ -194,8 +139,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     onToggleSpaceExpanded: (space) => _toggleSpace(site, space),
                     onToggleSiteSelected: (selected) =>
                         _onToggleSiteSelected(site, selected),
-                    onToggleItemSelected: (itemId, selected) =>
-                        _onToggleItemSelected(itemId, selected),
+                    onToggleItemSelected: _onToggleItemSelected,
                     onChangeQuantity: _onChangeQuantity,
                     onDeleteItem: _onDeleteItem,
                     onRemarkChanged: _onRemarkChanged,
@@ -218,183 +162,6 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
-  Widget _buildSummaryPanel(
-    BuildContext context, {
-    required int selectedCount,
-    required double selectedAmount,
-    required int totalCount,
-    required bool canExportQuotation,
-    required bool isExportingQuotationConfig,
-    required String? exportQuotationErrorMessage,
-  }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'PROJECT SUMMARY',
-                style: TextStyle(
-                  color: ProMaxTokens.textPrimary.withValues(alpha: 0.95),
-                  letterSpacing: 1.0,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _SummaryRow(
-                label: 'Total items selected',
-                // value: '$selectedCount / $totalCount',
-                value: '$selectedCount items',
-              ),
-              const SizedBox(height: 20),
-              Divider(color: Colors.white.withValues(alpha: 1), height: 2),
-              const SizedBox(height: 20),
-              Text(
-                'ESTIMATED TOTAL AMOUNT',
-                style: TextStyle(
-                  color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
-                  letterSpacing: 0.9,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '\$${_amountFormatter.format(selectedAmount)}',
-                style: const TextStyle(
-                  color: ProMaxTokens.textPrimary,
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: selectedCount <= 0 || _isCheckingOut
-                      ? null
-                      : _onCheckout,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(46),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _isCheckingOut
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Go To Checkout'),
-                      if (!_isCheckingOut) ...[
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 14),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _isClearingAll ? null : _onClearAll,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(44),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.38),
-                    ),
-                  ),
-                  child: _isClearingAll
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Clear'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Column(
-          children: [
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.push(AppRoutes.preOrder),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.28),
-                  ),
-                ),
-                icon: const Icon(Icons.assignment_outlined, size: 16),
-                label: const Text('Pre Order'),
-              ),
-            ),
-            if (canExportQuotation) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: selectedCount <= 0 || isExportingQuotationConfig
-                      ? null
-                      : _onExportQuotation,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.28),
-                    ),
-                  ),
-                  icon: isExportingQuotationConfig
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.ios_share_outlined, size: 16),
-                  label: Text(
-                    isExportingQuotationConfig ? 'Loading...' : 'Export',
-                  ),
-                ),
-              ),
-              if (exportQuotationErrorMessage != null) ...[
-                const SizedBox(height: 8),
-                SelectableText.rich(
-                  TextSpan(
-                    text: exportQuotationErrorMessage,
-                    style: const TextStyle(
-                      color: Color(0xFFFF6E76),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-
   String _spaceKey(CartSiteDto site, CartSpaceDto space) {
     return '${site.companyId}::${space.key}::${space.name}';
   }
@@ -414,55 +181,6 @@ class _CartPageState extends ConsumerState<CartPage> {
     });
   }
 
-  Future<void> _onClearAll() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final current =
-        ref.read(cartControllerProvider).asData?.value ?? const <CartListDto>[];
-    final selectedIds = current
-        .expand((group) => group.items)
-        .expand((site) => site.cart.items)
-        .expand((space) => space.list)
-        .where((item) => item.isSelected)
-        .map((item) => item.id)
-        .toSet()
-        .toList(growable: false);
-    final hasSelectedItems = selectedIds.isNotEmpty;
-
-    final confirmed = await showMallConfirmDialog(
-      context: context,
-      title: hasSelectedItems
-          ? 'Remove selected lines?'
-          : 'Clear entire shortlist?',
-      message: hasSelectedItems
-          ? '${selectedIds.length} selected lines will be removed from '
-                'your shortlist.'
-          : 'This clears all cart lines currently loaded for your sites.',
-      confirmLabel: hasSelectedItems ? 'Remove' : 'Clear all',
-      icon: hasSelectedItems
-          ? Icons.delete_sweep_rounded
-          : Icons.cleaning_services_rounded,
-      accentColor: hasSelectedItems
-          ? const Color(0xFFFF7B6B)
-          : const Color(0xFFFFB86B),
-    );
-    if (!mounted || confirmed != true) return;
-    setState(() => _isClearingAll = true);
-    final ok = hasSelectedItems
-        ? await ref.read(cartControllerProvider.notifier).removeSelectedItems()
-        : await ref.read(cartControllerProvider.notifier).clearAllSitesCart();
-    if (!mounted) return;
-    setState(() => _isClearingAll = false);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? (hasSelectedItems ? '已删除选中商品' : '购物车已清空')
-              : (hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试'),
-        ),
-      ),
-    );
-  }
-
   Future<bool> _onToggleSiteSelected(CartSiteDto site, bool selected) async {
     final ids = site.cart.items
         .expand((space) => space.list)
@@ -476,7 +194,7 @@ class _CartPageState extends ConsumerState<CartPage> {
       _pendingItemIds.addAll(ids);
     });
     final ok = await ref
-        .read(cartControllerProvider.notifier)
+        .read(preOrderCartControllerProvider.notifier)
         .toggleSiteSelected(companyId: site.companyId, selected: selected);
     if (!mounted) return ok;
     setState(() {
@@ -490,7 +208,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     return _runItemAction(
       itemId,
       () => ref
-          .read(cartControllerProvider.notifier)
+          .read(preOrderCartControllerProvider.notifier)
           .toggleProductSelected(cartId: itemId, selected: selected),
     );
   }
@@ -500,7 +218,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     return _runItemAction(
       item.id,
       () => ref
-          .read(cartControllerProvider.notifier)
+          .read(preOrderCartControllerProvider.notifier)
           .changeProductQuantity(cartId: item.id, productNum: nextProductNum),
     );
   }
@@ -511,7 +229,9 @@ class _CartPageState extends ConsumerState<CartPage> {
     if (!mounted || !confirmed) return false;
     return _runItemAction(
       item.id,
-      () => ref.read(cartControllerProvider.notifier).removeCartItem(item.id),
+      () => ref
+          .read(preOrderCartControllerProvider.notifier)
+          .removeCartItem(item.id),
       removeActionLoading: true,
     );
   }
@@ -537,7 +257,7 @@ class _CartPageState extends ConsumerState<CartPage> {
           final space = await resolveSpaceForCartAdd(sheetContext);
           if (space == null) return false;
           return ref
-              .read(cartControllerProvider.notifier)
+              .read(preOrderCartControllerProvider.notifier)
               .changeCartItemSpec(
                 cartItemId: item.id,
                 productId: payload.apiProductId,
@@ -563,106 +283,6 @@ class _CartPageState extends ConsumerState<CartPage> {
         _changeSpecLoadingItemIds.remove(item.id);
       }
     }
-  }
-
-  Future<void> _onCheckout() async {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _isCheckingOut = true);
-    final payload = ref
-        .read(cartControllerProvider.notifier)
-        .buildCreateBySitesPayload();
-    if (payload.cart.isEmpty) {
-      if (mounted) setState(() => _isCheckingOut = false);
-      return;
-    }
-    final ok = await ref
-        .read(cartControllerProvider.notifier)
-        .createOrderBySites(companyIds: payload.companyIds, cart: payload.cart);
-    if (!mounted) return;
-    setState(() => _isCheckingOut = false);
-    if (!ok) {
-      messenger.showSnackBar(const SnackBar(content: Text('Checkout failed')));
-      return;
-    }
-    await ref.read(cartControllerProvider.notifier).refresh();
-    if (!mounted) return;
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Order created successfully')),
-    );
-  }
-
-  Future<void> _onExportQuotation() async {
-    if (_isExportingQuotationConfig) return;
-    setState(() {
-      _isExportingQuotationConfig = true;
-      _exportQuotationErrorMessage = null;
-    });
-    final ApiResult<CartQuotationConfigDto> result = await ref
-        .read(cartControllerProvider.notifier)
-        .fetchQuotationConfig();
-    if (!mounted) return;
-    setState(() => _isExportingQuotationConfig = false);
-    if (result is ApiFailure<CartQuotationConfigDto>) {
-      setState(() {
-        _exportQuotationErrorMessage = result.exception.message;
-      });
-      return;
-    }
-    final config = (result as ApiSuccess<CartQuotationConfigDto>).data;
-    if (config.formData.isEmpty) {
-      setState(() {
-        _exportQuotationErrorMessage = 'Export form config is empty.';
-      });
-      return;
-    }
-    final values = await showCartQuotationFormBottomSheet(
-      context: context,
-      fields: config.formData,
-      onPreview: _onPreviewQuotation,
-    );
-    if (!mounted || values == null) return;
-    log('quotation export form values: $values', name: 'cart.export.quotation');
-    setState(() {
-      _isExportingQuotationConfig = true;
-      _exportQuotationErrorMessage = null;
-    });
-    final exportResult = await ref
-        .read(cartControllerProvider.notifier)
-        .exportQuotation(formData: values);
-    if (!mounted) return;
-    setState(() => _isExportingQuotationConfig = false);
-    if (exportResult is ApiFailure<CartQuotationExportResultDto>) {
-      setState(() {
-        _exportQuotationErrorMessage = exportResult.exception.message;
-      });
-      return;
-    }
-    final exportData =
-        (exportResult as ApiSuccess<CartQuotationExportResultDto>).data;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Quotation exported: ${exportData.fileName}\n${exportData.filePath}',
-        ),
-      ),
-    );
-  }
-
-  Future<String?> _onPreviewQuotation(Map<String, dynamic> formData) async {
-    final result = await ref
-        .read(cartControllerProvider.notifier)
-        .previewQuotation(formData: formData);
-    if (result is ApiFailure<String>) {
-      return result.exception.message;
-    }
-    final previewUrl = (result as ApiSuccess<String>).data;
-    if (!mounted) return null;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _CartQuotationPreviewPage(previewUrl: previewUrl),
-      ),
-    );
-    return null;
   }
 
   Future<bool> _runItemAction(
@@ -699,7 +319,7 @@ class _CartPageState extends ConsumerState<CartPage> {
   void _onRemarkChanged(int cartId, String remark) {
     unawaited(
       ref
-          .read(cartControllerProvider.notifier)
+          .read(preOrderCartControllerProvider.notifier)
           .updateProductRemark(cartId: cartId, remark: remark),
     );
   }
@@ -716,7 +336,6 @@ class _CartPageState extends ConsumerState<CartPage> {
     return result == true;
   }
 }
-
 class _CartSiteSection extends StatefulWidget {
   const _CartSiteSection({
     required this.site,
@@ -1675,179 +1294,6 @@ class _QuantityControlButton extends StatelessWidget {
           color: enabled ? Colors.white : Colors.white30,
         ),
       ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: ProMaxTokens.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CartQuotationPreviewPage extends StatefulWidget {
-  const _CartQuotationPreviewPage({required this.previewUrl});
-
-  final String previewUrl;
-
-  @override
-  State<_CartQuotationPreviewPage> createState() =>
-      _CartQuotationPreviewPageState();
-}
-
-class _CartQuotationPreviewPageState extends State<_CartQuotationPreviewPage> {
-  WebViewController? _controller;
-  bool _isLoading = true;
-  String? _loadError;
-
-  bool _shouldIgnoreWebResourceError(WebResourceError error) {
-    final isMainFrame = error.isForMainFrame;
-    if (isMainFrame == false) {
-      return true;
-    }
-    final description = error.description.toLowerCase();
-    if (description.contains('preloaded using link preload')) {
-      return true;
-    }
-    return false;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    try {
-      _controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageStarted: (_) {
-              if (!mounted) return;
-              setState(() {
-                _isLoading = true;
-                _loadError = null;
-              });
-            },
-            onPageFinished: (_) {
-              if (!mounted) return;
-              setState(() {
-                _isLoading = false;
-              });
-            },
-            onWebResourceError: (error) {
-              if (!mounted) return;
-              if (_shouldIgnoreWebResourceError(error)) {
-                log(
-                  'Quotation preview ignored web error: '
-                  '${error.description}',
-                  name: 'cart.quotation.preview',
-                );
-                return;
-              }
-              setState(() {
-                _isLoading = false;
-                _loadError = error.description;
-              });
-            },
-          ),
-        )
-        ..loadRequest(Uri.parse(widget.previewUrl));
-    } catch (e) {
-      _loadError = e.toString();
-      _isLoading = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quotation Preview'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_controller == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SelectableText.rich(
-            TextSpan(
-              text: _loadError ?? 'Preview is not available on this device.',
-              style: const TextStyle(
-                color: Color(0xFFFF6E76),
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    return Stack(
-      children: [
-        WebViewWidget(controller: _controller!),
-        if (_isLoading)
-          const Center(
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.4),
-            ),
-          ),
-        if (_loadError != null)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 12,
-            child: Material(
-              color: const Color(0xDD3A2022),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: SelectableText.rich(
-                  TextSpan(
-                    text: _loadError,
-                    style: const TextStyle(
-                      color: Color(0xFFFFB5BB),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

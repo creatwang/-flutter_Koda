@@ -3,6 +3,7 @@ class AppRoutes {
   static const login = '/login';
   static const home = '/';
   static const productDetailPattern = '/product/:id';
+  static const preOrder = '/pre-order';
   static const secureStorageDebug = '/debug/secure-storage';
 
   static String productDetail(int id) => '/product/$id';

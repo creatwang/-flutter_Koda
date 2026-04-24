@@ -700,7 +700,7 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 }
 
-class _CartSiteSection extends StatelessWidget {
+class _CartSiteSection extends StatefulWidget {
   const _CartSiteSection({
     required this.site,
     required this.isSpaceExpanded,
@@ -733,7 +733,37 @@ class _CartSiteSection extends StatelessWidget {
   final bool Function(int itemId) isChangeSpecLoading;
 
   @override
+  State<_CartSiteSection> createState() => _CartSiteSectionState();
+}
+
+class _CartSiteSectionState extends State<_CartSiteSection> {
+  int? _selectedSalesRepId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartSiteSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.site.smId != widget.site.smId ||
+        oldWidget.site.companyId != widget.site.companyId) {
+      _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    }
+  }
+
+  CartSalesRepDto? get _selectedSalesRep {
+    for (final rep in widget.site.smItems) {
+      if (rep.id == _selectedSalesRepId) return rep;
+    }
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final selectedSalesRep = _selectedSalesRep;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -771,7 +801,9 @@ class _CartSiteSection extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          site.shopName.isEmpty ? 'Department' : site.shopName,
+                          widget.site.shopName.isEmpty
+                              ? 'Department'
+                              : widget.site.shopName,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
@@ -785,26 +817,44 @@ class _CartSiteSection extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${site.cart.totalNum} ITEMS',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            height: 1.0,
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: 86),
+                        child: Container(
+                          child: UnconstrainedBox(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${widget.site.cart.totalNum} ITEMS',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.6,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                      if (widget.site.smItems.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        _CartSalesRepPicker(
+                          reps: widget.site.smItems,
+                          selected: selectedSalesRep,
+                          onChanged: (next) {
+                            setState(() => _selectedSalesRepId = next.id);
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -813,22 +863,282 @@ class _CartSiteSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...site.cart.items.map(
+        ...widget.site.cart.items.map(
           (space) => _CartSpaceSection(
             space: space,
-            isExpanded: isSpaceExpanded(space),
-            onToggleExpanded: () => onToggleSpaceExpanded(space),
-            onToggleItemSelected: onToggleItemSelected,
-            onChangeQuantity: onChangeQuantity,
-            onDeleteItem: onDeleteItem,
-            onRemarkChanged: onRemarkChanged,
-            onChangeSpec: onChangeSpec,
-            isItemBusy: isItemBusy,
-            isRemoveActionLoading: isRemoveActionLoading,
-            isChangeSpecLoading: isChangeSpecLoading,
+            isExpanded: widget.isSpaceExpanded(space),
+            onToggleExpanded: () => widget.onToggleSpaceExpanded(space),
+            onToggleItemSelected: widget.onToggleItemSelected,
+            onChangeQuantity: widget.onChangeQuantity,
+            onDeleteItem: widget.onDeleteItem,
+            onRemarkChanged: widget.onRemarkChanged,
+            onChangeSpec: widget.onChangeSpec,
+            isItemBusy: widget.isItemBusy,
+            isRemoveActionLoading: widget.isRemoveActionLoading,
+            isChangeSpecLoading: widget.isChangeSpecLoading,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CartSalesRepPicker extends StatelessWidget {
+  const _CartSalesRepPicker({
+    required this.reps,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<CartSalesRepDto> reps;
+  final CartSalesRepDto? selected;
+  final ValueChanged<CartSalesRepDto> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final display = selected?.name.trim().isNotEmpty == true
+        ? selected!.name
+        : 'Select SM';
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _openPicker(context),
+        child: Ink(
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+            color: Colors.white.withValues(alpha: 0.06),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SalesRepAvatar(url: selected?.avatar),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Text(
+                  display,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.edit_outlined, size: 14, color: Colors.white70),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPicker(BuildContext context) async {
+    final selectedRep = await showModalBottomSheet<CartSalesRepDto>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final keyboardBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
+        var query = '';
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(bottom: keyboardBottom),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return DraggableScrollableSheet(
+                expand: false,
+                initialChildSize: 0.56,
+                minChildSize: 0.32,
+                maxChildSize: 0.9,
+                builder: (context, scrollController) {
+                  final filtered = reps.where((rep) {
+                    final keyword = query.trim().toLowerCase();
+                    if (keyword.isEmpty) return true;
+                    final name = rep.name.toLowerCase();
+                    final dept = rep.deptName.toLowerCase();
+                    final phone = (rep.telephone ?? '').toLowerCase();
+                    return name.contains(keyword) ||
+                        dept.contains(keyword) ||
+                        phone.contains(keyword);
+                  }).toList(growable: false);
+                  return DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1A1D24),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(18),
+                      ),
+                      border: Border(
+                        top: BorderSide(color: Color(0x44FFFFFF)),
+                      ),
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.white24,
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Select Sales Rep',
+                                style: TextStyle(
+                                  color: ProMaxTokens.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: 'Search',
+                                hintStyle: const TextStyle(
+                                  color: Colors.white54,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Colors.white70,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white.withValues(alpha: 0.08),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              onChanged: (value) =>
+                                  setSheetState(() => query = value),
+                            ),
+                            const SizedBox(height: 10),
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 220,
+                                ),
+                                child: filtered.isEmpty
+                                    ? const Center(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.inbox_outlined,
+                                              color: Colors.white54,
+                                              size: 26,
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'No matching sales rep',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : ListView.separated(
+                                        controller: scrollController,
+                                        itemCount: filtered.length,
+                                        separatorBuilder: (_, __) => Divider(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                        ),
+                                        itemBuilder: (context, index) {
+                                          final rep = filtered[index];
+                                          return ListTile(
+                                            dense: true,
+                                            leading: _SalesRepAvatar(
+                                              url: rep.avatar,
+                                            ),
+                                            title: Text(
+                                              rep.name,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              rep.deptName,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            onTap: () => Navigator.of(
+                                              sheetContext,
+                                            ).pop(rep),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+    if (selectedRep != null) {
+      onChanged(selectedRep);
+    }
+  }
+}
+
+class _SalesRepAvatar extends StatelessWidget {
+  const _SalesRepAvatar({this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = url?.trim() ?? '';
+    return ClipOval(
+      child: SizedBox(
+        width: 22,
+        height: 22,
+        child: avatarUrl.isEmpty
+            ? Container(
+                color: Colors.white.withValues(alpha: 0.2),
+                child: const Icon(Icons.person, size: 14, color: Colors.white),
+              )
+            : Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  child: const Icon(
+                    Icons.person,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+      ),
     );
   }
 }

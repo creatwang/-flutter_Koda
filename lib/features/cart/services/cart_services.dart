@@ -71,13 +71,18 @@ Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
       bypassMemoryCache: bypassMemoryCache,
     );
     final data = response.data;
-    if (data is! List) {
+    final rawList = switch (data) {
+      List() => data,
+      Map() => data['result'] is List ? data['result'] as List : null,
+      _ => null,
+    };
+    if (rawList == null) {
       throw DioException(
         requestOptions: response.requestOptions,
         error: 'Invalid cart list response format',
       );
     }
-    final cartList = data
+    final cartList = rawList
         .whereType<Map>()
         .map((e) => CartListDto.fromJson(e.cast<String, dynamic>()))
         .toList(growable: false);

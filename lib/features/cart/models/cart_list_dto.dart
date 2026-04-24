@@ -5,6 +5,8 @@ class CartListDto {
     required this.id,
     required this.name,
     required this.items,
+    this.smId = 0,
+    this.smItems = const <CartSalesRepDto>[],
   });
 
   final int totalNum;
@@ -12,17 +14,66 @@ class CartListDto {
   final int id;
   final String name;
   final List<CartSiteDto> items;
+  final int smId;
+  final List<CartSalesRepDto> smItems;
 
   factory CartListDto.fromJson(Map<String, dynamic> json) {
-    return CartListDto(
-      totalNum: _asInt(json['total_num']) ?? 0,
-      totalAmount: _asDouble(json['total_amount']) ?? 0,
-      id: _asInt(json['id']) ?? 0,
-      name: (json['name'] ?? '').toString(),
-      items: (json['items'] as List? ?? const <dynamic>[])
+    final totalNum = _asInt(json['total_num']) ?? 0;
+    final totalAmount = _asDouble(json['total_amount']) ?? 0;
+    final id = _asInt(json['id']) ?? 0;
+    final name = (json['name'] ?? '').toString();
+    final smId = _asInt(json['sm_id']) ?? 0;
+    final smItems = _parseSalesRepList(json['sm_items']);
+    final rawItems = (json['items'] as List? ?? const <dynamic>[]);
+
+    final isLegacySiteList = rawItems.any(
+      (e) => e is Map && e['cart'] is Map,
+    );
+    if (isLegacySiteList) {
+      final sites = rawItems
           .whereType<Map>()
           .map((e) => CartSiteDto.fromJson(e.cast<String, dynamic>()))
-          .toList(growable: false),
+          .toList(growable: false);
+      return CartListDto(
+        totalNum: totalNum,
+        totalAmount: totalAmount,
+        id: id,
+        name: name,
+        items: sites,
+        smId: smId,
+        smItems: smItems,
+      );
+    }
+
+    // 新结构：当前层的 items 就是空间列表，适配为单站点结构供现有 UI 复用。
+    final spaces = rawItems
+        .whereType<Map>()
+        .map((e) => CartSpaceDto.fromJson(e.cast<String, dynamic>()))
+        .toList(growable: false);
+    final inferredCompanyId =
+        _inferCompanyIdFromSpaces(spaces) ??
+        _asInt(json['company_id']) ??
+        id;
+    return CartListDto(
+      totalNum: totalNum,
+      totalAmount: totalAmount,
+      id: id,
+      name: name,
+      smId: smId,
+      smItems: smItems,
+      items: <CartSiteDto>[
+        CartSiteDto(
+          cart: CartSiteSummaryDto(
+            items: spaces,
+            totalNum: totalNum,
+            totalAmount: totalAmount,
+          ),
+          shopName: name,
+          companyId: inferredCompanyId,
+          smId: smId,
+          smItems: smItems,
+        ),
+      ],
     );
   }
 
@@ -31,7 +82,9 @@ class CartListDto {
       'total_num': totalNum,
       'total_amount': totalAmount,
       'id': id,
+      'sm_id': smId,
       'name': name,
+      'sm_items': smItems.map((e) => e.toJson()).toList(growable: false),
       'items': items.map((e) => e.toJson()).toList(growable: false),
     };
   }
@@ -42,11 +95,15 @@ class CartSiteDto {
     required this.cart,
     required this.shopName,
     required this.companyId,
+    this.smId = 0,
+    this.smItems = const <CartSalesRepDto>[],
   });
 
   final CartSiteSummaryDto cart;
   final String shopName;
   final int companyId;
+  final int smId;
+  final List<CartSalesRepDto> smItems;
 
   factory CartSiteDto.fromJson(Map<String, dynamic> json) {
     return CartSiteDto(
@@ -55,6 +112,8 @@ class CartSiteDto {
       ),
       shopName: (json['shop_name'] ?? '').toString(),
       companyId: _asInt(json['company_id']) ?? 0,
+      smId: _asInt(json['sm_id']) ?? 0,
+      smItems: _parseSalesRepList(json['sm_items']),
     );
   }
 
@@ -63,6 +122,8 @@ class CartSiteDto {
       'cart': cart.toJson(),
       'shop_name': shopName,
       'company_id': companyId,
+      'sm_id': smId,
+      'sm_items': smItems.map((e) => e.toJson()).toList(growable: false),
     };
   }
 
@@ -70,11 +131,15 @@ class CartSiteDto {
     CartSiteSummaryDto? cart,
     String? shopName,
     int? companyId,
+    int? smId,
+    List<CartSalesRepDto>? smItems,
   }) {
     return CartSiteDto(
       cart: cart ?? this.cart,
       shopName: shopName ?? this.shopName,
       companyId: companyId ?? this.companyId,
+      smId: smId ?? this.smId,
+      smItems: smItems ?? this.smItems,
     );
   }
 }
@@ -196,6 +261,12 @@ class CartProductDto {
     required this.isCollect,
     required this.avgComment,
     required this.remark,
+    this.companyId = 0,
+    this.shopDepartmentId = 0,
+    this.smId = 0,
+    this.subPrice = 0,
+    this.combProductList = const <dynamic>[],
+    this.matchCombinations = const <dynamic>[],
   });
 
   final int id;
@@ -215,6 +286,12 @@ class CartProductDto {
   final bool isCollect;
   final String avgComment;
   final String remark;
+  final int companyId;
+  final int shopDepartmentId;
+  final int smId;
+  final double subPrice;
+  final List<dynamic> combProductList;
+  final List<dynamic> matchCombinations;
 
   bool get isSelected => selected == 1;
 
@@ -237,6 +314,16 @@ class CartProductDto {
       isCollect: json['is_collect'] == true || json['is_collect'] == 1,
       avgComment: (json['avg_comment'] ?? '').toString(),
       remark: (json['remark'] ?? '').toString(),
+      companyId: _asInt(json['company_id']) ?? 0,
+      shopDepartmentId: _asInt(json['shop_department_id']) ?? 0,
+      smId: _asInt(json['sm_id']) ?? 0,
+      subPrice: _asDouble(json['sub_price']) ?? 0,
+      combProductList:
+          (json['comb_product_list'] as List? ?? const <dynamic>[])
+              .toList(growable: false),
+      matchCombinations:
+          (json['match_combinations'] as List? ?? const <dynamic>[])
+              .toList(growable: false),
     );
   }
 
@@ -259,6 +346,12 @@ class CartProductDto {
       'is_collect': isCollect,
       'avg_comment': avgComment,
       'remark': remark,
+      'company_id': companyId,
+      'shop_department_id': shopDepartmentId,
+      'sm_id': smId,
+      'sub_price': subPrice,
+      'comb_product_list': combProductList,
+      'match_combinations': matchCombinations,
     };
   }
 
@@ -281,8 +374,67 @@ class CartProductDto {
       isCollect: isCollect,
       avgComment: avgComment,
       remark: remark ?? this.remark,
+      companyId: companyId,
+      shopDepartmentId: shopDepartmentId,
+      smId: smId,
+      subPrice: subPrice,
+      combProductList: combProductList,
+      matchCombinations: matchCombinations,
     );
   }
+}
+
+class CartSalesRepDto {
+  const CartSalesRepDto({
+    required this.id,
+    required this.name,
+    required this.avatar,
+    required this.deptName,
+    this.telephone,
+  });
+
+  final int id;
+  final String name;
+  final String avatar;
+  final String deptName;
+  final String? telephone;
+
+  factory CartSalesRepDto.fromJson(Map<String, dynamic> json) {
+    return CartSalesRepDto(
+      id: _asInt(json['id']) ?? 0,
+      name: (json['name'] ?? '').toString(),
+      avatar: (json['avatar'] ?? '').toString(),
+      deptName: (json['deptName'] ?? '').toString(),
+      telephone: json['telephone']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'name': name,
+      'avatar': avatar,
+      'deptName': deptName,
+      'telephone': telephone,
+    };
+  }
+}
+
+List<CartSalesRepDto> _parseSalesRepList(dynamic raw) {
+  final list = raw as List? ?? const <dynamic>[];
+  return list
+      .whereType<Map>()
+      .map((e) => CartSalesRepDto.fromJson(e.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+int? _inferCompanyIdFromSpaces(List<CartSpaceDto> spaces) {
+  for (final space in spaces) {
+    for (final item in space.list) {
+      if (item.companyId > 0) return item.companyId;
+    }
+  }
+  return null;
 }
 
 int? _asInt(dynamic value) {

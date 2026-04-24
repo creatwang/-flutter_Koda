@@ -603,6 +603,20 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
     return null;
   }
 
+  bool get _siteHasItems {
+    return widget.site.cart.items
+        .expand((space) => space.list)
+        .isNotEmpty;
+  }
+
+  bool get _siteAllSelected {
+    final items = widget.site.cart.items
+        .expand((space) => space.list)
+        .toList(growable: false);
+    if (items.isEmpty) return false;
+    return items.every((item) => item.isSelected);
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedSalesRep = _selectedSalesRep;
@@ -615,27 +629,20 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                /*  Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Transform.scale(
-                      scale: 0.8,
-                      child: Checkbox(
-                        value: allSelected,
-                        onChanged: hasItems && !isSiteBusy
-                            ? (value) => onToggleSiteSelected(value ?? false)
-                            : null,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(
-                          horizontal: -4,
-                          vertical: -4,
-                        ),
-                      ),
-                    ),
+                Center(
+                  child: SmallCheckSquareCheckboxWidget(
+                    value: _siteAllSelected,
+                    touchExtent: 34,
+                    onChanged: _siteHasItems && !widget.isSiteBusy
+                        ? (selected) {
+                            unawaited(
+                              widget.onToggleSiteSelected(selected),
+                            );
+                          }
+                        : null,
                   ),
                 ),
-                const SizedBox(width: 8),*/
+                const SizedBox(width: 8),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,

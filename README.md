@@ -211,11 +211,70 @@ flutter run 2>&1 | grep "\[NET\]\[TRACE\]"
 
 ---
 
+## 应用图标（flutter_launcher_icons）
+
+本项目已接入 `flutter_launcher_icons`，用于从一张源图自动生成
+Android/iOS 启动器图标。
+
+### 1) 配置位置
+
+在 `pubspec.yaml` 中包含以下两部分：
+
+```yaml
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/app.png
+```
+
+说明：
+
+- `image_path` 指向图标源文件（当前为 `assets/images/app.png`）。
+- 建议使用 1024x1024 PNG，主体居中，减少边缘留白。
+- iOS 上架建议使用无透明背景图片（避免审核风险）。
+
+### 2) 首次生成 / 重新生成
+
+当你替换了 `assets/images/app.png`，或调整了
+`flutter_launcher_icons` 配置后，执行：
+
+```bash
+flutter pub get
+dart run flutter_launcher_icons
+```
+
+这两个命令可重复执行；`dart run flutter_launcher_icons`
+会覆盖旧图标产物。
+
+### 3) 本次会改动哪些文件
+
+执行生成后，通常会改动以下文件：
+
+- Android 图标：
+  `android/app/src/main/res/mipmap-*/ic_launcher.png`
+- iOS 图标资源集：
+  `ios/Runner/Assets.xcassets/AppIcon.appiconset/*`
+- iOS 图标清单：
+  `ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json`
+- 依赖锁文件（首次引入依赖时）：
+  `pubspec.lock`
+
+另外，本次已手动修改应用名称为“选品助手”：
+
+- `android/app/src/main/AndroidManifest.xml`
+- `ios/Runner/Info.plist`
+
+---
+
 ## 常用命令速查
 
 ```bash
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter gen-l10n
+dart run flutter_launcher_icons
 flutter build apk --release
 ```

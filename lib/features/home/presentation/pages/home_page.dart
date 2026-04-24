@@ -16,9 +16,9 @@ import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/frosted_bottom_menu.dart';
 import 'package:george_pick_mate/shared/widgets/header_menu_button.dart';
 
-import '../../../product/presentation/pages/product_category_page.dart';
+import 'home_start.dart';
 
-enum HomeSection { products, cart, productCategory, profile }
+enum HomeSection { products, cart, start, profile }
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, this.initialTab});
@@ -30,7 +30,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  HomeSection _section = HomeSection.products;
+  HomeSection _section = HomeSection.start;
   bool _isLogoutLoading = false;
   bool _showSwitchSiteEntry = false;
   Timer? _profileSwitchSiteHoldTimer;
@@ -82,7 +82,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       HomeSection.products => const ProductListPage(),
       // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
-      HomeSection.productCategory => const ProductCategoryPage(),
+      HomeSection.start => const HomeStartPage(),
       HomeSection.profile => ProfilePage(
         showSwitchSiteEntry: _showSwitchSiteEntry,
       ),
@@ -93,10 +93,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       automaticallyImplyLeading: false,
       actions: [
         HeaderMenuButton(
-          label: l10n.homeCategory,
+          label: 'Home',
           icon: Icons.storefront,
-          selected: _section == HomeSection.productCategory,
-          onTap: () => setState(() => _section = HomeSection.productCategory),
+          selected: _section == HomeSection.start,
+          onTap: () => setState(() => _section = HomeSection.start),
         ),
         HeaderMenuButton(
           label: l10n.homeProducts,
@@ -190,9 +190,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         items: [
           FrostedBottomMenuItem(
             icon: Icons.home_outlined,
-            label: l10n.homeCategory,
-            selected: _section == HomeSection.productCategory,
-            onTap: () => setState(() => _section = HomeSection.productCategory),
+            label: 'Home',
+            selected: _section == HomeSection.start,
+            onTap: () => setState(() => _section = HomeSection.start),
           ),
           FrostedBottomMenuItem(
             icon: Icons.inventory_2_outlined,

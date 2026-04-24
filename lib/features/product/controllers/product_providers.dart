@@ -26,9 +26,11 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   int _selectedShopCategoryId = 0;
   String? _sort;
   int _orderBy = 0;
+  int _queryVersion = 0;
 
   @override
   FutureOr<PaginatedProductsState> build() async {
+    _queryVersion++;
     final result = await fetchProductsPageService(
       page: 1,
       pageSize: _pageSize,
@@ -47,6 +49,8 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 
   Future<void> refresh() async {
+    _queryVersion++;
+    final version = _queryVersion;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final result = await fetchProductsPageService(
@@ -56,6 +60,9 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
         sort: _sort,
         orderBy: _orderBy,
       );
+      if (version != _queryVersion) {
+        throw StateError('Stale products refresh response');
+      }
       return result.when(
         success: (data) => PaginatedProductsState(
           items: data,
@@ -67,19 +74,28 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     });
   }
 
-  Future<void> loadMore() async {
+  Future<void> loadMoreOnScroll() => _loadMoreNextPage();
+
+  Future<void> loadMoreWhenViewportNotFilled() => _loadMoreNextPage();
+
+  Future<void> _loadMoreNextPage() async {
     final current = state.asData?.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
     final nextPage = current.page + 1;
+    final version = _queryVersion;
+    final selectedShopCategoryId = _selectedShopCategoryId;
+    final sort = _sort;
+    final orderBy = _orderBy;
     final result = await fetchProductsPageService(
       page: nextPage,
       pageSize: _pageSize,
-      shopCateGoryId: _selectedShopCategoryId,
-      sort: _sort,
-      orderBy: _orderBy,
+      shopCateGoryId: selectedShopCategoryId,
+      sort: sort,
+      orderBy: orderBy,
     );
+    if (version != _queryVersion) return;
 
     state = result.when(
       success: (allData) {

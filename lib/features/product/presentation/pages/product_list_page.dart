@@ -68,7 +68,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     if (_scrollController.position.extentAfter < 300) {
-      ref.read(productsProvider.notifier).loadMore();
+      ref.read(productsProvider.notifier).loadMoreOnScroll();
     }
   }
 
@@ -84,7 +84,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
       // 内容不足一屏时（无法滚动到底），主动触发下一页加载。
       if (_scrollController.position.maxScrollExtent <= 0) {
-        ref.read(productsProvider.notifier).loadMore();
+        ref.read(productsProvider.notifier).loadMoreWhenViewportNotFilled();
       }
     });
   }

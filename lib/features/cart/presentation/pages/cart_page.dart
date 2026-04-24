@@ -694,16 +694,14 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                           ),
                         ),
                       ),
-                      if (widget.site.smItems.isNotEmpty) ...[
-                        const SizedBox(width: 12),
-                        _CartSalesRepPicker(
-                          reps: widget.site.smItems,
-                          selected: selectedSalesRep,
-                          onChanged: (next) {
-                            setState(() => _selectedSalesRepId = next.id);
-                          },
-                        ),
-                      ],
+                      const SizedBox(width: 12),
+                      _CartSalesRepPicker(
+                        reps: widget.site.smItems,
+                        selected: selectedSalesRep,
+                        onChanged: (next) {
+                          setState(() => _selectedSalesRepId = next.id);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -745,43 +743,51 @@ class _CartSalesRepPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasReps = reps.isNotEmpty;
     final display = selected?.name.trim().isNotEmpty == true
         ? selected!.name
-        : 'Select SM';
+        : (hasReps ? 'Select SM' : 'No SM');
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: () => _openPicker(context),
-        child: Ink(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            color: Colors.white.withValues(alpha: 0.06),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _SalesRepAvatar(url: selected?.avatar),
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 120),
-                child: Text(
-                  display,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+        onTap: hasReps ? () => _openPicker(context) : null,
+        child: Opacity(
+          opacity: hasReps ? 1 : 0.55,
+          child: Ink(
+            height: 34,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+              color: Colors.white.withValues(alpha: 0.06),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _SalesRepAvatar(url: selected?.avatar),
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    display,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.edit_outlined, size: 14, color: Colors.white70),
-            ],
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.edit_outlined,
+                  size: 14,
+                  color: hasReps ? Colors.white70 : Colors.white38,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -789,6 +795,7 @@ class _CartSalesRepPicker extends StatelessWidget {
   }
 
   Future<void> _openPicker(BuildContext context) async {
+    if (reps.isEmpty) return;
     final selectedRep = await showModalBottomSheet<CartSalesRepDto>(
       context: context,
       isScrollControlled: true,

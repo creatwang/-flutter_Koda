@@ -3,6 +3,7 @@
 ## 文档
 
 - [Dio 请求选项（extra、simpleResponse、noCache、noRetry）](docs/DIO_OPTIONS.md)
+- [Android 非商店自动升级方案](docs/ANDROID_NON_STORE_UPGRADE_PLAN.md)
 
 ---
 

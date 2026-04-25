@@ -32,9 +32,6 @@ class GeorgeOutlinedButton extends StatelessWidget {
     this.loadingStrokeWidth = 2,
     this.loadingIndicatorColor,
     this.loadingGap = 8,
-    this.loadingText,
-    this.loadingTextStyle,
-    this.loadingReplacement,
     this.alignment,
   });
 
@@ -107,15 +104,6 @@ class GeorgeOutlinedButton extends StatelessWidget {
   /// 加载转圈与主体内容之间的水平间距。
   final double loadingGap;
 
-  /// 非空且 [isLoading] 时，优先展示「左侧转圈 + 该文案」。
-  final String? loadingText;
-
-  /// [loadingText] 的样式；为 null 时使用前景相关默认色。
-  final TextStyle? loadingTextStyle;
-
-  /// 非空且 [isLoading] 时，整颗按钮 child 仅为此组件（次于 [loadingText]）。
-  final Widget? loadingReplacement;
-
   /// 子内容在按钮内的对齐；为 null 时由主题决定。
   final AlignmentGeometry? alignment;
 
@@ -154,31 +142,6 @@ class GeorgeOutlinedButton extends StatelessWidget {
   }
 
   Widget _buildChild() {
-    if (isLoading && loadingText != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: loadingIndicatorSize,
-            height: loadingIndicatorSize,
-            child: CircularProgressIndicator(
-              strokeWidth: loadingStrokeWidth,
-              color: loadingIndicatorColor ?? foregroundColor,
-            ),
-          ),
-          SizedBox(width: loadingGap),
-          Text(
-            loadingText!,
-            style:
-                loadingTextStyle ??
-                TextStyle(color: loadingIndicatorColor ?? foregroundColor),
-          ),
-        ],
-      );
-    }
-    if (isLoading && loadingReplacement != null) {
-      return loadingReplacement!;
-    }
     final showEndIcon =
         endIcon != null && (!isLoading || keepEndIconDuringLoading);
     final core = Row(

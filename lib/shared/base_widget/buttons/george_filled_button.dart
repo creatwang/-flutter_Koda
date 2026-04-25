@@ -34,12 +34,10 @@ class GeorgeFilledButton extends StatelessWidget {
     this.iconSize = 16,
     this.iconGap = 6,
     this.keepEndIconDuringLoading = false,
-    this.loadingOnlyIndicator = false,
     this.loadingIndicatorSize = 14,
     this.loadingStrokeWidth = 2,
     this.loadingIndicatorColor,
     this.loadingGap = 8,
-    this.loadingReplacement,
     this.alignment,
   });
 
@@ -109,9 +107,6 @@ class GeorgeFilledButton extends StatelessWidget {
   /// 加载时是否仍显示 [endIcon]（默认加载时隐藏尾部图标）。
   final bool keepEndIconDuringLoading;
 
-  /// 为 true 时加载态仅显示转圈（不展示 [child] 与图标）。
-  final bool loadingOnlyIndicator;
-
   /// 转圈边长（宽高一致）。
   final double loadingIndicatorSize;
 
@@ -123,9 +118,6 @@ class GeorgeFilledButton extends StatelessWidget {
 
   /// 加载转圈与主体内容之间的水平间距。
   final double loadingGap;
-
-  /// 非空且 [isLoading] 时，整颗按钮 child 仅为此组件（最高优先级）。
-  final Widget? loadingReplacement;
 
   /// 子内容在按钮内的对齐；为 null 时由主题决定。
   final AlignmentGeometry? alignment;
@@ -166,19 +158,6 @@ class GeorgeFilledButton extends StatelessWidget {
   }
 
   Widget _buildChild() {
-    if (isLoading && loadingOnlyIndicator) {
-      return SizedBox(
-        width: loadingIndicatorSize,
-        height: loadingIndicatorSize,
-        child: CircularProgressIndicator(
-          strokeWidth: loadingStrokeWidth,
-          color: loadingIndicatorColor ?? foregroundColor,
-        ),
-      );
-    }
-    if (isLoading && loadingReplacement != null) {
-      return loadingReplacement!;
-    }
     final showEndIcon =
         endIcon != null && (!isLoading || keepEndIconDuringLoading);
     final core = Row(

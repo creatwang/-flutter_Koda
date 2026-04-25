@@ -148,10 +148,6 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                           onPressed: selectedCount <= 0
                                               ? null
                                               : _onExportQuotation,
-                                          loadingText: 'Loading...',
-                                          loadingTextStyle: const TextStyle(
-                                            color: Colors.white70,
-                                          ),
                                           child: const Text('Export'),
                                         ),
                                       if (canExportQuotation)
@@ -167,7 +163,6 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                         iconSize: 14,
                                         iconGap: 8,
                                         isLoading: _isCheckingOut,
-                                        loadingOnlyIndicator: true,
                                         loadingIndicatorSize: 16,
                                         onPressed: selectedCount <= 0
                                             ? null
@@ -235,25 +230,6 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Curated Shortlist',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: ProMaxTokens.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 30,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${siteEntries.length} EXCLUSIVE SECTIONS SELECTED',
-              style: TextStyle(
-                color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
-                letterSpacing: 1.1,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
             Expanded(
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -1351,14 +1327,13 @@ class _CartProductTileState extends State<_CartProductTile> {
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 widget.item.mainImage,
-                width: 130,
-                height: 130,
+                width: 80,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const ColoredBox(
                   color: Color(0x33222222),
                   child: SizedBox(
-                    width: 88,
-                    height: 88,
+                    width: 80,
+                    height: 80,
                     child: Icon(
                       Icons.image_not_supported,
                       color: Colors.white70,
@@ -1388,7 +1363,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
-                                fontSize: 20,
+                                fontSize: 16,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1425,168 +1400,152 @@ class _CartProductTileState extends State<_CartProductTile> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.16),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 5,
-                        ),
+                      GeorgeQuantityControl(
+                        quantityText:
+                            '${widget.item.productNum} ${widget.item.unit}',
+                        isDecreaseEnabled:
+                            !widget.isBusy && widget.item.productNum > 1,
+                        isIncreaseEnabled: !widget.isBusy,
+                        onDecreaseTap: () => _changeQuantityByDelta(-1),
+                        onIncreaseTap: () => _changeQuantityByDelta(1),
+                        onDecreaseLongPressStart: () =>
+                            _startContinuousAdjust(-1),
+                        onDecreaseLongPressEnd: _stopContinuousAdjust,
+                        onIncreaseLongPressStart: () =>
+                            _startContinuousAdjust(1),
+                        onIncreaseLongPressEnd: _stopContinuousAdjust,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            GeorgeQuantityControl(
-                              icon: Icons.remove,
-                              enabled:
-                                  !widget.isBusy && widget.item.productNum > 1,
-                              onTap: () => _changeQuantityByDelta(-1),
-                              onLongPressStart: () =>
-                                  _startContinuousAdjust(-1),
-                              onLongPressEnd: _stopContinuousAdjust,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              '${widget.item.productNum} ${widget.item.unit}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 290),
+                                  child: SizedBox(
+                                    height: 34,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.14),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: TextField(
+                                        controller: _remarkController,
+                                        focusNode: _remarkFocusNode,
+                                        scrollPadding: EdgeInsets.only(
+                                          bottom:
+                                              24 +
+                                              MediaQuery.viewInsetsOf(
+                                                context,
+                                              ).bottom,
+                                        ),
+                                        readOnly: widget.isBusy,
+                                        maxLines: 1,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          prefixIcon: Icon(
+                                            Icons.edit_outlined,
+                                            size: 14,
+                                            color: Colors.white54,
+                                          ),
+                                          prefixIconConstraints: BoxConstraints(
+                                            minWidth: 26,
+                                            maxWidth: 26,
+                                          ),
+                                          hintText: 'Please edit content',
+                                          hintStyle: TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 7,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            GeorgeQuantityControl(
-                              icon: Icons.add,
-                              enabled: !widget.isBusy,
-                              onTap: () => _changeQuantityByDelta(1),
-                              onLongPressStart: () => _startContinuousAdjust(1),
-                              onLongPressEnd: _stopContinuousAdjust,
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: widget.isBusy
+                                  ? null
+                                  : () => widget.onDeleteItem(widget.item),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                minimumSize: const Size(0, 22),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                foregroundColor: Colors.white70,
+                                disabledForegroundColor: Colors.white30,
+                              ),
+                              icon: widget.isRemoveActionLoading
+                                  ? SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.75,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(Icons.delete_outline, size: 14),
+                              label: const Text(
+                                'REMOVE',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: widget.isBusy
+                                  ? null
+                                  : () => widget.onChangeSpec(widget.item),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                minimumSize: const Size(0, 22),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                foregroundColor: Colors.white70,
+                                disabledForegroundColor: Colors.white30,
+                              ),
+                              icon: widget.isChangeSpecLoading
+                                  ? SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.75,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(Icons.tune, size: 14),
+                              label: const Text(
+                                'EDIT',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 290),
-                            child: SizedBox(
-                              height: 30,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: TextField(
-                                  controller: _remarkController,
-                                  focusNode: _remarkFocusNode,
-                                  scrollPadding: EdgeInsets.only(
-                                    bottom:
-                                        24 +
-                                        MediaQuery.viewInsetsOf(context).bottom,
-                                  ),
-                                  readOnly: widget.isBusy,
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                  decoration: const InputDecoration(
-                                    isDense: true,
-                                    prefixIcon: Icon(
-                                      Icons.edit_outlined,
-                                      size: 14,
-                                      color: Colors.white54,
-                                    ),
-                                    prefixIconConstraints: BoxConstraints(
-                                      minWidth: 26,
-                                      maxWidth: 26,
-                                    ),
-                                    hintText: 'Please edit content',
-                                    hintStyle: TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 12,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 7,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: widget.isBusy
-                            ? null
-                            : () => widget.onDeleteItem(widget.item),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          minimumSize: const Size(0, 22),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          foregroundColor: Colors.white70,
-                          disabledForegroundColor: Colors.white30,
-                        ),
-                        icon: widget.isRemoveActionLoading
-                            ? SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                ),
-                              )
-                            : const Icon(Icons.delete_outline, size: 14),
-                        label: const Text(
-                          'REMOVE',
-                          style: TextStyle(fontSize: 10, letterSpacing: 0.4),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: widget.isBusy
-                            ? null
-                            : () => widget.onChangeSpec(widget.item),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          minimumSize: const Size(0, 22),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          foregroundColor: Colors.white70,
-                          disabledForegroundColor: Colors.white30,
-                        ),
-                        icon: widget.isChangeSpecLoading
-                            ? SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                ),
-                              )
-                            : const Icon(Icons.tune, size: 14),
-                        label: Text(
-                          'EDIT',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+
                 ],
               ),
             ),

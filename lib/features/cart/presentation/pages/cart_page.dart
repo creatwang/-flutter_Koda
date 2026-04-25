@@ -1371,48 +1371,20 @@ class _CartProductTileState extends State<_CartProductTile> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.16),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 5,
-                        ),
-                        child: Row(
-                          children: [
-                            GeorgeQuantityControl(
-                              icon: Icons.remove,
-                              enabled:
-                                  !widget.isBusy && widget.item.productNum > 1,
-                              onTap: () => _changeQuantityByDelta(-1),
-                              onLongPressStart: () =>
-                                  _startContinuousAdjust(-1),
-                              onLongPressEnd: _stopContinuousAdjust,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              '${widget.item.productNum} ${widget.item.unit}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            GeorgeQuantityControl(
-                              icon: Icons.add,
-                              enabled: !widget.isBusy,
-                              onTap: () => _changeQuantityByDelta(1),
-                              onLongPressStart: () => _startContinuousAdjust(1),
-                              onLongPressEnd: _stopContinuousAdjust,
-                            ),
-                          ],
-                        ),
+                      GeorgeQuantityControl(
+                        quantityText:
+                            '${widget.item.productNum} ${widget.item.unit}',
+                        isDecreaseEnabled:
+                            !widget.isBusy && widget.item.productNum > 1,
+                        isIncreaseEnabled: !widget.isBusy,
+                        onDecreaseTap: () => _changeQuantityByDelta(-1),
+                        onIncreaseTap: () => _changeQuantityByDelta(1),
+                        onDecreaseLongPressStart: () =>
+                            _startContinuousAdjust(-1),
+                        onDecreaseLongPressEnd: _stopContinuousAdjust,
+                        onIncreaseLongPressStart: () =>
+                            _startContinuousAdjust(1),
+                        onIncreaseLongPressEnd: _stopContinuousAdjust,
                       ),
                     ],
                   ),
@@ -1426,11 +1398,11 @@ class _CartProductTileState extends State<_CartProductTile> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 290),
                             child: SizedBox(
-                              height: 30,
+                              height: 34,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: TextField(
                                   controller: _remarkController,

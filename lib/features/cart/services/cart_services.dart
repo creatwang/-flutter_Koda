@@ -264,17 +264,20 @@ String? validateSmForPreSubmitOrder({
 /// 组装 [requestCartSetSm] 请求体中的 `data`。
 ///
 /// [shop_department_id] 为购物车列表一级 [CartListDto.id]；同一部门多站点时
-/// 取迭代中最后一次有效 `sm_id`。
+/// 取迭代中最后一次有效 `sm_id`，并附带该部门下当前选中行 `cart_ids`。
 List<Map<String, dynamic>> buildSetSmRequestItems({
   required List<CartListDto> groups,
   required Map<int, int> reportedSmIdByCompanyId,
 }) {
   final departmentToSm = <int, int>{};
+  final departmentToCartIds = <int, Set<int>>{};
   for (final group in groups) {
     for (final site in group.items) {
-      final hasSelected = site.cart.items
+      final selectedItems = site.cart.items
           .expand((sp) => sp.list)
-          .any((p) => p.isSelected);
+          .where((p) => p.isSelected)
+          .toList(growable: false);
+      final hasSelected = selectedItems.isNotEmpty;
       if (!hasSelected) continue;
       final repList = site.smItems.isNotEmpty
           ? site.smItems
@@ -286,6 +289,11 @@ List<Map<String, dynamic>> buildSetSmRequestItems({
           reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
       if (smId <= 0) continue;
       departmentToSm[group.id] = smId;
+      final cartIds = departmentToCartIds.putIfAbsent(
+        group.id,
+        () => <int>{},
+      );
+      cartIds.addAll(selectedItems.map((item) => item.id));
     }
   }
   return departmentToSm.entries
@@ -293,6 +301,8 @@ List<Map<String, dynamic>> buildSetSmRequestItems({
         (e) => <String, dynamic>{
           'shop_department_id': e.key,
           'sm_id': e.value,
+          'cart_ids': (departmentToCartIds[e.key] ?? const <int>{})
+              .toList(growable: false),
         },
       )
       .toList(growable: false);

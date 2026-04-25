@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// 项目内通用描边 CTA（购物车 Clear 等），样式可通过参数覆盖。
+///
+/// 默认 [minimumSize] 为 `Size(0, 44)`（勿用 [Size.fromHeight]：其宽度为
+/// `double.infinity`，在 [Row] 等水平无界约束下会触发布局断言）。
 class MallOutlinedCtaButtonWidget extends StatelessWidget {
   const MallOutlinedCtaButtonWidget({
     super.key,
@@ -10,7 +13,7 @@ class MallOutlinedCtaButtonWidget extends StatelessWidget {
     this.foregroundColor = Colors.white,
     this.disabledForegroundColor,
     this.backgroundColor,
-    this.minimumSize = const Size.fromHeight(44),
+    this.minimumSize = const Size(0, 44),
     this.maximumSize,
     this.fixedSize,
     this.width,

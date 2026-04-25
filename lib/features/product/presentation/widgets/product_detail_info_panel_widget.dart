@@ -295,7 +295,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
         const SizedBox(height: 10),
         MallFilledCtaButtonWidget(
           width: double.infinity,
-          minimumSize: const Size.fromHeight(46),
+          minimumSize: const Size(0, 46),
           onPressed: hasMatchedSku && !isBuyNowSubmitting
               ? () async {
                   await onBuyNow();
@@ -310,7 +310,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
         const SizedBox(height: 8),
         MallFilledCtaButtonWidget(
           width: double.infinity,
-          minimumSize: const Size.fromHeight(46),
+          minimumSize: const Size(0, 46),
           backgroundColor: const Color.fromRGBO(200, 200, 200, 1),
           foregroundColor: const Color.fromRGBO(58, 72, 91, 1),
           loadingIndicatorColor: const Color.fromRGBO(58, 72, 91, 1),

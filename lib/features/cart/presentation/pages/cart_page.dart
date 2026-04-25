@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/features/cart/presentation/cart_clear_all_confirm_flow.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
@@ -21,7 +22,6 @@ import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_bu
 import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-import '../../../../shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
 import '../../models/cart_list_dto.dart';
 
 class CartPage extends ConsumerStatefulWidget {
@@ -62,15 +62,13 @@ class _CartPageState extends ConsumerState<CartPage> {
           return HomeMainContentSlot(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [AppEmptyView(message: l10n.cartEmpty),
-                SizedBox(
-                  height: 10,
-                ),
+              children: [
+                AppEmptyView(message: l10n.cartEmpty),
+                SizedBox(height: 10),
                 MallOutlinedCtaButtonWidget(
                   width: 200,
                   foregroundColor: Colors.white,
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
-                  minimumSize: const Size.fromHeight(44),
                   onPressed: () {
                     ref.invalidate(preOrderCartControllerProvider);
                     context.push(AppRoutes.preOrder);
@@ -344,7 +342,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(46),
+                    minimumSize: const Size(0, 46),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -371,7 +369,6 @@ class _CartPageState extends ConsumerState<CartPage> {
                 width: double.infinity,
                 foregroundColor: Colors.white,
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
-                minimumSize: const Size.fromHeight(44),
                 isLoading: _isClearingAll,
                 onPressed: _onClearAll,
                 child: const Text('Clear'),
@@ -420,51 +417,15 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 
   Future<void> _onClearAll() async {
-    final messenger = ScaffoldMessenger.of(context);
     final current =
         ref.read(cartControllerProvider).asData?.value ?? const <CartListDto>[];
-    final selectedIds = current
-        .expand((group) => group.items)
-        .expand((site) => site.cart.items)
-        .expand((space) => space.list)
-        .where((item) => item.isSelected)
-        .map((item) => item.id)
-        .toSet()
-        .toList(growable: false);
-    final hasSelectedItems = selectedIds.isNotEmpty;
-
-    final confirmed = await showMallConfirmDialog(
+    await runCartClearAllConfirmFlow(
       context: context,
-      title: hasSelectedItems
-          ? 'Remove selected lines?'
-          : 'Clear entire shortlist?',
-      message: hasSelectedItems
-          ? '${selectedIds.length} selected lines will be removed from '
-                'your shortlist.'
-          : 'This clears all cart lines currently loaded for your sites.',
-      confirmLabel: hasSelectedItems ? 'Remove' : 'Clear all',
-      icon: hasSelectedItems
-          ? Icons.delete_sweep_rounded
-          : Icons.cleaning_services_rounded,
-      accentColor: hasSelectedItems
-          ? const Color(0xFFFF7B6B)
-          : const Color(0xFFFFB86B),
-    );
-    if (!mounted || confirmed != true) return;
-    setState(() => _isClearingAll = true);
-    final ok = hasSelectedItems
-        ? await ref.read(cartControllerProvider.notifier).removeSelectedItems()
-        : await ref.read(cartControllerProvider.notifier).clearAllSitesCart();
-    if (!mounted) return;
-    setState(() => _isClearingAll = false);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? (hasSelectedItems ? '已删除选中商品' : '购物车已清空')
-              : (hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试'),
-        ),
-      ),
+      currentGroups: current,
+      cartNotifier: ref.read(cartControllerProvider.notifier),
+      onBusy: (isBusy) {
+        if (mounted) setState(() => _isClearingAll = isBusy);
+      },
     );
   }
 

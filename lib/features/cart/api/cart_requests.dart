@@ -219,6 +219,7 @@ Future<Response<dynamic>> requestCartSetSm({
 }) {
   return (client ?? protectedDioClient).post(
     CartRequests.setSmPath,
+    simpleResponse: false,
     data: <String, dynamic>{'data': data},
   );
 }

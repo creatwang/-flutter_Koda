@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// 项目内通用实心 CTA（Buy now、加购、侧滑确认等），样式可通过参数覆盖。
+///
+/// 需要限制高度时，优先使用 `Size(0, h)` 作为 [minimumSize]，避免
+/// [Size.fromHeight]（其最小宽度为 `double.infinity`）出现在 [Row] 等
+/// 水平无界约束中。
 class MallFilledCtaButtonWidget extends StatelessWidget {
   const MallFilledCtaButtonWidget({
     super.key,

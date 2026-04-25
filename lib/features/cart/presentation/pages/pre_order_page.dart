@@ -10,10 +10,12 @@ import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
+import 'package:george_pick_mate/features/cart/presentation/cart_clear_all_confirm_flow.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_quotation_form_bottom_sheet_widget.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
@@ -42,6 +44,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
   bool _isExportingQuotationConfig = false;
   String? _exportQuotationErrorMessage;
   bool _isCheckingOut = false;
+  bool _isClearingAll = false;
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +78,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                   return Column(
                     children: [
                       const SizedBox(height: 60),
-                      Expanded(
-                        child: _buildCuratedListPanel(context, sites),
-                      ),
+                      Expanded(child: _buildCuratedListPanel(context, sites)),
                       Padding(
                         padding: EdgeInsets.only(
                           top: 10,
@@ -106,81 +107,99 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                   ),
                                   style: const TextStyle(color: Colors.white70),
                                 ),
-                                Row(
-                                  children: [
-                                    if (canExportQuotation)
-                                      OutlinedButton.icon(
-                                        onPressed: selectedCount <= 0 ||
-                                                _isExportingQuotationConfig
-                                            ? null
-                                            : _onExportQuotation,
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: Colors.white70,
-                                          side: BorderSide(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.28,
-                                            ),
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      MallOutlinedCtaButtonWidget(
+                                        foregroundColor: Colors.white,
+                                        side: BorderSide(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.38,
                                           ),
                                         ),
-                                        icon: _isExportingQuotationConfig
-                                            ? const SizedBox(
-                                                width: 14,
-                                                height: 14,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                ),
-                                              )
-                                            : const Icon(
-                                                Icons.ios_share_outlined,
-                                                size: 16,
-                                              ),
-                                        label: Text(
-                                          _isExportingQuotationConfig
-                                              ? 'Loading...'
-                                              : 'Export',
-                                        ),
+                                        isLoading: _isClearingAll,
+                                        onPressed: _onClearAllPreOrder,
+                                        child: const Text('Clear'),
                                       ),
-                                    if (canExportQuotation)
                                       const SizedBox(width: 8),
-                                    FilledButton(
-                                      onPressed: selectedCount <= 0 ||
-                                              _isCheckingOut
-                                          ? null
-                                          : _onCheckout,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 10,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          _isCheckingOut
+                                      if (canExportQuotation)
+                                        OutlinedButton.icon(
+                                          onPressed:
+                                              selectedCount <= 0 ||
+                                                  _isExportingQuotationConfig
+                                              ? null
+                                              : _onExportQuotation,
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white70,
+                                            side: BorderSide(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.28,
+                                              ),
+                                            ),
+                                          ),
+                                          icon: _isExportingQuotationConfig
                                               ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
+                                                  width: 14,
+                                                  height: 14,
                                                   child:
                                                       CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    color: Colors.white,
-                                                  ),
+                                                        strokeWidth: 2,
+                                                      ),
                                                 )
-                                              : const Text('Go To Checkout'),
-                                          if (!_isCheckingOut) ...[
-                                            const SizedBox(width: 8),
-                                            const Icon(
-                                              Icons.arrow_forward,
-                                              size: 14,
-                                            ),
+                                              : const Icon(
+                                                  Icons.ios_share_outlined,
+                                                  size: 16,
+                                                ),
+                                          label: Text(
+                                            _isExportingQuotationConfig
+                                                ? 'Loading...'
+                                                : 'Export',
+                                          ),
+                                        ),
+                                      if (canExportQuotation)
+                                        const SizedBox(width: 8),
+                                      FilledButton(
+                                        onPressed:
+                                            selectedCount <= 0 || _isCheckingOut
+                                            ? null
+                                            : _onCheckout,
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _isCheckingOut
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: Colors.white,
+                                                        ),
+                                                  )
+                                                : const Text('Go To Checkout'),
+                                            if (!_isCheckingOut) ...[
+                                              const SizedBox(width: 8),
+                                              const Icon(
+                                                Icons.arrow_forward,
+                                                size: 14,
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -246,10 +265,10 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
             Text(
               'Curated Shortlist',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: ProMaxTokens.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 30,
-                  ),
+                color: ProMaxTokens.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 30,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -315,6 +334,20 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
         _collapsedSpaceKeys.add(key);
       }
     });
+  }
+
+  Future<void> _onClearAllPreOrder() async {
+    final current =
+        ref.read(preOrderCartControllerProvider).asData?.value ??
+        const <CartListDto>[];
+    await runCartClearAllConfirmFlow(
+      context: context,
+      currentGroups: current,
+      cartNotifier: ref.read(preOrderCartControllerProvider.notifier),
+      onBusy: (isBusy) {
+        if (mounted) setState(() => _isClearingAll = isBusy);
+      },
+    );
   }
 
   Future<bool> _onToggleSiteSelected(CartSiteDto site, bool selected) async {
@@ -543,8 +576,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     if (!mounted) return null;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            _PreOrderQuotationPreviewPage(previewUrl: previewUrl),
+        builder: (_) => _PreOrderQuotationPreviewPage(previewUrl: previewUrl),
       ),
     );
     return null;
@@ -562,16 +594,11 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     }
     final ok = await ref
         .read(preOrderCartControllerProvider.notifier)
-        .createOrderBySites(
-          companyIds: payload.companyIds,
-          cart: payload.cart,
-        );
+        .createOrderBySites(companyIds: payload.companyIds, cart: payload.cart);
     if (!mounted) return;
     setState(() => _isCheckingOut = false);
     if (!ok) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Checkout failed')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Checkout failed')));
       return;
     }
     await ref.read(preOrderCartControllerProvider.notifier).refresh();
@@ -582,6 +609,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     );
   }
 }
+
 class _CartSiteSection extends StatefulWidget {
   const _CartSiteSection({
     required this.site,
@@ -644,9 +672,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
   }
 
   bool get _siteHasItems {
-    return widget.site.cart.items
-        .expand((space) => space.list)
-        .isNotEmpty;
+    return widget.site.cart.items.expand((space) => space.list).isNotEmpty;
   }
 
   bool get _siteAllSelected {
@@ -675,9 +701,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                     touchExtent: 34,
                     onChanged: _siteHasItems && !widget.isSiteBusy
                         ? (selected) {
-                            unawaited(
-                              widget.onToggleSiteSelected(selected),
-                            );
+                            unawaited(widget.onToggleSiteSelected(selected));
                           }
                         : null,
                   ),
@@ -855,25 +879,25 @@ class _CartSalesRepPicker extends StatelessWidget {
                 minChildSize: 0.32,
                 maxChildSize: 0.9,
                 builder: (context, scrollController) {
-                  final filtered = reps.where((rep) {
-                    final keyword = query.trim().toLowerCase();
-                    if (keyword.isEmpty) return true;
-                    final name = rep.name.toLowerCase();
-                    final dept = rep.deptName.toLowerCase();
-                    final phone = (rep.telephone ?? '').toLowerCase();
-                    return name.contains(keyword) ||
-                        dept.contains(keyword) ||
-                        phone.contains(keyword);
-                  }).toList(growable: false);
+                  final filtered = reps
+                      .where((rep) {
+                        final keyword = query.trim().toLowerCase();
+                        if (keyword.isEmpty) return true;
+                        final name = rep.name.toLowerCase();
+                        final dept = rep.deptName.toLowerCase();
+                        final phone = (rep.telephone ?? '').toLowerCase();
+                        return name.contains(keyword) ||
+                            dept.contains(keyword) ||
+                            phone.contains(keyword);
+                      })
+                      .toList(growable: false);
                   return DecoratedBox(
                     decoration: const BoxDecoration(
                       color: Color(0xFF1A1D24),
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(18),
                       ),
-                      border: Border(
-                        top: BorderSide(color: Color(0x44FFFFFF)),
-                      ),
+                      border: Border(top: BorderSide(color: Color(0x44FFFFFF))),
                     ),
                     child: SafeArea(
                       top: false,

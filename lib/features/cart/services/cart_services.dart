@@ -217,9 +217,14 @@ String? validateSmForPreSubmitOrder({
           .expand((sp) => sp.list)
           .any((p) => p.isSelected);
       if (!hasSelected) continue;
-      if (site.smItems.isEmpty) continue;
+      final repList = site.smItems.isNotEmpty
+          ? site.smItems
+          : group.smItems;
+      if (repList.isEmpty) continue;
+      final fallbackSmId =
+          site.smId > 0 ? site.smId : group.smId;
       final smId =
-          reportedSmIdByCompanyId[site.companyId] ?? site.smId;
+          reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
       if (smId <= 0) {
         final fromSite = site.shopName.trim();
         final fromGroup = group.name.trim();
@@ -233,10 +238,97 @@ String? validateSmForPreSubmitOrder({
   return null;
 }
 
-/// 预提交订单：占位实现，接入 [requestPreSubmitOrder] 后在此解析响应。
-Future<ApiResult<void>> runPreSubmitOrderAfterValidationService() async {
-  // TODO: await requestPreSubmitOrder() 并按项目约定解析 code / result。
-  return const ApiSuccess(null);
+/// 组装 [requestCartSetSm] 请求体中的 `data`。
+///
+/// [shop_department_id] 为购物车列表一级 [CartListDto.id]；同一部门多站点时
+/// 取迭代中最后一次有效 `sm_id`。
+List<Map<String, dynamic>> buildSetSmRequestItems({
+  required List<CartListDto> groups,
+  required Map<int, int> reportedSmIdByCompanyId,
+}) {
+  final departmentToSm = <int, int>{};
+  for (final group in groups) {
+    for (final site in group.items) {
+      final hasSelected = site.cart.items
+          .expand((sp) => sp.list)
+          .any((p) => p.isSelected);
+      if (!hasSelected) continue;
+      final repList = site.smItems.isNotEmpty
+          ? site.smItems
+          : group.smItems;
+      if (repList.isEmpty) continue;
+      final fallbackSmId =
+          site.smId > 0 ? site.smId : group.smId;
+      final smId =
+          reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
+      if (smId <= 0) continue;
+      departmentToSm[group.id] = smId;
+    }
+  }
+  return departmentToSm.entries
+      .map(
+        (e) => <String, dynamic>{
+          'shop_department_id': e.key,
+          'sm_id': e.value,
+        },
+      )
+      .toList(growable: false);
+}
+
+/// 预提交：调用 [requestCartSetSm] 写入各部门所选 SM。
+Future<ApiResult<void>> setCartSmForPreSubmitService({
+  required List<CartListDto> groups,
+  required Map<int, int> reportedSmIdByCompanyId,
+}) async {
+  final items = buildSetSmRequestItems(
+    groups: groups,
+    reportedSmIdByCompanyId: reportedSmIdByCompanyId,
+  );
+  if (items.isEmpty) {
+    return ApiFailure(
+      AppException('No sales rep selections to submit.'),
+    );
+  }
+  try {
+    final response = await requestCartSetSm(data: items);
+    final payload = response.data;
+    if (payload is! Map) {
+      return ApiFailure(
+        AppException(
+          'Set SM failed',
+          code: response.statusCode?.toString(),
+        ),
+      );
+    }
+    final map = Map<String, dynamic>.from(payload);
+    final code = map['code'];
+    if (code is num && code != 0) {
+      return ApiFailure(
+        AppException(
+          map['message']?.toString() ?? 'Set SM failed',
+          code: code.toString(),
+        ),
+      );
+    }
+    if (code is String && code != '0' && code.trim() != '0') {
+      return ApiFailure(
+        AppException(
+          map['message']?.toString() ?? 'Set SM failed',
+          code: code,
+        ),
+      );
+    }
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Set SM failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
 }
 
 /// 加购。

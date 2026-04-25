@@ -19,8 +19,8 @@ class CartRequests {
   static const String quotationConfigPath = '/store/quotationConfig';
   static const String exportQuotationPath = '/store/cart/exportQuotation';
 
-  /// 预提交订单（占位路径，待后端确认后替换）。
-  static const String preSubmitOrderPath = '/store/cart/preSubmitOrder';
+  /// 预提交前为部门设置 SM（需鉴权）。
+  static const String setSmPath = '/store/cart/setSm';
 }
 
 /// 购物车商品总件数（需鉴权）。
@@ -210,10 +210,15 @@ Future<Response<dynamic>> requestCartChangeSpec({
   );
 }
 
-/// 预提交订单（需鉴权）。路径与请求体待业务确认后调整。
-Future<Response<dynamic>> requestPreSubmitOrder({DioClient? client}) {
+/// 为购物车部门批量设置 SM（需鉴权）。
+///
+/// [data]：`[{ shop_department_id, sm_id }, ...]`，与列表一级 `id` 对应。
+Future<Response<dynamic>> requestCartSetSm({
+  required List<Map<String, dynamic>> data,
+  DioClient? client,
+}) {
   return (client ?? protectedDioClient).post(
-    CartRequests.preSubmitOrderPath,
-    data: <String, dynamic>{},
+    CartRequests.setSmPath,
+    data: <String, dynamic>{'data': data},
   );
 }

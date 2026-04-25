@@ -54,17 +54,16 @@ class _CartPageState extends ConsumerState<CartPage> {
         child: AppErrorView(message: l10n.cartLoadFailed(error.toString())),
       ),
       data: (groups) {
-        final sites = groups
-            .expand((group) => group.items)
-            .toList(growable: false);
-        if (sites.isEmpty) {
+        final siteCount =
+            groups.fold<int>(0, (n, g) => n + g.items.length);
+        if (siteCount == 0) {
           return HomeMainContentSlot(
             child: AppEmptyView(message: l10n.cartEmpty),
           );
         }
 
         final isWide = MediaQuery.sizeOf(context).width >= 1120;
-        final listPanel = _buildCuratedListPanel(context, sites);
+        final listPanel = _buildCuratedListPanel(context, groups);
         final summaryPanel = _buildSummaryPanel(
           context,
           groups: groups,
@@ -141,7 +140,14 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
-  Widget _buildCuratedListPanel(BuildContext context, List<CartSiteDto> sites) {
+  Widget _buildCuratedListPanel(
+    BuildContext context,
+    List<CartListDto> groups,
+  ) {
+    final siteEntries = <({CartListDto group, CartSiteDto site})>[
+      for (final g in groups)
+        for (final s in g.items) (group: g, site: s),
+    ];
     return RefreshIndicator(
       onRefresh: () => ref.read(cartControllerProvider.notifier).refresh(),
       child: Container(
@@ -163,7 +169,7 @@ class _CartPageState extends ConsumerState<CartPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${sites.length} EXCLUSIVE SECTIONS SELECTED',
+              '${siteEntries.length} EXCLUSIVE SECTIONS SELECTED',
               style: TextStyle(
                 color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                 letterSpacing: 1.1,
@@ -175,16 +181,24 @@ class _CartPageState extends ConsumerState<CartPage> {
             Expanded(
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: sites.length,
+                itemCount: siteEntries.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 14),
                 itemBuilder: (_, index) {
-                  final site = sites[index];
+                  final e = siteEntries[index];
+                  final grp = e.group;
+                  final s = e.site;
+                  final smPickerReps =
+                      s.smItems.isNotEmpty ? s.smItems : grp.smItems;
+                  final resolvedSmId =
+                      s.smId > 0 ? s.smId : grp.smId;
                   return _CartSiteSection(
-                    site: site,
-                    isSpaceExpanded: (space) => _isSpaceExpanded(site, space),
-                    onToggleSpaceExpanded: (space) => _toggleSpace(site, space),
+                    site: s,
+                    smPickerReps: smPickerReps,
+                    resolvedServerSmId: resolvedSmId,
+                    isSpaceExpanded: (space) => _isSpaceExpanded(s, space),
+                    onToggleSpaceExpanded: (space) => _toggleSpace(s, space),
                     onToggleSiteSelected: (selected) =>
-                        _onToggleSiteSelected(site, selected),
+                        _onToggleSiteSelected(s, selected),
                     onToggleItemSelected: (itemId, selected) =>
                         _onToggleItemSelected(itemId, selected),
                     onChangeQuantity: _onChangeQuantity,
@@ -192,10 +206,10 @@ class _CartPageState extends ConsumerState<CartPage> {
                     onRemarkChanged: _onRemarkChanged,
                     onChangeSpec: _onChangeSpec,
                     onSiteSmSelectionReported: _onSiteSmSelectionReported,
-                    isSiteBusy: _pendingSiteIds.contains(site.companyId),
+                    isSiteBusy: _pendingSiteIds.contains(s.companyId),
                     isItemBusy: (itemId) =>
                         _pendingItemIds.contains(itemId) ||
-                        _pendingSiteIds.contains(site.companyId),
+                        _pendingSiteIds.contains(s.companyId),
                     isRemoveActionLoading: (itemId) =>
                         _removeActionLoadingItemIds.contains(itemId),
                     isChangeSpecLoading: (itemId) =>
@@ -229,10 +243,16 @@ class _CartPageState extends ConsumerState<CartPage> {
     try {
       final result = await ref
           .read(cartControllerProvider.notifier)
-          .submitPreSubmitOrderAfterSmValidation();
+          .submitPreSubmitOrderAfterSmValidation(
+            reportedSmIdByCompanyId: _reportedSmIdByCompanyId,
+          );
       if (!mounted) return;
       result.when(
-        success: (_) {},
+        success: (_) {
+          ref.invalidate(cartControllerProvider);
+          ref.invalidate(preOrderCartControllerProvider);
+          context.push(AppRoutes.preOrder);
+        },
         failure: (e) => showGlobalErrorMessage(e.message),
       );
     } finally {
@@ -598,6 +618,8 @@ class _CartPageState extends ConsumerState<CartPage> {
 class _CartSiteSection extends StatefulWidget {
   const _CartSiteSection({
     required this.site,
+    required this.smPickerReps,
+    required this.resolvedServerSmId,
     required this.isSpaceExpanded,
     required this.onToggleSpaceExpanded,
     required this.onToggleSiteSelected,
@@ -614,6 +636,13 @@ class _CartSiteSection extends StatefulWidget {
   });
 
   final CartSiteDto site;
+
+  /// SM 候选项：站点无列表时与校验一致，回退到部门（分组）级。
+  final List<CartSalesRepDto> smPickerReps;
+
+  /// 服务端已选 SM：`site` 与部门分组择非零。
+  final int resolvedServerSmId;
+
   final bool Function(CartSpaceDto space) isSpaceExpanded;
   final void Function(CartSpaceDto space) onToggleSpaceExpanded;
   final Future<bool> Function(bool selected) onToggleSiteSelected;
@@ -639,11 +668,11 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
   int _effectiveSelectedSmId() {
     final sid = _selectedSalesRepId;
     if (sid != null) {
-      for (final r in widget.site.smItems) {
+      for (final r in widget.smPickerReps) {
         if (r.id == sid) return sid;
       }
     }
-    return widget.site.smId;
+    return widget.resolvedServerSmId;
   }
 
   void _reportSmToParent() {
@@ -656,7 +685,9 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
   @override
   void initState() {
     super.initState();
-    _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    _selectedSalesRepId = widget.resolvedServerSmId > 0
+        ? widget.resolvedServerSmId
+        : null;
     WidgetsBinding.instance.addPostFrameCallback((_) => _reportSmToParent());
   }
 
@@ -665,15 +696,20 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
     super.didUpdateWidget(oldWidget);
     final companyChanged =
         oldWidget.site.companyId != widget.site.companyId;
-    final smServerChanged = oldWidget.site.smId != widget.site.smId;
-    if (companyChanged || smServerChanged) {
-      _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    final smServerChanged =
+        oldWidget.resolvedServerSmId != widget.resolvedServerSmId;
+    final repsChanged =
+        !identical(oldWidget.smPickerReps, widget.smPickerReps);
+    if (companyChanged || smServerChanged || repsChanged) {
+      _selectedSalesRepId = widget.resolvedServerSmId > 0
+          ? widget.resolvedServerSmId
+          : null;
       WidgetsBinding.instance.addPostFrameCallback((_) => _reportSmToParent());
     }
   }
 
   CartSalesRepDto? get _selectedSalesRep {
-    for (final rep in widget.site.smItems) {
+    for (final rep in widget.smPickerReps) {
       if (rep.id == _selectedSalesRepId) return rep;
     }
     return null;
@@ -772,7 +808,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                       ),
                       const SizedBox(width: 12),
                       _CartSalesRepPicker(
-                        reps: widget.site.smItems,
+                        reps: widget.smPickerReps,
                         selected: selectedSalesRep,
                         onChanged: (next) {
                           setState(() => _selectedSalesRepId = next.id);

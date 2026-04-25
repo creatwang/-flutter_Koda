@@ -23,7 +23,9 @@ class CartListDto {
     final id = _asInt(json['id']) ?? 0;
     final name = (json['name'] ?? '').toString();
     final smId = _asInt(json['sm_id']) ?? 0;
-    final smItems = _parseSalesRepList(json['sm_items']);
+    final smItems = _parseSalesRepList(
+      json['sm_items'] ?? json['smItems'],
+    );
     final rawItems = (json['items'] as List? ?? const <dynamic>[]);
 
     final isLegacySiteList = rawItems.any(
@@ -113,7 +115,9 @@ class CartSiteDto {
       shopName: (json['shop_name'] ?? '').toString(),
       companyId: _asInt(json['company_id']) ?? 0,
       smId: _asInt(json['sm_id']) ?? 0,
-      smItems: _parseSalesRepList(json['sm_items']),
+      smItems: _parseSalesRepList(
+        json['sm_items'] ?? json['smItems'],
+      ),
     );
   }
 

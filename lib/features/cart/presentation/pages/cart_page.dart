@@ -21,6 +21,7 @@ import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_bu
 import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
+import '../../../../shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
 import '../../models/cart_list_dto.dart';
 
 class CartPage extends ConsumerStatefulWidget {
@@ -61,7 +62,22 @@ class _CartPageState extends ConsumerState<CartPage> {
           return HomeMainContentSlot(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [AppEmptyView(message: l10n.cartEmpty)],
+              children: [AppEmptyView(message: l10n.cartEmpty),
+                SizedBox(
+                  height: 10,
+                ),
+                MallOutlinedCtaButtonWidget(
+                  width: 200,
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
+                  minimumSize: const Size.fromHeight(44),
+                  onPressed: () {
+                    ref.invalidate(preOrderCartControllerProvider);
+                    context.push(AppRoutes.preOrder);
+                  },
+                  child: const Text('Go To Pre Order'),
+                ),
+              ],
             ),
           );
         }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 
 /// 购物车 / 预订单共用的「Clear」确认与执行（选中则删选中，否则清空全部）。
 Future<void> runCartClearAllConfirmFlow({
@@ -20,7 +20,7 @@ Future<void> runCartClearAllConfirmFlow({
       .toList(growable: false);
   final hasSelectedItems = selectedIds.isNotEmpty;
 
-  final confirmed = await showMallConfirmDialog(
+  final confirmed = await showGeorgeConfirmDialog(
     context: context,
     title: hasSelectedItems
         ? 'Remove selected lines?'

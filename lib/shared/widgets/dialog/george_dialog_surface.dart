@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// 商城弹窗外壳：非对称圆角、轻渐变、细描边与柔光阴影（温暖 / 呼吸感）。
+/// 弹窗外壳：非对称圆角、轻渐变、细描边与柔光阴影（温暖 / 呼吸感）。
 ///
 /// 不使用 [BackdropFilter]，避免与 [AppShell] 全局毛玻璃及侧滑路由遮罩
 /// 叠加后，在部分平台（尤其 Windows）上出现内容层空白、只剩弹窗遮罩
 /// 的现象。
-class MallDialogSurface extends StatelessWidget {
-  const MallDialogSurface({
+class GeorgeDialogSurface extends StatelessWidget {
+  const GeorgeDialogSurface({
     required this.child,
     super.key,
     this.padding = const EdgeInsets.fromLTRB(26, 22, 22, 24),

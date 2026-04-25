@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_confirm_dialog_panel.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 
 /// 统一确认弹窗。按钮文案为英文；标题与正文由调用方传入（可为英文）。
-Future<bool?> showMallConfirmDialog({
+Future<bool?> showGeorgeConfirmDialog({
   required BuildContext context,
   required String title,
   required String message,
@@ -25,11 +25,11 @@ Future<bool?> showMallConfirmDialog({
           horizontal: 22,
           vertical: 28,
         ),
-        child: MallDialogEntrance(
+        child: GeorgeDialogAnim(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: MallDialogSurface(
-              child: MallConfirmDialogPanel(
+            child: GeorgeDialogSurface(
+              child: GeorgeConfirmDialogPanel(
                 title: title,
                 message: message,
                 cancelLabel: cancelLabel,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 登录失效等阻塞提示，单主按钮（英文）。
-Future<void> showMallSessionExpiredDialog({
+Future<void> showGeorgeSessionExpiredDialog({
   required BuildContext context,
   String title = 'Session ended',
   String message = 'Please sign in again to continue shopping.',
@@ -22,11 +22,14 @@ Future<void> showMallSessionExpiredDialog({
         canPop: false,
         child: Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-          child: MallDialogEntrance(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 22,
+            vertical: 28,
+          ),
+          child: GeorgeDialogAnim(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 360),
-              child: MallDialogSurface(
+              child: GeorgeDialogSurface(
                 showWarmGlow: false,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

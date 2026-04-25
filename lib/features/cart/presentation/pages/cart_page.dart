@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
-import 'package:george_pick_mate/features/cart/presentation/cart_clear_all_confirm_flow.dart';
+import 'package:george_pick_mate/features/cart/presentation/widgets/cart_clear_all_confirm_flow.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/services/cart_services.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
@@ -18,8 +18,9 @@ import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.da
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_button_widget.dart';
-import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_checkbox_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_outlined_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 import '../../models/cart_list_dto.dart';
@@ -65,7 +66,7 @@ class _CartPageState extends ConsumerState<CartPage> {
               children: [
                 AppEmptyView(message: l10n.cartEmpty),
                 SizedBox(height: 10),
-                MallOutlinedCtaButtonWidget(
+                GeorgeOutlinedButton(
                   width: 200,
                   foregroundColor: Colors.white,
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
@@ -365,7 +366,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              MallOutlinedCtaButtonWidget(
+              GeorgeOutlinedButton(
                 width: double.infinity,
                 foregroundColor: Colors.white,
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
@@ -571,7 +572,7 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 
   Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
-    final result = await showMallConfirmDialog(
+    final result = await showGeorgeConfirmDialog(
       context: context,
       title: 'Remove this line?',
       message: item.name,
@@ -706,7 +707,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: SmallCheckSquareCheckboxWidget(
+                  child: GeorgeCheckboxButton(
                     value: _siteAllSelected,
                     touchExtent: 34,
                     onChanged: _siteHasItems && !widget.isSiteBusy
@@ -1278,7 +1279,7 @@ class _CartProductTileState extends State<_CartProductTile> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SmallCheckSquareCheckboxWidget(
+            GeorgeCheckboxButton(
               value: widget.item.isSelected,
               onChanged: widget.isBusy
                   ? null
@@ -1378,7 +1379,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                         ),
                         child: Row(
                           children: [
-                            _QuantityControlButton(
+                            GeorgeQuantityControl(
                               icon: Icons.remove,
                               enabled:
                                   !widget.isBusy && widget.item.productNum > 1,
@@ -1397,7 +1398,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            _QuantityControlButton(
+                            GeorgeQuantityControl(
                               icon: Icons.add,
                               enabled: !widget.isBusy,
                               onTap: () => _changeQuantityByDelta(1),
@@ -1534,59 +1535,6 @@ class _CartProductTileState extends State<_CartProductTile> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuantityControlButton extends StatelessWidget {
-  const _QuantityControlButton({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
-    this.onLongPressStart,
-    this.onLongPressEnd,
-  });
-
-  final IconData icon;
-  final bool enabled;
-  final Future<void> Function() onTap;
-  final VoidCallback? onLongPressStart;
-  final VoidCallback? onLongPressEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? () => unawaited(onTap()) : null,
-      onLongPressStart: enabled && onLongPressStart != null
-          ? (_) => onLongPressStart!()
-          : null,
-      onLongPressEnd: enabled && onLongPressEnd != null
-          ? (_) => onLongPressEnd!()
-          : null,
-      onLongPressCancel: enabled && onLongPressEnd != null
-          ? onLongPressEnd
-          : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          color: enabled
-              ? Colors.white.withValues(alpha: 0.16)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: enabled
-                ? Colors.white.withValues(alpha: 0.28)
-                : Colors.white.withValues(alpha: 0.12),
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: enabled ? Colors.white : Colors.white30,
         ),
       ),
     );

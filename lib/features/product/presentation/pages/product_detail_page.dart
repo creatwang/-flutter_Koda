@@ -11,7 +11,7 @@ import 'package:george_pick_mate/features/product/presentation/widgets/product_d
 import 'package:george_pick_mate/features/product/presentation/widgets/product_technical_data_panel.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/gen/assets.gen.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/back_nav_filled_button_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_back_button.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
@@ -209,7 +209,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         Positioned(
           left: contentPadding.left,
           top: 12,
-          child: BackNavFilledButtonWidget(
+          child: GeorgeBackButton(
             label: 'Back to Product List',
             onPressed: () => context.pop(),
           ),

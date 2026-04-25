@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-/// 商城统一确认弹窗的内容区（图标、标题、正文、双按钮）。
+/// 统一确认弹窗的内容区（图标、标题、正文、双按钮）。
 ///
-/// 外层由调用方包 [MallDialogSurface] / [Dialog] 等；与购物车
-/// [showMallConfirmDialog] 使用同一套视觉。
-class MallConfirmDialogPanel extends StatelessWidget {
-  const MallConfirmDialogPanel({
+/// 外层由调用方包 [GeorgeDialogSurface] / [Dialog] 等；与购物车
+/// [showGeorgeConfirmDialog] 使用同一套视觉。
+class GeorgeConfirmDialogPanel extends StatelessWidget {
+  const GeorgeConfirmDialogPanel({
     super.key,
     required this.title,
     required this.message,

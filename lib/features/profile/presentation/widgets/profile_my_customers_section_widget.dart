@@ -13,9 +13,9 @@ import 'package:george_pick_mate/features/profile/presentation/widgets/store_cus
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_confirm_dialog_panel.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_confirm_dialog_panel.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 业务员客户列表：表头、列表行（代客登录等逻辑不变）。
@@ -786,11 +786,11 @@ class _DeleteStoreCustomerDialogState
           horizontal: 22,
           vertical: 28,
         ),
-        child: MallDialogEntrance(
+        child: GeorgeDialogAnim(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: MallDialogSurface(
-              child: MallConfirmDialogPanel(
+            child: GeorgeDialogSurface(
+              child: GeorgeConfirmDialogPanel(
                 title: 'Delete customer',
                 message: 'Remove ${item.name} (${item.username})?',
                 cancelLabel: 'Cancel',

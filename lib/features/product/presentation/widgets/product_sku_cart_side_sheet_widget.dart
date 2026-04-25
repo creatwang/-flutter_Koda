@@ -4,7 +4,7 @@ import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 const Color _kSkuDrawerChipIdle = Color(0xFF2E2E2E);
@@ -664,7 +664,7 @@ class _ProductSkuCartSideSheetBodyState
           child: Row(
             children: [
               Expanded(
-                child: MallFilledCtaButtonWidget(
+                child: GeorgeFilledButton(
                   shape: const StadiumBorder(),
                   elevation: 0,
                   backgroundColor: Colors.white,
@@ -683,7 +683,7 @@ class _ProductSkuCartSideSheetBodyState
               ),
               const SizedBox(width: 24),
               Expanded(
-                child: MallFilledCtaButtonWidget(
+                child: GeorgeFilledButton(
                   shape: const StadiumBorder(),
                   elevation: 0,
                   side: const BorderSide(color: Colors.white, width: 1.2),

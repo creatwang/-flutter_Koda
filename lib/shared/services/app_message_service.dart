@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/show_mall_session_expired_dialog.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_george_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -37,7 +37,7 @@ Future<void> showSessionExpiredDialog(String message) async {
   }
   messenger?.hideCurrentSnackBar();
 
-  await showMallSessionExpiredDialog(
+  await showGeorgeSessionExpiredDialog(
     context: rootContext,
     useRootNavigator: true,
     title: 'Session ended',

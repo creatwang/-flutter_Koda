@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// 圆角方框复选框：外框尺寸由 [boxSide] 固定，对勾仅通过 [checkIconSize] 缩小，
 /// 与 Material [Checkbox] 不同，对勾不会随方框同比放大。
-class SmallCheckSquareCheckboxWidget extends StatelessWidget {
-  const SmallCheckSquareCheckboxWidget({
+class GeorgeCheckboxButton extends StatelessWidget {
+  const GeorgeCheckboxButton({
     super.key,
     required this.value,
     required this.onChanged,
@@ -18,16 +18,37 @@ class SmallCheckSquareCheckboxWidget extends StatelessWidget {
     this.semanticLabel,
   });
 
+  /// 是否勾选。
   final bool value;
+
+  /// 状态变更回调；为 null 时禁用交互。
   final ValueChanged<bool>? onChanged;
+
+  /// 方框边长。
   final double boxSide;
+
+  /// 对勾图标尺寸。
   final double checkIconSize;
+
+  /// 方框圆角半径。
   final double borderRadius;
+
+  /// 未选中时边框颜色。
   final Color borderColor;
+
+  /// 边框线宽。
   final double borderWidth;
+
+  /// 选中时方框填充色。
   final Color checkedFillColor;
+
+  /// 对勾颜色。
   final Color checkColor;
+
+  /// 可点热区边长（扩大触摸范围）。
   final double touchExtent;
+
+  /// 无障碍标签。
   final String? semanticLabel;
 
   @override

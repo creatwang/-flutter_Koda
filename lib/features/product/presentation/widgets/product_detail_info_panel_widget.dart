@@ -3,7 +3,7 @@ import 'package:george_pick_mate/features/product/controllers/product_detail_con
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_qty_adjust_button_widget.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductDetailInfoPanel extends StatelessWidget {
@@ -293,7 +293,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        MallFilledCtaButtonWidget(
+        GeorgeFilledButton(
           width: double.infinity,
           minimumSize: const Size(0, 46),
           borderRadius: 5,
@@ -309,7 +309,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        MallFilledCtaButtonWidget(
+        GeorgeFilledButton(
           width: double.infinity,
           minimumSize: const Size(0, 46),
           borderRadius: 5,

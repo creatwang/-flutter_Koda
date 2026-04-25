@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_anim.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/mall_dialog_surface.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 单行输入弹窗（如 Space）。取消返回 `null`；确定返回去首尾空格后的文本。
-Future<String?> showMallTextFieldDialog({
+Future<String?> showGeorgeInputDialog({
   required BuildContext context,
   required String title,
   required String hintText,
@@ -18,7 +18,7 @@ Future<String?> showMallTextFieldDialog({
     barrierDismissible: barrierDismissible,
     barrierColor: const Color(0xB30A0E14),
     builder: (BuildContext dialogContext) {
-      return _MallTextFieldDialogBody(
+      return _GeorgeInputDialogBody(
         title: title,
         subtitle: subtitle,
         hintText: hintText,
@@ -29,8 +29,8 @@ Future<String?> showMallTextFieldDialog({
   );
 }
 
-class _MallTextFieldDialogBody extends StatefulWidget {
-  const _MallTextFieldDialogBody({
+class _GeorgeInputDialogBody extends StatefulWidget {
+  const _GeorgeInputDialogBody({
     required this.title,
     required this.hintText,
     required this.cancelLabel,
@@ -45,11 +45,11 @@ class _MallTextFieldDialogBody extends StatefulWidget {
   final String confirmLabel;
 
   @override
-  State<_MallTextFieldDialogBody> createState() =>
-      _MallTextFieldDialogBodyState();
+  State<_GeorgeInputDialogBody> createState() =>
+      _GeorgeInputDialogBodyState();
 }
 
-class _MallTextFieldDialogBodyState extends State<_MallTextFieldDialogBody> {
+class _GeorgeInputDialogBodyState extends State<_GeorgeInputDialogBody> {
   late final TextEditingController _controller;
   late final FocusNode _fieldFocusNode;
   String _errorText = '';
@@ -96,10 +96,10 @@ class _MallTextFieldDialogBodyState extends State<_MallTextFieldDialogBody> {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-      child: MallDialogEntrance(
+      child: GeorgeDialogAnim(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
-          child: MallDialogSurface(
+          child: GeorgeDialogSurface(
             padding: const EdgeInsets.fromLTRB(26, 22, 22, 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,

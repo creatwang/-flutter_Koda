@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// 外层 [DialogRoute] 已带 [FadeTransition]；若此处再用缩放值推导
 /// [Opacity]，在 ticker 未推进时会出现「只有遮罩、面板全透明」。
-class MallDialogEntrance extends StatelessWidget {
-  const MallDialogEntrance({
+class GeorgeDialogAnim extends StatelessWidget {
+  const GeorgeDialogAnim({
     required this.child,
     super.key,
     this.duration = const Duration(milliseconds: 240),

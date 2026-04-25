@@ -10,20 +10,22 @@ import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
-import 'package:george_pick_mate/features/cart/presentation/cart_clear_all_confirm_flow.dart';
+import 'package:george_pick_mate/features/cart/presentation/widgets/cart_clear_all_confirm_flow.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_quotation_form_bottom_sheet_widget.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
-import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_button_widget.dart';
-import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_back_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_checkbox_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_outlined_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
-import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -114,7 +116,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      MallOutlinedCtaButtonWidget(
+                                      GeorgeOutlinedButton(
                                         foregroundColor: Colors.white,
                                         side: BorderSide(
                                           color: Colors.white.withValues(
@@ -127,7 +129,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                       ),
                                       const SizedBox(width: 8),
                                       if (canExportQuotation)
-                                        MallOutlinedCtaButtonWidget(
+                                        GeorgeOutlinedButton(
                                           foregroundColor: Colors.white70,
                                           side: BorderSide(
                                             color: Colors.white.withValues(
@@ -150,7 +152,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                         ),
                                       if (canExportQuotation)
                                         const SizedBox(width: 8),
-                                      MallFilledCtaButtonWidget(
+                                      GeorgeFilledButton(
                                         backgroundColor: Colors.black,
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
@@ -198,19 +200,9 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
             Positioned(
               left: 18,
               top: 12,
-              child: FilledButton.icon(
-                style: ButtonStyle(
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                  backgroundColor: WidgetStateProperty.all(
-                    const Color.fromRGBO(129, 119, 110, 1),
-                  ),
-                ),
+              child: GeorgeBackButton(
+                label: 'Back Cart',
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, size: 16),
-                label: const Text(
-                  'Back Cart',
-                  style: TextStyle(color: Colors.white),
-                ),
               ),
             ),
           ],
@@ -464,7 +456,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
   }
 
   Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
-    final result = await showMallConfirmDialog(
+    final result = await showGeorgeConfirmDialog(
       context: context,
       title: 'Remove this line?',
       message: item.name,
@@ -666,7 +658,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: SmallCheckSquareCheckboxWidget(
+                  child: GeorgeCheckboxButton(
                     value: _siteAllSelected,
                     touchExtent: 34,
                     onChanged: _siteHasItems && !widget.isSiteBusy
@@ -1237,7 +1229,7 @@ class _CartProductTileState extends State<_CartProductTile> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SmallCheckSquareCheckboxWidget(
+            GeorgeCheckboxButton(
               value: widget.item.isSelected,
               onChanged: widget.isBusy
                   ? null
@@ -1337,7 +1329,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                         ),
                         child: Row(
                           children: [
-                            _QuantityControlButton(
+                            GeorgeQuantityControl(
                               icon: Icons.remove,
                               enabled:
                                   !widget.isBusy && widget.item.productNum > 1,
@@ -1356,7 +1348,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            _QuantityControlButton(
+                            GeorgeQuantityControl(
                               icon: Icons.add,
                               enabled: !widget.isBusy,
                               onTap: () => _changeQuantityByDelta(1),
@@ -1493,59 +1485,6 @@ class _CartProductTileState extends State<_CartProductTile> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuantityControlButton extends StatelessWidget {
-  const _QuantityControlButton({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
-    this.onLongPressStart,
-    this.onLongPressEnd,
-  });
-
-  final IconData icon;
-  final bool enabled;
-  final Future<void> Function() onTap;
-  final VoidCallback? onLongPressStart;
-  final VoidCallback? onLongPressEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? () => unawaited(onTap()) : null,
-      onLongPressStart: enabled && onLongPressStart != null
-          ? (_) => onLongPressStart!()
-          : null,
-      onLongPressEnd: enabled && onLongPressEnd != null
-          ? (_) => onLongPressEnd!()
-          : null,
-      onLongPressCancel: enabled && onLongPressEnd != null
-          ? onLongPressEnd
-          : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          color: enabled
-              ? Colors.white.withValues(alpha: 0.16)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: enabled
-                ? Colors.white.withValues(alpha: 0.28)
-                : Colors.white.withValues(alpha: 0.12),
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: enabled ? Colors.white : Colors.white30,
         ),
       ),
     );

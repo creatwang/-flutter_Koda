@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_mall_confirm_dialog.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/cart/services/cart_services.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
@@ -34,6 +36,9 @@ class _CartPageState extends ConsumerState<CartPage> {
   final Set<int> _changeSpecLoadingItemIds = <int>{};
   final Set<int> _pendingSiteIds = <int>{};
   bool _isClearingAll = false;
+  bool _isPreSubmitting = false;
+  /// 各站点当前选择的 SM id（与 [_CartSiteSection] 内选择器同步）。
+  final Map<int, int> _reportedSmIdByCompanyId = <int, int>{};
   final NumberFormat _amountFormatter = NumberFormat('#,##0.##');
 
   @override
@@ -62,6 +67,7 @@ class _CartPageState extends ConsumerState<CartPage> {
         final listPanel = _buildCuratedListPanel(context, sites);
         final summaryPanel = _buildSummaryPanel(
           context,
+          groups: groups,
           selectedCount: selectedCount,
           selectedAmount: selectedAmount,
           totalCount: totalCount,
@@ -185,6 +191,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     onDeleteItem: _onDeleteItem,
                     onRemarkChanged: _onRemarkChanged,
                     onChangeSpec: _onChangeSpec,
+                    onSiteSmSelectionReported: _onSiteSmSelectionReported,
                     isSiteBusy: _pendingSiteIds.contains(site.companyId),
                     isItemBusy: (itemId) =>
                         _pendingItemIds.contains(itemId) ||
@@ -203,8 +210,39 @@ class _CartPageState extends ConsumerState<CartPage> {
     );
   }
 
+  void _onSiteSmSelectionReported(int companyId, int smId) {
+    if (_reportedSmIdByCompanyId[companyId] == smId) return;
+    setState(() => _reportedSmIdByCompanyId[companyId] = smId);
+  }
+
+  Future<void> _onPreSubmitOrder(List<CartListDto> groups) async {
+    if (_isPreSubmitting) return;
+    final message = validateSmForPreSubmitOrder(
+      groups: groups,
+      reportedSmIdByCompanyId: _reportedSmIdByCompanyId,
+    );
+    if (message != null) {
+      showGlobalErrorMessage(message);
+      return;
+    }
+    setState(() => _isPreSubmitting = true);
+    try {
+      final result = await ref
+          .read(cartControllerProvider.notifier)
+          .submitPreSubmitOrderAfterSmValidation();
+      if (!mounted) return;
+      result.when(
+        success: (_) {},
+        failure: (e) => showGlobalErrorMessage(e.message),
+      );
+    } finally {
+      if (mounted) setState(() => _isPreSubmitting = false);
+    }
+  }
+
   Widget _buildSummaryPanel(
     BuildContext context, {
+    required List<CartListDto> groups,
     required int selectedCount,
     required double selectedAmount,
     required int totalCount,
@@ -260,7 +298,9 @@ class _CartPageState extends ConsumerState<CartPage> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () {},
+                  onPressed: selectedCount < 1 || _isPreSubmitting
+                      ? null
+                      : () => unawaited(_onPreSubmitOrder(groups)),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -269,7 +309,20 @@ class _CartPageState extends ConsumerState<CartPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
-                    children: [const Text('Pre Submit Order')],
+                    children: [
+                      if (_isPreSubmitting) ...[
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      const Text('Pre Submit Order'),
+                    ],
                   ),
                 ),
               ),
@@ -553,6 +606,7 @@ class _CartSiteSection extends StatefulWidget {
     required this.onDeleteItem,
     required this.onRemarkChanged,
     required this.onChangeSpec,
+    required this.onSiteSmSelectionReported,
     required this.isSiteBusy,
     required this.isItemBusy,
     required this.isRemoveActionLoading,
@@ -569,6 +623,7 @@ class _CartSiteSection extends StatefulWidget {
   final Future<bool> Function(CartProductDto item) onDeleteItem;
   final void Function(int cartId, String remark) onRemarkChanged;
   final Future<void> Function(CartProductDto item) onChangeSpec;
+  final void Function(int companyId, int smId) onSiteSmSelectionReported;
   final bool isSiteBusy;
   final bool Function(int itemId) isItemBusy;
   final bool Function(int itemId) isRemoveActionLoading;
@@ -581,18 +636,39 @@ class _CartSiteSection extends StatefulWidget {
 class _CartSiteSectionState extends State<_CartSiteSection> {
   int? _selectedSalesRepId;
 
+  int _effectiveSelectedSmId() {
+    final sid = _selectedSalesRepId;
+    if (sid != null) {
+      for (final r in widget.site.smItems) {
+        if (r.id == sid) return sid;
+      }
+    }
+    return widget.site.smId;
+  }
+
+  void _reportSmToParent() {
+    widget.onSiteSmSelectionReported(
+      widget.site.companyId,
+      _effectiveSelectedSmId(),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reportSmToParent());
   }
 
   @override
   void didUpdateWidget(covariant _CartSiteSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.site.smId != widget.site.smId ||
-        oldWidget.site.companyId != widget.site.companyId) {
+    final companyChanged =
+        oldWidget.site.companyId != widget.site.companyId;
+    final smServerChanged = oldWidget.site.smId != widget.site.smId;
+    if (companyChanged || smServerChanged) {
       _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _reportSmToParent());
     }
   }
 
@@ -700,6 +776,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                         selected: selectedSalesRep,
                         onChanged: (next) {
                           setState(() => _selectedSalesRepId = next.id);
+                          _reportSmToParent();
                         },
                       ),
                     ],

@@ -18,6 +18,9 @@ class CartRequests {
   static const String clearPath = '/store/cart/clear';
   static const String quotationConfigPath = '/store/quotationConfig';
   static const String exportQuotationPath = '/store/cart/exportQuotation';
+
+  /// 预提交订单（占位路径，待后端确认后替换）。
+  static const String preSubmitOrderPath = '/store/cart/preSubmitOrder';
 }
 
 /// 购物车商品总件数（需鉴权）。
@@ -42,7 +45,6 @@ Future<Response<dynamic>> requestCartListBySite({
     CartRequests.listBySitePath,
     queryParameters: <String, dynamic>{
       'sm_status': smStatus,
-      'smStatus': smStatus,
     },
     options: Options(extra: <String, dynamic>{'noCache': true})
   );
@@ -205,5 +207,13 @@ Future<Response<dynamic>> requestCartChangeSpec({
       'space': space,
       'sub_name': subName,
     },
+  );
+}
+
+/// 预提交订单（需鉴权）。路径与请求体待业务确认后调整。
+Future<Response<dynamic>> requestPreSubmitOrder({DioClient? client}) {
+  return (client ?? protectedDioClient).post(
+    CartRequests.preSubmitOrderPath,
+    data: <String, dynamic>{},
   );
 }

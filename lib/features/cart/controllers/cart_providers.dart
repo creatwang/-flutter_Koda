@@ -189,6 +189,14 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     );
   }
 
+  /// 预提交订单（SM 等校验由调用方在 UI 层完成后调用）。
+  Future<ApiResult<void>> submitPreSubmitOrderAfterSmValidation() async {
+    if (!_isAuthenticated()) {
+      return ApiFailure(AppException('Please sign in first.'));
+    }
+    return runPreSubmitOrderAfterValidationService();
+  }
+
   Future<bool> changeCartItemSpec({
     required int cartItemId,
     required int productId,

@@ -203,6 +203,42 @@ Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
   }
 }
 
+/// 预提交前校验：存在已选商品的站点若返回了 SM 列表，则必须已选 SM。
+///
+/// [reportedSmIdByCompanyId] 由购物车页同步各站点当前选择的 `sm_id`
+///（含用户刚选尚未落库的值）。
+String? validateSmForPreSubmitOrder({
+  required List<CartListDto> groups,
+  required Map<int, int> reportedSmIdByCompanyId,
+}) {
+  for (final group in groups) {
+    for (final site in group.items) {
+      final hasSelected = site.cart.items
+          .expand((sp) => sp.list)
+          .any((p) => p.isSelected);
+      if (!hasSelected) continue;
+      if (site.smItems.isEmpty) continue;
+      final smId =
+          reportedSmIdByCompanyId[site.companyId] ?? site.smId;
+      if (smId <= 0) {
+        final fromSite = site.shopName.trim();
+        final fromGroup = group.name.trim();
+        final label = fromSite.isNotEmpty
+            ? fromSite
+            : (fromGroup.isNotEmpty ? fromGroup : 'Department');
+        return 'Please select SM ($label)';
+      }
+    }
+  }
+  return null;
+}
+
+/// 预提交订单：占位实现，接入 [requestPreSubmitOrder] 后在此解析响应。
+Future<ApiResult<void>> runPreSubmitOrderAfterValidationService() async {
+  // TODO: await requestPreSubmitOrder() 并按项目约定解析 code / result。
+  return const ApiSuccess(null);
+}
+
 /// 加购。
 ///
 /// 字段与后端 `create` 接口一致。

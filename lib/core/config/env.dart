@@ -1,7 +1,7 @@
 class Env {
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://store.gbuilderchina.com/testapi',
+    defaultValue: 'https://store.gbuilderchina.com/api',
   );
 
   ///开发环境：flutter run --dart-define=BASE_URL=https://api.com

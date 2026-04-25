@@ -1311,10 +1311,9 @@ class _CartProductTileState extends State<_CartProductTile> {
         color: Colors.black.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             GeorgeCheckboxButton(
               value: widget.item.isSelected,
               onChanged: widget.isBusy
@@ -1327,13 +1326,14 @@ class _CartProductTileState extends State<_CartProductTile> {
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 widget.item.mainImage,
-                width: 80,
+                width: 84,
+                height: 84,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const ColoredBox(
                   color: Color(0x33222222),
                   child: SizedBox(
-                    width: 80,
-                    height: 80,
+                    width: 84,
+                    height: 84,
                     child: Icon(
                       Icons.image_not_supported,
                       color: Colors.white70,
@@ -1550,7 +1550,6 @@ class _CartProductTileState extends State<_CartProductTile> {
               ),
             ),
           ],
-        ),
       ),
     );
   }

@@ -167,6 +167,10 @@ class _CartPageState extends ConsumerState<CartPage> {
       for (final g in groups)
         for (final s in g.items) (group: g, site: s),
     ];
+    final totalNum = groups.fold<int>(
+      0,
+      (sum, group) => sum + group.totalNum,
+    );
     return RefreshIndicator(
       onRefresh: () => ref.read(cartControllerProvider.notifier).refresh(),
       child: Container(
@@ -179,7 +183,7 @@ class _CartPageState extends ConsumerState<CartPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Curated Shortlist',
+              'Shopping Cart',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: ProMaxTokens.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -188,7 +192,7 @@ class _CartPageState extends ConsumerState<CartPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${siteEntries.length} EXCLUSIVE SECTIONS SELECTED',
+              'Total num $totalNum items',
               style: TextStyle(
                 color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                 letterSpacing: 1.1,

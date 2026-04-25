@@ -11,6 +11,7 @@ import 'package:george_pick_mate/features/product/presentation/widgets/product_d
 import 'package:george_pick_mate/features/product/presentation/widgets/product_technical_data_panel.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/gen/assets.gen.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/back_nav_filled_button_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
@@ -208,19 +209,9 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         Positioned(
           left: contentPadding.left,
           top: 12,
-          child: FilledButton.icon(
-            style: ButtonStyle(
-              foregroundColor: WidgetStateProperty.all(Colors.white),
-              backgroundColor: WidgetStateProperty.all(
-                const Color.fromRGBO(129, 119, 110, 1),
-              ),
-            ),
+          child: BackNavFilledButtonWidget(
+            label: 'Back to Product List',
             onPressed: () => context.pop(),
-            icon: const Icon(Icons.arrow_back, size: 16),
-            label: Text(
-             'Back to Product List',
-              style: const TextStyle(color: Colors.white),
-            ),
           ),
         ),
       ],
@@ -264,9 +255,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       if (!context.mounted) return;
       if (ok) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.productAddedToCart(title)),
-          ),
+          SnackBar(content: Text(context.l10n.productAddedToCart(title))),
         );
       }
     } finally {
@@ -328,13 +317,15 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     );
     final space = await resolveSpaceForCartAdd(context);
     if (space == null) return false;
-    return ref.read(cartControllerProvider.notifier).createCartItem(
-      productId: sub.pid!,
-      subIndex: subIndex,
-      productNum: qty,
-      space: space,
-      subName: subName,
-    );
+    return ref
+        .read(cartControllerProvider.notifier)
+        .createCartItem(
+          productId: sub.pid!,
+          subIndex: subIndex,
+          productNum: qty,
+          space: space,
+          subName: subName,
+        );
   }
 
   void _syncCarouselIndex(int imageIndex, {required bool hasImages}) {
@@ -346,7 +337,6 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         setState(() => _selectedImageIndex = imageIndex);
       });
     }
-
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
@@ -390,5 +380,3 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     );
   }
 }
-
-

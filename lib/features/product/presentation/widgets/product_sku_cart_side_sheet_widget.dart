@@ -4,6 +4,7 @@ import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 const Color _kSkuDrawerChipIdle = Color(0xFF2E2E2E);
@@ -663,13 +664,11 @@ class _ProductSkuCartSideSheetBodyState
           child: Row(
             children: [
               Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: const StadiumBorder(),
-                  ),
+                child: MallFilledCtaButtonWidget(
+                  shape: const StadiumBorder(),
+                  elevation: 0,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
                   onPressed: _isSubmitting
                       ? null
                       : () => Navigator.of(context).pop(false),
@@ -684,20 +683,14 @@ class _ProductSkuCartSideSheetBodyState
               ),
               const SizedBox(width: 24),
               Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    side: const BorderSide(color: Colors.white, width: 1.2),
-                    // padding: const EdgeInsets.symmetric(vertical: 4),
-                    shape: const StadiumBorder(),
-                    disabledBackgroundColor: Color(0xFF3A3A3A),
-                    disabledForegroundColor: Colors.white38,
-                  ),
-                  onPressed: (!hasMatchedSku ||
-                          _isSubmitting ||
-                          !canSubmitAddToCart)
+                child: MallFilledCtaButtonWidget(
+                  shape: const StadiumBorder(),
+                  elevation: 0,
+                  side: const BorderSide(color: Colors.white, width: 1.2),
+                  disabledBackgroundColor: const Color(0xFF3A3A3A),
+                  disabledForegroundColor: Colors.white38,
+                  onPressed:
+                      (!hasMatchedSku || _isSubmitting || !canSubmitAddToCart)
                       ? null
                       : () => _onPrimaryPressed(
                           context,
@@ -706,28 +699,14 @@ class _ProductSkuCartSideSheetBodyState
                           skuRowSelection,
                           skuResolved,
                         ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        primaryLabel,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (_isSubmitting) ...[
-                        const SizedBox(width: 8),
-                        const SizedBox(
-                          height: 14,
-                          width: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ],
+                  isLoading: _isSubmitting,
+                  loadingIndicatorColor: Colors.white,
+                  child: Text(
+                    primaryLabel,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),

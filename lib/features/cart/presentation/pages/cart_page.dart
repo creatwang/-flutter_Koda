@@ -17,6 +17,7 @@ import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.da
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
@@ -37,6 +38,7 @@ class _CartPageState extends ConsumerState<CartPage> {
   final Set<int> _pendingSiteIds = <int>{};
   bool _isClearingAll = false;
   bool _isPreSubmitting = false;
+
   /// 各站点当前选择的 SM id（与 [_CartSiteSection] 内选择器同步）。
   final Map<int, int> _reportedSmIdByCompanyId = <int, int>{};
   final NumberFormat _amountFormatter = NumberFormat('#,##0.##');
@@ -54,15 +56,12 @@ class _CartPageState extends ConsumerState<CartPage> {
         child: AppErrorView(message: l10n.cartLoadFailed(error.toString())),
       ),
       data: (groups) {
-        final siteCount =
-            groups.fold<int>(0, (n, g) => n + g.items.length);
+        final siteCount = groups.fold<int>(0, (n, g) => n + g.items.length);
         if (siteCount == 0) {
           return HomeMainContentSlot(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppEmptyView(message: l10n.cartEmpty)
-              ],
+              children: [AppEmptyView(message: l10n.cartEmpty)],
             ),
           );
         }
@@ -167,10 +166,10 @@ class _CartPageState extends ConsumerState<CartPage> {
             Text(
               'Curated Shortlist',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: ProMaxTokens.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 30,
-                  ),
+                color: ProMaxTokens.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 30,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -192,10 +191,10 @@ class _CartPageState extends ConsumerState<CartPage> {
                   final e = siteEntries[index];
                   final grp = e.group;
                   final s = e.site;
-                  final smPickerReps =
-                      s.smItems.isNotEmpty ? s.smItems : grp.smItems;
-                  final resolvedSmId =
-                      s.smId > 0 ? s.smId : grp.smId;
+                  final smPickerReps = s.smItems.isNotEmpty
+                      ? s.smItems
+                      : grp.smItems;
+                  final resolvedSmId = s.smId > 0 ? s.smId : grp.smId;
                   return _CartSiteSection(
                     site: s,
                     smPickerReps: smPickerReps,
@@ -352,25 +351,14 @@ class _CartPageState extends ConsumerState<CartPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
+              MallOutlinedCtaButtonWidget(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _isClearingAll ? null : _onClearAll,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(44),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.38),
-                    ),
-                  ),
-                  child: _isClearingAll
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Clear'),
-                ),
+                foregroundColor: Colors.white,
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
+                minimumSize: const Size.fromHeight(44),
+                isLoading: _isClearingAll,
+                onPressed: _onClearAll,
+                child: const Text('Clear'),
               ),
             ],
           ),
@@ -384,9 +372,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                 onPressed: () => context.push(AppRoutes.preOrder),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white70,
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.28),
-                  ),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
                 ),
                 icon: const Icon(Icons.assignment_outlined, size: 16),
                 label: const Text('Pre Order'),
@@ -699,12 +685,10 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
   @override
   void didUpdateWidget(covariant _CartSiteSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final companyChanged =
-        oldWidget.site.companyId != widget.site.companyId;
+    final companyChanged = oldWidget.site.companyId != widget.site.companyId;
     final smServerChanged =
         oldWidget.resolvedServerSmId != widget.resolvedServerSmId;
-    final repsChanged =
-        !identical(oldWidget.smPickerReps, widget.smPickerReps);
+    final repsChanged = !identical(oldWidget.smPickerReps, widget.smPickerReps);
     if (companyChanged || smServerChanged || repsChanged) {
       _selectedSalesRepId = widget.resolvedServerSmId > 0
           ? widget.resolvedServerSmId
@@ -721,9 +705,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
   }
 
   bool get _siteHasItems {
-    return widget.site.cart.items
-        .expand((space) => space.list)
-        .isNotEmpty;
+    return widget.site.cart.items.expand((space) => space.list).isNotEmpty;
   }
 
   bool get _siteAllSelected {
@@ -752,9 +734,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                     touchExtent: 34,
                     onChanged: _siteHasItems && !widget.isSiteBusy
                         ? (selected) {
-                            unawaited(
-                              widget.onToggleSiteSelected(selected),
-                            );
+                            unawaited(widget.onToggleSiteSelected(selected));
                           }
                         : null,
                   ),
@@ -933,25 +913,25 @@ class _CartSalesRepPicker extends StatelessWidget {
                 minChildSize: 0.32,
                 maxChildSize: 0.9,
                 builder: (context, scrollController) {
-                  final filtered = reps.where((rep) {
-                    final keyword = query.trim().toLowerCase();
-                    if (keyword.isEmpty) return true;
-                    final name = rep.name.toLowerCase();
-                    final dept = rep.deptName.toLowerCase();
-                    final phone = (rep.telephone ?? '').toLowerCase();
-                    return name.contains(keyword) ||
-                        dept.contains(keyword) ||
-                        phone.contains(keyword);
-                  }).toList(growable: false);
+                  final filtered = reps
+                      .where((rep) {
+                        final keyword = query.trim().toLowerCase();
+                        if (keyword.isEmpty) return true;
+                        final name = rep.name.toLowerCase();
+                        final dept = rep.deptName.toLowerCase();
+                        final phone = (rep.telephone ?? '').toLowerCase();
+                        return name.contains(keyword) ||
+                            dept.contains(keyword) ||
+                            phone.contains(keyword);
+                      })
+                      .toList(growable: false);
                   return DecoratedBox(
                     decoration: const BoxDecoration(
                       color: Color(0xFF1A1D24),
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(18),
                       ),
-                      border: Border(
-                        top: BorderSide(color: Color(0x44FFFFFF)),
-                      ),
+                      border: Border(top: BorderSide(color: Color(0x44FFFFFF))),
                     ),
                     child: SafeArea(
                       top: false,

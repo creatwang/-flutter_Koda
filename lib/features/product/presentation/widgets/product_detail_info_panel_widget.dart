@@ -3,6 +3,7 @@ import 'package:george_pick_mate/features/product/controllers/product_detail_con
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_qty_adjust_button_widget.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductDetailInfoPanel extends StatelessWidget {
@@ -292,83 +293,36 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        SizedBox(
+        MallFilledCtaButtonWidget(
           width: double.infinity,
-          child: FilledButton(
-            onPressed: hasMatchedSku
-                    && !isBuyNowSubmitting
-                ? () async {
-                    await onBuyNow();
-                  }
-                : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(46),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.productDetailBuyNow,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                if (isBuyNowSubmitting) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          minimumSize: const Size.fromHeight(46),
+          onPressed: hasMatchedSku && !isBuyNowSubmitting
+              ? () async {
+                  await onBuyNow();
+                }
+              : null,
+          isLoading: isBuyNowSubmitting,
+          child: Text(
+            l10n.productDetailBuyNow,
+            style: const TextStyle(fontSize: 14),
           ),
         ),
         const SizedBox(height: 8),
-        SizedBox(
+        MallFilledCtaButtonWidget(
           width: double.infinity,
-          child: FilledButton(
-            onPressed: canAddToCart
-                    && !isAddToCartSubmitting
-                ? () async {
-                    await onAddToCart();
-                  }
-                : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color.fromRGBO(200, 200, 200, 1),
-              foregroundColor: const Color.fromRGBO(58, 72, 91, 1),
-              minimumSize: const Size.fromHeight(46),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  context.l10n.addToCart,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                if (isAddToCartSubmitting) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color.fromRGBO(58, 72, 91, 1),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          minimumSize: const Size.fromHeight(46),
+          backgroundColor: const Color.fromRGBO(200, 200, 200, 1),
+          foregroundColor: const Color.fromRGBO(58, 72, 91, 1),
+          loadingIndicatorColor: const Color.fromRGBO(58, 72, 91, 1),
+          onPressed: canAddToCart && !isAddToCartSubmitting
+              ? () async {
+                  await onAddToCart();
+                }
+              : null,
+          isLoading: isAddToCartSubmitting,
+          child: Text(
+            context.l10n.addToCart,
+            style: const TextStyle(fontSize: 14),
           ),
         ),
       ],

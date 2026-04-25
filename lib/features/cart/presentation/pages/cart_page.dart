@@ -58,7 +58,12 @@ class _CartPageState extends ConsumerState<CartPage> {
             groups.fold<int>(0, (n, g) => n + g.items.length);
         if (siteCount == 0) {
           return HomeMainContentSlot(
-            child: AppEmptyView(message: l10n.cartEmpty),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppEmptyView(message: l10n.cartEmpty)
+              ],
+            ),
           );
         }
 

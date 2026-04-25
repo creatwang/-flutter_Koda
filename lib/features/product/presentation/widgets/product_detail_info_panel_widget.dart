@@ -296,6 +296,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
         MallFilledCtaButtonWidget(
           width: double.infinity,
           minimumSize: const Size(0, 46),
+          borderRadius: 5,
           onPressed: hasMatchedSku && !isBuyNowSubmitting
               ? () async {
                   await onBuyNow();
@@ -311,6 +312,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
         MallFilledCtaButtonWidget(
           width: double.infinity,
           minimumSize: const Size(0, 46),
+          borderRadius: 5,
           backgroundColor: const Color.fromRGBO(200, 200, 200, 1),
           foregroundColor: const Color.fromRGBO(58, 72, 91, 1),
           loadingIndicatorColor: const Color.fromRGBO(58, 72, 91, 1),

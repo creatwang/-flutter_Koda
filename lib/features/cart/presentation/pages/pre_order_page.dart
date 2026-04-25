@@ -15,6 +15,7 @@ import 'package:george_pick_mate/features/cart/presentation/widgets/cart_quotati
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/mall_filled_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/mall_outlined_cta_button_widget.dart';
 import 'package:george_pick_mate/shared/base_widget/small_check_square_checkbox_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
@@ -126,77 +127,46 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                       ),
                                       const SizedBox(width: 8),
                                       if (canExportQuotation)
-                                        OutlinedButton.icon(
-                                          onPressed:
-                                              selectedCount <= 0 ||
-                                                  _isExportingQuotationConfig
-                                              ? null
-                                              : _onExportQuotation,
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.white70,
-                                            side: BorderSide(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.28,
-                                              ),
+                                        MallOutlinedCtaButtonWidget(
+                                          foregroundColor: Colors.white70,
+                                          side: BorderSide(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.28,
                                             ),
                                           ),
-                                          icon: _isExportingQuotationConfig
-                                              ? const SizedBox(
-                                                  width: 14,
-                                                  height: 14,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                )
-                                              : const Icon(
-                                                  Icons.ios_share_outlined,
-                                                  size: 16,
-                                                ),
-                                          label: Text(
-                                            _isExportingQuotationConfig
-                                                ? 'Loading...'
-                                                : 'Export',
+                                          startIcon: Icons.ios_share_outlined,
+                                          iconSize: 16,
+                                          iconGap: 8,
+                                          isLoading:
+                                              _isExportingQuotationConfig,
+                                          onPressed: selectedCount <= 0
+                                              ? null
+                                              : _onExportQuotation,
+                                          loadingText: 'Loading...',
+                                          loadingTextStyle: const TextStyle(
+                                            color: Colors.white70,
                                           ),
+                                          child: const Text('Export'),
                                         ),
                                       if (canExportQuotation)
                                         const SizedBox(width: 8),
-                                      FilledButton(
-                                        onPressed:
-                                            selectedCount <= 0 || _isCheckingOut
+                                      MallFilledCtaButtonWidget(
+                                        backgroundColor: Colors.black,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 10,
+                                        ),
+                                        endIcon: Icons.arrow_forward,
+                                        iconSize: 14,
+                                        iconGap: 8,
+                                        isLoading: _isCheckingOut,
+                                        loadingOnlyIndicator: true,
+                                        loadingIndicatorSize: 16,
+                                        onPressed: selectedCount <= 0
                                             ? null
                                             : _onCheckout,
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: Colors.black,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 10,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _isCheckingOut
-                                                ? const SizedBox(
-                                                    width: 16,
-                                                    height: 16,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          color: Colors.white,
-                                                        ),
-                                                  )
-                                                : const Text('Go To Checkout'),
-                                            if (!_isCheckingOut) ...[
-                                              const SizedBox(width: 8),
-                                              const Icon(
-                                                Icons.arrow_forward,
-                                                size: 14,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
+                                        child: const Text('Go To Checkout'),
                                       ),
                                     ],
                                   ),

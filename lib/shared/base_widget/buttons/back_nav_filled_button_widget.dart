@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// 详情等页顶「返回列表」实心按钮，图标与配色可通过参数覆盖。
+///
+/// 使用 Material [FilledButton.icon]：**仅前图标**（[icon]）+ 文案 [label]；
+/// 不包含 loading 态；提交中禁用返回请在外层对 [onPressed] 置 null。
+///
+/// 默认圆角 [borderRadius] 为 8。
 class BackNavFilledButtonWidget extends StatelessWidget {
   const BackNavFilledButtonWidget({
     super.key,
@@ -15,6 +20,7 @@ class BackNavFilledButtonWidget extends StatelessWidget {
     this.padding,
     this.visualDensity,
     this.elevation,
+    this.borderRadius = 8,
   });
 
   final VoidCallback? onPressed;
@@ -28,6 +34,7 @@ class BackNavFilledButtonWidget extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final VisualDensity? visualDensity;
   final double? elevation;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +46,9 @@ class BackNavFilledButtonWidget extends StatelessWidget {
         padding: padding,
         visualDensity: visualDensity,
         elevation: elevation,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       onPressed: onPressed,

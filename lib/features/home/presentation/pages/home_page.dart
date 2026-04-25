@@ -83,7 +83,11 @@ class _HomePageState extends ConsumerState<HomePage> {
       HomeSection.products => const ProductListPage(),
       // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
-      HomeSection.start => const HomeStartPage(),
+      HomeSection.start => HomeStartPage(
+        showSwitchSiteEntry: _showSwitchSiteEntry,
+        onStartShopping: () =>
+            setState(() => _section = HomeSection.products),
+      ),
       HomeSection.profile => ProfilePage(
         showSwitchSiteEntry: _showSwitchSiteEntry,
       ),

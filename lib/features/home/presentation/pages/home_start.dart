@@ -1,37 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:george_pick_mate/app/router/app_routes.dart';
-import 'package:george_pick_mate/features/auth/controllers/main_user_providers.dart';
-import 'package:george_pick_mate/features/profile/controllers/profile_page_controller.dart';
-import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
-import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
-import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
-import 'package:george_pick_mate/features/profile/models/profile_section_meta.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/profile_content_area_widget.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/profile_order_center_section_widget.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/profile_sidebar_widget.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/store_customer_common_password_bottom_sheet.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
-import 'package:george_pick_mate/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
-import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
-import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 
-class HomeStartPage extends ConsumerStatefulWidget {
+class HomeStartPage extends StatefulWidget {
   const HomeStartPage({
     super.key,
     this.showSwitchSiteEntry = false,
+    required this.onStartShopping,
   });
 
   /// 由首页「Profile」入口长按 10s 切换；为 `true` 时在设置中展示切换站点按钮。
   final bool showSwitchSiteEntry;
 
+  /// 进入产品列表（由 [HomePage] 切换分区）。
+  final VoidCallback onStartShopping;
+
   @override
-  ConsumerState<HomeStartPage> createState() => _ProfilePageState();
+  State<HomeStartPage> createState() => _HomeStartPageState();
 }
 
-class _ProfilePageState extends ConsumerState<HomeStartPage> {
+class _HomeStartPageState extends State<HomeStartPage> {
 
 
   @override
@@ -46,9 +33,59 @@ class _ProfilePageState extends ConsumerState<HomeStartPage> {
               const ColoredBox(color: Color(0xFFE8ECEF)),
         ),
         HomeMainContentSlot(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [Text('data')],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (Rect bounds) {
+                  return const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: <Color>[
+                      Color(0xFFFFFFFF),
+                      Color(0xFF8E8E8E),
+                    ],
+                  ).createShader(bounds);
+                },
+                child: const Text(
+                  'Modern Furniture',
+                  style: TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.05,
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 12,
+              ),
+              ConstrainedBox(
+                // 关键：使用 maxWidth 限制最大宽度，超过这个宽度就会换行
+                constraints: const BoxConstraints(maxWidth: 340),
+                child: Text(
+                  textAlign: TextAlign.center,
+                  'Turn your room with panto into a lot more minimalist with ease and speed',
+                  style: TextStyle(color: Colors.grey),
+                  softWrap: true, // 默认为 true，即允许换行
+                ),
+              ),
+              const SizedBox(
+                height: 67,
+              ),
+              FilledButton(
+                onPressed: widget.onStartShopping,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: const Text('Start Shopping', style: TextStyle(color: Colors.black,fontWeight: FontWeight.w400),),
+              )
+            ],
           ),
         ),
       ],

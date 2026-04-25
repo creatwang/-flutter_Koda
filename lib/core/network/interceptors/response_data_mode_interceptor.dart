@@ -106,12 +106,13 @@ class ResponseDataModeInterceptor extends Interceptor {
 
   bool _isSessionExpiredCode(dynamic code) {
     if (code is num) {
-      return code == 1000 || code == 1002 || code == 1004 || code == 1102;
+      return code == 1000 || code == 1002 || code == 1004 || code == 1001 || code == 1102;
     }
     if (code is String) {
       return code == '1000' ||
           code == '1002' ||
           code == '1004' ||
+          code == '1001' ||
           code == '1102';
     }
     return false;

@@ -1208,23 +1208,28 @@ class _CartProductTile extends StatefulWidget {
 
 class _CartProductTileState extends State<_CartProductTile> {
   late final TextEditingController _remarkController;
-  FocusNode? _remarkFocusNode;
+  late final FocusNode _remarkFocusNode;
   Timer? _quantityPressTimer;
   bool _isAdjustingQuantity = false;
-
-  FocusNode get _safeRemarkFocusNode {
-    return _remarkFocusNode ??= FocusNode();
-  }
 
   @override
   void initState() {
     super.initState();
     _remarkController = TextEditingController(text: widget.item.remark);
+    _remarkFocusNode = FocusNode()..addListener(_onRemarkFocusChange);
+  }
+
+  void _onRemarkFocusChange() {
+    if (_remarkFocusNode.hasFocus || widget.isBusy) return;
+    final text = _remarkController.text;
+    if (text == widget.item.remark) return;
+    widget.onRemarkChanged(widget.item.id, text);
   }
 
   @override
   void didUpdateWidget(covariant _CartProductTile oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_remarkFocusNode.hasFocus) return;
     if (oldWidget.item.remark != widget.item.remark &&
         _remarkController.text != widget.item.remark) {
       _remarkController.text = widget.item.remark;
@@ -1234,8 +1239,9 @@ class _CartProductTileState extends State<_CartProductTile> {
   @override
   void dispose() {
     _quantityPressTimer?.cancel();
+    _remarkFocusNode.removeListener(_onRemarkFocusChange);
+    _remarkFocusNode.dispose();
     _remarkController.dispose();
-    _remarkFocusNode?.dispose();
     super.dispose();
   }
 
@@ -1428,15 +1434,11 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 ),
                                 child: TextField(
                                   controller: _remarkController,
-                                  focusNode: _safeRemarkFocusNode,
+                                  focusNode: _remarkFocusNode,
                                   scrollPadding: EdgeInsets.only(
                                     bottom:
                                         24 +
                                         MediaQuery.viewInsetsOf(context).bottom,
-                                  ),
-                                  onChanged: (value) => widget.onRemarkChanged(
-                                    widget.item.id,
-                                    value,
                                   ),
                                   readOnly: widget.isBusy,
                                   maxLines: 1,

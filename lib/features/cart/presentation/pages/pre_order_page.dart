@@ -26,6 +26,7 @@ import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -72,16 +73,19 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                       .refresh(),
                 ),
                 data: (groups) {
-                  final sites = groups
-                      .expand((group) => group.items)
-                      .toList(growable: false);
-                  if (sites.isEmpty) {
+                  final siteCount = groups.fold<int>(
+                    0,
+                    (sum, g) => sum + g.items.length,
+                  );
+                  if (siteCount == 0) {
                     return const AppEmptyView(message: 'No pre-order items');
                   }
                   return Column(
                     children: [
                       const SizedBox(height: 60),
-                      Expanded(child: _buildCuratedListPanel(context, sites)),
+                      Expanded(
+                        child: _buildCuratedListPanel(context, groups),
+                      ),
                       Padding(
                         padding: EdgeInsets.only(
                           top: 10,
@@ -211,7 +215,14 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     );
   }
 
-  Widget _buildCuratedListPanel(BuildContext context, List<CartSiteDto> sites) {
+  Widget _buildCuratedListPanel(
+    BuildContext context,
+    List<CartListDto> groups,
+  ) {
+    final siteEntries = <({CartListDto group, CartSiteDto site})>[
+      for (final g in groups)
+        for (final s in g.items) (group: g, site: s),
+    ];
     return RefreshIndicator(
       onRefresh: () =>
           ref.read(preOrderCartControllerProvider.notifier).refresh(),
@@ -234,7 +245,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${sites.length} EXCLUSIVE SECTIONS SELECTED',
+              '${siteEntries.length} EXCLUSIVE SECTIONS SELECTED',
               style: TextStyle(
                 color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                 letterSpacing: 1.1,
@@ -246,14 +257,30 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
             Expanded(
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: sites.length,
+                itemCount: siteEntries.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 14),
                 itemBuilder: (_, index) {
-                  final site = sites[index];
+                  final e = siteEntries[index];
+                  final grp = e.group;
+                  final site = e.site;
+                  final smPickerReps = site.smItems.isNotEmpty
+                      ? site.smItems
+                      : grp.smItems;
+                  final resolvedSmId =
+                      site.smId > 0 ? site.smId : grp.smId;
                   return _CartSiteSection(
                     site: site,
-                    isSpaceExpanded: (space) => _isSpaceExpanded(site, space),
-                    onToggleSpaceExpanded: (space) => _toggleSpace(site, space),
+                    shopDepartmentId: grp.id,
+                    smPickerReps: smPickerReps,
+                    resolvedServerSmId: resolvedSmId,
+                    onSalesRepSelected: (rep) => _onPreOrderSmSelected(
+                      shopDepartmentId: grp.id,
+                      smId: rep.id,
+                    ),
+                    isSpaceExpanded: (space) =>
+                        _isSpaceExpanded(site, space),
+                    onToggleSpaceExpanded: (space) =>
+                        _toggleSpace(site, space),
                     onToggleSiteSelected: (selected) =>
                         _onToggleSiteSelected(site, selected),
                     onToggleItemSelected: _onToggleItemSelected,
@@ -276,6 +303,23 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _onPreOrderSmSelected({
+    required int shopDepartmentId,
+    required int smId,
+  }) async {
+    final result = await ref
+        .read(preOrderCartControllerProvider.notifier)
+        .saveSmForShopDepartment(
+          shopDepartmentId: shopDepartmentId,
+          smId: smId,
+        );
+    if (!mounted) return;
+    result.when(
+      success: (_) {},
+      failure: (e) => showGlobalErrorMessage(e.message),
     );
   }
 
@@ -575,6 +619,10 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
 class _CartSiteSection extends StatefulWidget {
   const _CartSiteSection({
     required this.site,
+    required this.shopDepartmentId,
+    required this.smPickerReps,
+    required this.resolvedServerSmId,
+    required this.onSalesRepSelected,
     required this.isSpaceExpanded,
     required this.onToggleSpaceExpanded,
     required this.onToggleSiteSelected,
@@ -590,6 +638,19 @@ class _CartSiteSection extends StatefulWidget {
   });
 
   final CartSiteDto site;
+
+  /// 列表一级部门 id，对应设置 SM 接口的 `shop_department_id`。
+  final int shopDepartmentId;
+
+  /// SM 候选项：站点无列表时回退到部门（分组）级。
+  final List<CartSalesRepDto> smPickerReps;
+
+  /// 服务端已选 SM：站点与部门分组择非零。
+  final int resolvedServerSmId;
+
+  /// 用户在预订单页选定 SM 后立即落库（与购物车预提交同一接口）。
+  final Future<void> Function(CartSalesRepDto rep) onSalesRepSelected;
+
   final bool Function(CartSpaceDto space) isSpaceExpanded;
   final void Function(CartSpaceDto space) onToggleSpaceExpanded;
   final Future<bool> Function(bool selected) onToggleSiteSelected;
@@ -610,24 +671,61 @@ class _CartSiteSection extends StatefulWidget {
 
 class _CartSiteSectionState extends State<_CartSiteSection> {
   int? _selectedSalesRepId;
+  bool _isSavingSm = false;
+
+  int _effectiveSelectedSmId() {
+    final sid = _selectedSalesRepId;
+    if (sid != null) {
+      for (final r in widget.smPickerReps) {
+        if (r.id == sid) return sid;
+      }
+    }
+    return widget.resolvedServerSmId;
+  }
+
+  Future<void> _commitSmSelection(CartSalesRepDto next) async {
+    if (widget.shopDepartmentId <= 0 ||
+        next.id <= 0 ||
+        _isSavingSm ||
+        next.id == _effectiveSelectedSmId()) {
+      return;
+    }
+    setState(() => _isSavingSm = true);
+    try {
+      await widget.onSalesRepSelected(next);
+    } finally {
+      if (mounted) setState(() => _isSavingSm = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    _selectedSalesRepId = widget.resolvedServerSmId > 0
+        ? widget.resolvedServerSmId
+        : null;
   }
 
   @override
   void didUpdateWidget(covariant _CartSiteSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.site.smId != widget.site.smId ||
-        oldWidget.site.companyId != widget.site.companyId) {
-      _selectedSalesRepId = widget.site.smId > 0 ? widget.site.smId : null;
+    final companyChanged =
+        oldWidget.site.companyId != widget.site.companyId;
+    final deptChanged =
+        oldWidget.shopDepartmentId != widget.shopDepartmentId;
+    final smServerChanged =
+        oldWidget.resolvedServerSmId != widget.resolvedServerSmId;
+    final repsChanged =
+        !identical(oldWidget.smPickerReps, widget.smPickerReps);
+    if (companyChanged || deptChanged || smServerChanged || repsChanged) {
+      _selectedSalesRepId = widget.resolvedServerSmId > 0
+          ? widget.resolvedServerSmId
+          : null;
     }
   }
 
   CartSalesRepDto? get _selectedSalesRep {
-    for (final rep in widget.site.smItems) {
+    for (final rep in widget.smPickerReps) {
       if (rep.id == _selectedSalesRepId) return rep;
     }
     return null;
@@ -721,12 +819,18 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      _CartSalesRepPicker(
-                        reps: widget.site.smItems,
-                        selected: selectedSalesRep,
-                        onChanged: (next) {
-                          setState(() => _selectedSalesRepId = next.id);
-                        },
+                      AbsorbPointer(
+                        absorbing: _isSavingSm,
+                        child: Opacity(
+                          opacity: _isSavingSm ? 0.55 : 1,
+                          child: _CartSalesRepPicker(
+                            reps: widget.smPickerReps,
+                            selected: selectedSalesRep,
+                            onChanged: (next) {
+                              unawaited(_commitSmSelection(next));
+                            },
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1158,23 +1262,28 @@ class _CartProductTile extends StatefulWidget {
 
 class _CartProductTileState extends State<_CartProductTile> {
   late final TextEditingController _remarkController;
-  FocusNode? _remarkFocusNode;
+  late final FocusNode _remarkFocusNode;
   Timer? _quantityPressTimer;
   bool _isAdjustingQuantity = false;
-
-  FocusNode get _safeRemarkFocusNode {
-    return _remarkFocusNode ??= FocusNode();
-  }
 
   @override
   void initState() {
     super.initState();
     _remarkController = TextEditingController(text: widget.item.remark);
+    _remarkFocusNode = FocusNode()..addListener(_onRemarkFocusChange);
+  }
+
+  void _onRemarkFocusChange() {
+    if (_remarkFocusNode.hasFocus || widget.isBusy) return;
+    final text = _remarkController.text;
+    if (text == widget.item.remark) return;
+    widget.onRemarkChanged(widget.item.id, text);
   }
 
   @override
   void didUpdateWidget(covariant _CartProductTile oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_remarkFocusNode.hasFocus) return;
     if (oldWidget.item.remark != widget.item.remark &&
         _remarkController.text != widget.item.remark) {
       _remarkController.text = widget.item.remark;
@@ -1184,8 +1293,9 @@ class _CartProductTileState extends State<_CartProductTile> {
   @override
   void dispose() {
     _quantityPressTimer?.cancel();
+    _remarkFocusNode.removeListener(_onRemarkFocusChange);
+    _remarkFocusNode.dispose();
     _remarkController.dispose();
-    _remarkFocusNode?.dispose();
     super.dispose();
   }
 
@@ -1378,15 +1488,11 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 ),
                                 child: TextField(
                                   controller: _remarkController,
-                                  focusNode: _safeRemarkFocusNode,
+                                  focusNode: _remarkFocusNode,
                                   scrollPadding: EdgeInsets.only(
                                     bottom:
                                         24 +
                                         MediaQuery.viewInsetsOf(context).bottom,
-                                  ),
-                                  onChanged: (value) => widget.onRemarkChanged(
-                                    widget.item.id,
-                                    value,
                                   ),
                                   readOnly: widget.isBusy,
                                   maxLines: 1,

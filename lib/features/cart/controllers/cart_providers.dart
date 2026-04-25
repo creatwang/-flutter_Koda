@@ -206,6 +206,24 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     );
   }
 
+  /// 为单个部门保存 SM（与预提交共用 [requestCartSetSm]），成功后刷新列表。
+  Future<ApiResult<void>> saveSmForShopDepartment({
+    required int shopDepartmentId,
+    required int smId,
+  }) async {
+    if (!_isAuthenticated()) {
+      return ApiFailure(AppException('Please sign in first.'));
+    }
+    final result = await setCartSmForShopDepartmentService(
+      shopDepartmentId: shopDepartmentId,
+      smId: smId,
+    );
+    if (result is ApiSuccess<void>) {
+      await refresh();
+    }
+    return result;
+  }
+
   Future<bool> changeCartItemSpec({
     required int cartItemId,
     required int productId,
@@ -320,6 +338,17 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
   }) async {
     if (!_isAuthenticated()) return false;
     final current = state.asData?.value ?? const <CartListDto>[];
+    CartProductDto? line;
+    for (final item in _allProducts(current)) {
+      if (item.id == cartId) {
+        line = item;
+        break;
+      }
+    }
+    if (line == null) return false;
+    if (line.remark == remark) return true;
+
+    final previous = current;
     final next = _mapProducts(
       current,
       (item) => item.id == cartId ? item.copyWith(remark: remark) : item,
@@ -328,7 +357,18 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     if (_persistCartListLocally) {
       unawaited(saveCartListToLocal(items: next));
     }
-    return true;
+
+    final result = await updateCartRemarkService(id: cartId, remark: remark);
+    return result.when(
+      success: (_) => true,
+      failure: (_) {
+        state = AsyncData(previous);
+        if (_persistCartListLocally) {
+          unawaited(saveCartListToLocal(items: previous));
+        }
+        return false;
+      },
+    );
   }
 
   Future<bool> clearSiteCart(int companyId, {bool shouldRefresh = true}) async {

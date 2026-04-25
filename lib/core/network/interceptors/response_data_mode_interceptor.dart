@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:george_pick_mate/core/network/api_business_code.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 enum ResponseDataMode { origin, simple }
@@ -93,10 +94,7 @@ class ResponseDataModeInterceptor extends Interceptor {
   }
 
   bool _isBusinessError(Map<String, dynamic> data) {
-    final code = data['code'];
-    if (code is num) return code != 0;
-    if (code is String) return code != '0' && code.toLowerCase() != 'success';
-    return false;
+    return !isApiBusinessSuccessCode(data['code']);
   }
 
   dynamic _extractCode(dynamic data) {

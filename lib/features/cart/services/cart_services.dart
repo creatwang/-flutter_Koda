@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:george_pick_mate/core/network/api_business_code.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/features/cart/api/cart_requests.dart';
@@ -113,6 +114,28 @@ Future<ApiResult<void>> updateCartSelectedService({
     return ApiFailure(
       AppException(
         e.message ?? 'Update cart selected failed',
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+/// 更新购物车行备注。
+///
+/// 错误提示由全局拦截器统一处理，此处只回传结果给调用方用于回滚。
+Future<ApiResult<void>> updateCartRemarkService({
+  required int id,
+  required String remark,
+}) async {
+  try {
+    await requestCartRemark(id: id, remark: remark);
+    return const ApiSuccess(null);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? 'Update remark failed',
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -275,15 +298,10 @@ List<Map<String, dynamic>> buildSetSmRequestItems({
       .toList(growable: false);
 }
 
-/// 预提交：调用 [requestCartSetSm] 写入各部门所选 SM。
-Future<ApiResult<void>> setCartSmForPreSubmitService({
-  required List<CartListDto> groups,
-  required Map<int, int> reportedSmIdByCompanyId,
+/// 调用 [requestCartSetSm] 写入 `data`（与预提交、预订单即时保存共用）。
+Future<ApiResult<void>> postCartSetSm({
+  required List<Map<String, dynamic>> items,
 }) async {
-  final items = buildSetSmRequestItems(
-    groups: groups,
-    reportedSmIdByCompanyId: reportedSmIdByCompanyId,
-  );
   if (items.isEmpty) {
     return ApiFailure(
       AppException('No sales rep selections to submit.'),
@@ -302,19 +320,11 @@ Future<ApiResult<void>> setCartSmForPreSubmitService({
     }
     final map = Map<String, dynamic>.from(payload);
     final code = map['code'];
-    if (code is num && code != 0) {
+    if (!isApiBusinessSuccessCode(code)) {
       return ApiFailure(
         AppException(
           map['message']?.toString() ?? 'Set SM failed',
-          code: code.toString(),
-        ),
-      );
-    }
-    if (code is String && code != '0' && code.trim() != '0') {
-      return ApiFailure(
-        AppException(
-          map['message']?.toString() ?? 'Set SM failed',
-          code: code,
+          code: code?.toString(),
         ),
       );
     }
@@ -329,6 +339,36 @@ Future<ApiResult<void>> setCartSmForPreSubmitService({
   } catch (e) {
     return ApiFailure(AppException(e.toString()));
   }
+}
+
+/// 为单个部门写入 SM（与 [setCartSmForPreSubmitService] 同一接口）。
+Future<ApiResult<void>> setCartSmForShopDepartmentService({
+  required int shopDepartmentId,
+  required int smId,
+}) async {
+  if (shopDepartmentId <= 0 || smId <= 0) {
+    return ApiFailure(AppException('Invalid SM selection.'));
+  }
+  return postCartSetSm(
+    items: <Map<String, dynamic>>[
+      <String, dynamic>{
+        'shop_department_id': shopDepartmentId,
+        'sm_id': smId,
+      },
+    ],
+  );
+}
+
+/// 预提交：调用 [requestCartSetSm] 写入各部门所选 SM。
+Future<ApiResult<void>> setCartSmForPreSubmitService({
+  required List<CartListDto> groups,
+  required Map<int, int> reportedSmIdByCompanyId,
+}) async {
+  final items = buildSetSmRequestItems(
+    groups: groups,
+    reportedSmIdByCompanyId: reportedSmIdByCompanyId,
+  );
+  return postCartSetSm(items: items);
 }
 
 /// 加购。
@@ -355,18 +395,19 @@ Future<ApiResult<void>> createCartItemService({
         AppException(
           'Add to cart failed',
           code: response.statusCode?.toString(),
-        ),);
-    } else {
-      final code = payload['code'];
-      if (code is num && code == 100000) {
-        return ApiFailure(
-            AppException(
-              'There are still unordered items in the shopping cart',
-              code: code.toString(),
-            )
-          );
-        }
-      }
+        ),
+      );
+    }
+    final map = Map<String, dynamic>.from(payload);
+    final code = map['code'];
+    if (code is num && code == 100000) {
+      return ApiFailure(
+        AppException(
+          'There are still unordered items in the shopping cart',
+          code: code.toString(),
+        ),
+      );
+    }
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(

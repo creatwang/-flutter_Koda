@@ -244,7 +244,6 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     ProductDetailResolvedSelection resolved,
   ) async {
     if (_isAddToCartSubmitting) return;
-    final title = resolved.selected.name ?? detail.name ?? '--';
     setState(() => _isAddToCartSubmitting = true);
     try {
       final ok = await _submitCartCreate(
@@ -254,9 +253,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       );
       if (!context.mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.productAddedToCart(title))),
-        );
+        context.go(AppRoutes.homeWithTab('cart'));
       }
     } finally {
       if (mounted) {

@@ -42,6 +42,15 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   @override
+  void didUpdateWidget(covariant HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTab == widget.initialTab) return;
+    final nextSection = _tabToSection(widget.initialTab);
+    if (nextSection == _section) return;
+    setState(() => _section = nextSection);
+  }
+
+  @override
   void dispose() {
     _profileSwitchSiteHoldTimer?.cancel();
     super.dispose();

@@ -379,10 +379,9 @@ class _ProductSkuCartSideSheetBodyState
     );
     final hasMatchedSku = skuResolved.sub != null;
     final unitPrice = skuResolved.sub?.salesPrice ?? 0.0;
-    final canSubmitAddToCart =
-        hasMatchedSku &&
-        unitPrice > 0 &&
-        widget.mode == ProductSkuCartSheetMode.addToCart;
+    // 加购需有价；改规格仅要求命中 SKU（数量沿用购物车行）。
+    final canSubmitPrimary = hasMatchedSku &&
+        (widget.mode == ProductSkuCartSheetMode.changeSpec || unitPrice > 0);
     final thumbUrl = _thumbUrl(detail, selected);
     final title =
         selected.nameCn ?? selected.name ?? detail.nameCn ?? detail.name ?? '';
@@ -390,7 +389,9 @@ class _ProductSkuCartSideSheetBodyState
         ? l10n.cartConfirmChangeSpec
         : l10n.cartConfirmAdd;
 
-    final qtyRow = widget.mode == ProductSkuCartSheetMode.addToCart
+    // 改规格：数量沿用购物车行，不在侧栏展示加减控件。
+    final Widget? qtyControls =
+        widget.mode == ProductSkuCartSheetMode.addToCart
         ? Row(
             children: [
               _QtySquareButton(
@@ -420,39 +421,7 @@ class _ProductSkuCartSideSheetBodyState
               ),
             ],
           )
-        : Row(
-            children: [
-              _QtySquareButton(
-                background: _kSkuDrawerQtyMinus,
-                onTap: null,
-                child: Icon(
-                  Icons.remove,
-                  color: Colors.white.withValues(alpha: 0.35),
-                  size: 22,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  '${widget.cartLine?.productNum ?? 1}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              _QtySquareButton(
-                background: _kSkuDrawerQtyPlus.withValues(alpha: 0.35),
-                onTap: null,
-                child: Icon(
-                  Icons.add,
-                  color: Colors.black.withValues(alpha: 0.35),
-                  size: 22,
-                ),
-              ),
-            ],
-          );
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -498,8 +467,10 @@ class _ProductSkuCartSideSheetBodyState
                               height: 1.25,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          qtyRow,
+                          if (qtyControls != null) ...[
+                            const SizedBox(height: 6),
+                            qtyControls,
+                          ],
                         ],
                       ),
                     ),
@@ -690,7 +661,7 @@ class _ProductSkuCartSideSheetBodyState
                   disabledBackgroundColor: const Color(0xFF3A3A3A),
                   disabledForegroundColor: Colors.white38,
                   onPressed:
-                      (!hasMatchedSku || _isSubmitting || !canSubmitAddToCart)
+                      (!canSubmitPrimary || _isSubmitting)
                       ? null
                       : () => _onPrimaryPressed(
                           context,

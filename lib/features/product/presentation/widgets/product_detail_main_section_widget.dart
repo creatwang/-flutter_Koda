@@ -115,52 +115,78 @@ class ProductDetailMainSection extends StatelessWidget {
         final leftWidth = (rowWidth - _panelGap) * 0.6;
         final rightWidth = (rowWidth - _panelGap) * 0.4;
         final panelHeight = leftWidth / _mediaAspectRatio;
+        final infoHeight = (MediaQuery.sizeOf(context).height * 0.58).clamp(
+          360.0,
+          620.0,
+        );
+        final isLandscape =
+            MediaQuery.of(context).orientation == Orientation.landscape;
+
+        final mediaPanel = ProductDetailMediaPanel(
+          images: images,
+          imageIndex: imageIndex,
+          pageController: pageController,
+          thumbScrollController: thumbScrollController,
+          onPageChanged: onPageChanged,
+          onThumbnailTap: onThumbnailTap,
+        );
+        final infoPanel = Container(
+          padding: const EdgeInsets.all(16),
+          decoration: productDetailCardDecoration(),
+          child: ProductDetailInfoPanel(
+            detail: detail,
+            selected: selected,
+            selectedId: selectedId,
+            skuRowSelection: skuRowSelection,
+            skuResolved: skuResolved,
+            variants: variants,
+            productNum: productNum,
+            onSelectVariant: onSelectVariant,
+            onApplySpecOption: onApplySpecOption,
+            onDecrementQty: onDecrementQty,
+            onIncrementQty: onIncrementQty,
+            onBuyNow: onBuyNow,
+            onAddToCart: onAddToCart,
+            isBuyNowSubmitting: isBuyNowSubmitting,
+            isAddToCartSubmitting: isAddToCartSubmitting,
+          ),
+        );
 
         return Align(
           alignment: Alignment.topCenter,
           child: SizedBox(
-            height: panelHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: leftWidth,
-                  child: ProductDetailMediaPanel(
-                    images: images,
-                    imageIndex: imageIndex,
-                    pageController: pageController,
-                    thumbScrollController: thumbScrollController,
-                    onPageChanged: onPageChanged,
-                    onThumbnailTap: onThumbnailTap,
+            height: isLandscape
+                ? panelHeight
+                : (rowWidth / _mediaAspectRatio) + _panelGap + infoHeight,
+            child: isLandscape
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: leftWidth,
+                        child: mediaPanel,
+                      ),
+                      const SizedBox(width: _panelGap),
+                      SizedBox(
+                        width: rightWidth,
+                        child: infoPanel,
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: rowWidth / _mediaAspectRatio,
+                        child: mediaPanel,
+                      ),
+                      const SizedBox(height: _panelGap),
+                      SizedBox(
+                        height: infoHeight.toDouble(),
+                        child: infoPanel,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: _panelGap),
-                SizedBox(
-                  width: rightWidth,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: productDetailCardDecoration(),
-                    child: ProductDetailInfoPanel(
-                      detail: detail,
-                      selected: selected,
-                      selectedId: selectedId,
-                      skuRowSelection: skuRowSelection,
-                      skuResolved: skuResolved,
-                      variants: variants,
-                      productNum: productNum,
-                      onSelectVariant: onSelectVariant,
-                      onApplySpecOption: onApplySpecOption,
-                      onDecrementQty: onDecrementQty,
-                      onIncrementQty: onIncrementQty,
-                      onBuyNow: onBuyNow,
-                      onAddToCart: onAddToCart,
-                      isBuyNowSubmitting: isBuyNowSubmitting,
-                      isAddToCartSubmitting: isAddToCartSubmitting,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         );
       },

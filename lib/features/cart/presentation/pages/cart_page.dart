@@ -134,7 +134,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                       child: SafeArea(
                         top: false,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                           child: LayoutBuilder(
                             builder: (context, viewport) {
                               return SingleChildScrollView(

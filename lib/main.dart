@@ -7,8 +7,8 @@ Future<void> main() async {
   ///  仅横屏下使用后面需要兼容的化，去掉下面的代码
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
   ]);
   runApp(const ProviderScope(child: AppShell()));
 }

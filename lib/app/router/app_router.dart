@@ -10,24 +10,21 @@ import 'package:george_pick_mate/features/home/presentation/pages/home_page.dart
 import 'package:george_pick_mate/features/product/presentation/pages/product_detail_page.dart';
 
 GoRouter buildAppRouter({
-  required bool isLoading,
-  required bool isLoggedIn,
+  required bool Function() isLoading,
+  required bool Function() isLoggedIn,
+  Listenable? refreshListenable,
   GlobalKey<NavigatorState>? navigatorKey,
 }) {
   return GoRouter(
     navigatorKey: navigatorKey,
+    refreshListenable: refreshListenable,
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, __) => const SplashPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const LoginPage(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashPage()),
+      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginPage()),
       GoRoute(
         path: AppRoutes.home,
-        builder: (_, state) => HomePage(initialTab: state.uri.queryParameters['tab']),
+        builder: (_, state) =>
+            HomePage(initialTab: state.uri.queryParameters['tab']),
       ),
       GoRoute(
         path: AppRoutes.productDetailPattern,
@@ -48,14 +45,16 @@ GoRouter buildAppRouter({
     // 初始化路由
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
+      final isLoadingNow = isLoading();
+      final isLoggedInNow = isLoggedIn();
       final atSplash = state.matchedLocation == AppRoutes.splash;
       final atLogin = state.matchedLocation == AppRoutes.login;
 
-      if (isLoading) {
+      if (isLoadingNow) {
         return atSplash ? null : AppRoutes.splash;
       }
 
-      if (!isLoggedIn) {
+      if (!isLoggedInNow) {
         return atLogin ? null : AppRoutes.login;
       }
 

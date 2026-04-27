@@ -12,6 +12,7 @@ class ProfileSidebarWidget extends StatelessWidget {
     required this.avatarUrl,
     required this.profileName,
     required this.profileId,
+    required this.profileSiteId,
     required this.favoriteCount,
     required this.cartBadgeCount,
     required this.currentSection,
@@ -22,6 +23,7 @@ class ProfileSidebarWidget extends StatelessWidget {
   final String avatarUrl;
   final String profileName;
   final int? profileId;
+  final int? profileSiteId;
   final int favoriteCount;
   final int cartBadgeCount;
   final ProfileContentSection currentSection;
@@ -74,7 +76,9 @@ class ProfileSidebarWidget extends StatelessWidget {
                                       color: Color.fromRGBO(222, 232, 255, 1),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.92),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.92,
+                                        ),
                                         width: 1,
                                       ),
                                       boxShadow: [
@@ -87,7 +91,9 @@ class ProfileSidebarWidget extends StatelessWidget {
                                           offset: const Offset(0, 2),
                                         ),
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.35),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.35,
+                                          ),
                                           blurRadius: 12,
                                           offset: const Offset(0, 8),
                                         ),
@@ -99,18 +105,18 @@ class ProfileSidebarWidget extends StatelessWidget {
                                         color: Colors.black26,
                                         child: avatarUrl.trim().isEmpty
                                             ? const Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                        )
+                                                Icons.person,
+                                                color: Colors.white,
+                                              )
                                             : Image.network(
-                                          avatarUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                          const Icon(
-                                            Icons.person,
-                                            color: Colors.white,
-                                          ),
-                                        ),
+                                                avatarUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                      Icons.person,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -120,8 +126,11 @@ class ProfileSidebarWidget extends StatelessWidget {
                             Positioned(
                               bottom: 0,
                               right: -6,
-                              child: Assets.svg.profileSetting.svg(width: 30, height: 30),
-                            )
+                              child: Assets.svg.profileSetting.svg(
+                                width: 30,
+                                height: 30,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 36),
@@ -139,6 +148,16 @@ class ProfileSidebarWidget extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.92),
                             letterSpacing: 1.4,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'SITEID: ${profileSiteId ?? '--'}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            letterSpacing: 1.2,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),

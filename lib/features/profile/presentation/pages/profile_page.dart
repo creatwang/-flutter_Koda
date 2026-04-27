@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/auth/controllers/main_user_providers.dart';
+import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_page_controller.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
@@ -19,10 +20,7 @@ import 'package:george_pick_mate/features/product/controllers/product_providers.
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
-  const ProfilePage({
-    super.key,
-    this.showSwitchSiteEntry = false,
-  });
+  const ProfilePage({super.key, this.showSwitchSiteEntry = false});
 
   /// 由首页「Profile」入口长按 10s 切换；为 `true` 时在设置中展示切换站点按钮。
   final bool showSwitchSiteEntry;
@@ -114,8 +112,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _settingsErrorMessage = null;
       _isSigningOut = true;
     });
-    final result =
-        await ProfilePageController.signOutWithRemoteLogout(ref);
+    final result = await ProfilePageController.signOutWithRemoteLogout(ref);
     if (!mounted) return;
     setState(() => _isSigningOut = false);
     result.when(
@@ -166,6 +163,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id?.toInt();
+    final profileSiteId = ref
+        .watch(sessionControllerProvider)
+        .asData
+        ?.value
+        .companyId;
     final canViewCustomerOrders =
         userInfoState.asData?.value.isAuthAccount == true;
     final visibleMenus = buildProfileSidebarMenus(
@@ -205,6 +207,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               avatarUrl: avatarUrl,
               profileName: userName,
               profileId: userId,
+              profileSiteId: profileSiteId,
               favoriteCount: favoriteCount,
               cartBadgeCount: cartBadgeCount,
               currentSection: contentSection,
@@ -254,10 +257,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 },
                 onMyCustomersAddCustomer: canViewCustomerOrders
                     ? () => showStoreCustomerFormBottomSheet(
-                          context: context,
-                          ref: ref,
-                          mode: StoreCustomerSheetMode.create,
-                        )
+                        context: context,
+                        ref: ref,
+                        mode: StoreCustomerSheetMode.create,
+                      )
                     : null,
                 onMyCustomersSetCommandPassword: canViewCustomerOrders
                     ? () async {

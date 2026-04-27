@@ -4,10 +4,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/providers/locale_provider.dart';
 import 'package:george_pick_mate/app/providers/theme_provider.dart';
 import 'package:george_pick_mate/app/router/app_router.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
+import 'package:george_pick_mate/features/auth/models/session.dart';
 import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
@@ -28,6 +30,9 @@ class _AppShellState extends ConsumerState<AppShell>
     with WidgetsBindingObserver {
   // 前台回归同步最小间隔，避免频繁切前后台导致重复请求。
   static const Duration _resumeSyncMinInterval = Duration(seconds: 60);
+  final _routerSessionState = _RouterSessionState();
+  late final GoRouter _router;
+  late final ProviderSubscription<AsyncValue<Session>> _sessionSubscription;
   DateTime? _lastResumeSyncAt;
   // 并发保护：同一时刻只允许一个同步任务执行。
   bool _isResumedSyncing = false;
@@ -37,12 +42,25 @@ class _AppShellState extends ConsumerState<AppShell>
     super.initState();
     // 注册生命周期监听，接收前后台切换事件。
     WidgetsBinding.instance.addObserver(this);
+    _syncRouterSessionState(ref.read(sessionControllerProvider));
+    _router = buildAppRouter(
+      isLoading: () => _routerSessionState.isLoading,
+      isLoggedIn: () => _routerSessionState.isLoggedIn,
+      refreshListenable: _routerSessionState,
+      navigatorKey: appNavigatorKey,
+    );
+    _sessionSubscription = ref.listenManual<AsyncValue<Session>>(
+      sessionControllerProvider,
+      (_, next) => _syncRouterSessionState(next),
+    );
   }
 
   @override
   void dispose() {
     // 页面销毁时移除监听，避免内存泄漏与重复回调。
     WidgetsBinding.instance.removeObserver(this);
+    _sessionSubscription.close();
+    _routerSessionState.dispose();
     super.dispose();
   }
 
@@ -79,6 +97,13 @@ class _AppShellState extends ConsumerState<AppShell>
     }
   }
 
+  void _syncRouterSessionState(AsyncValue<Session> sessionState) {
+    _routerSessionState.update(
+      isLoading: sessionState.isLoading,
+      isLoggedIn: sessionState.asData?.value.isAuthenticated ?? false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 全局会话过期处理：由网络层回调后统一清会话并回登录态。
@@ -89,13 +114,6 @@ class _AppShellState extends ConsumerState<AppShell>
     final appThemeMode = ref.watch(appThemeModeProvider);
     final isDark = appThemeMode == AppThemeMode.dark;
     final localeMode = ref.watch(appLocaleModeProvider);
-    final sessionState = ref.watch(sessionControllerProvider);
-    // 路由是否放行取决于会话状态，保证登录态变化后自动重定向。
-    final router = buildAppRouter(
-      isLoading: sessionState.isLoading,
-      isLoggedIn: sessionState.asData?.value.isAuthenticated ?? false,
-      navigatorKey: appNavigatorKey,
-    );
 
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.appTitle,
@@ -114,10 +132,8 @@ class _AppShellState extends ConsumerState<AppShell>
       ],
       // 应用支持的语言列表（系统语言会在这里做匹配与回退）。
       supportedLocales: const [Locale('en'), Locale('zh')],
-      routerConfig: router,
+      routerConfig: _router,
       builder: (context, child) {
-        final currentPath = router.routeInformationProvider.value.uri.path;
-        const globalScanFabBottomOffset = 14.0;
         // iPad/桌面保持固定最大宽度，小屏按 1024 设计稿等比缩放。
         final content = ResponsiveBreakpoints.builder(
           child: Builder(
@@ -214,5 +230,19 @@ class _AppShellState extends ConsumerState<AppShell>
         );
       },
     );
+  }
+}
+
+class _RouterSessionState extends ChangeNotifier {
+  bool isLoading = true;
+  bool isLoggedIn = false;
+
+  void update({required bool isLoading, required bool isLoggedIn}) {
+    if (this.isLoading == isLoading && this.isLoggedIn == isLoggedIn) {
+      return;
+    }
+    this.isLoading = isLoading;
+    this.isLoggedIn = isLoggedIn;
+    notifyListeners();
   }
 }

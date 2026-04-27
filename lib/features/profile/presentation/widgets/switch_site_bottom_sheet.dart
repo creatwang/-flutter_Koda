@@ -35,7 +35,8 @@ class _SwitchSiteSheetScaffold extends ConsumerStatefulWidget {
       _SwitchSiteSheetScaffoldState();
 }
 
-class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffold> {
+class _SwitchSiteSheetScaffoldState
+    extends ConsumerState<_SwitchSiteSheetScaffold> {
   /// 正在切换的站点 id；非空时禁用其它行点击。
   int? _busySiteId;
 
@@ -44,6 +45,18 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
     if (v is int) return v;
     if (v is num) return v.toInt();
     return int.tryParse('$v');
+  }
+
+  static bool _isSelectedSite({
+    required Map<String, dynamic> item,
+    required int? currentCompanyId,
+  }) {
+    if (currentCompanyId == null) return false;
+    final id = _idFromItem(item);
+    if (id != null) return id == currentCompanyId;
+    final dynamic selectedRaw = item['selected'] ?? item['is_selected'];
+    if (selectedRaw is bool) return selectedRaw;
+    return '$selectedRaw' == '1' || '$selectedRaw'.toLowerCase() == 'true';
   }
 
   Future<void> _pickSite(int id) async {
@@ -62,9 +75,7 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
       },
       failure: (exception) {
         setState(() => _busySiteId = null);
-        messenger?.showSnackBar(
-          SnackBar(content: Text(exception.message)),
-        );
+        messenger?.showSnackBar(SnackBar(content: Text(exception.message)));
       },
     );
   }
@@ -72,6 +83,11 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(storeCompanyListProvider);
+    final currentCompanyId = ref
+        .watch(sessionControllerProvider)
+        .asData
+        ?.value
+        .companyId;
     final bottom = MediaQuery.paddingOf(context).bottom;
     final busy = _busySiteId != null;
 
@@ -85,9 +101,7 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
           decoration: const BoxDecoration(
             color: Color(0xFF1A1D24),
             borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-            border: Border(
-              top: BorderSide(color: Color(0x44FFFFFF)),
-            ),
+            border: Border(top: BorderSide(color: Color(0x44FFFFFF))),
           ),
           child: Column(
             children: <Widget>[
@@ -138,16 +152,35 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
                             item['name']?.toString() ??
                             '';
                         final id = _idFromItem(item);
+                        final isSelected = _isSelectedSite(
+                          item: item,
+                          currentCompanyId: currentCompanyId,
+                        );
                         final isRowBusy = id != null && _busySiteId == id;
+                        final isDisabled = busy && !isRowBusy;
+                        final titleColor = isSelected
+                            ? const Color(0xFFF4C77A)
+                            : ProMaxTokens.textPrimary;
                         return ListTile(
+                          tileColor: isSelected
+                              ? const Color(0x1AF4C77A)
+                              : Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? const Color(0x66F4C77A)
+                                  : Colors.transparent,
+                            ),
+                          ),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: 12,
                           ),
                           title: Text(
                             title.isEmpty ? 'Site #$id' : title,
                             style: TextStyle(
-                              color: ProMaxTokens.textPrimary.withValues(
-                                alpha: busy && !isRowBusy ? 0.45 : 1,
+                              color: titleColor.withValues(
+                                alpha: isDisabled ? 0.45 : 1,
                               ),
                               fontWeight: FontWeight.w600,
                             ),
@@ -155,10 +188,17 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
                           subtitle: id == null
                               ? null
                               : Text(
-                                  'ID: $id',
+                                  isSelected
+                                      ? 'Current site · ID: $id'
+                                      : 'ID: $id',
                                   style: TextStyle(
-                                    color: ProMaxTokens.textSecondary
-                                        .withValues(alpha: 0.85),
+                                    color:
+                                        (isSelected
+                                                ? const Color(0xFFF4C77A)
+                                                : ProMaxTokens.textSecondary)
+                                            .withValues(
+                                              alpha: isDisabled ? 0.6 : 0.85,
+                                            ),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -171,9 +211,18 @@ class _SwitchSiteSheetScaffoldState extends ConsumerState<_SwitchSiteSheetScaffo
                                     color: Color(0xFFF4C77A),
                                   ),
                                 )
+                              : isSelected
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: const Color(
+                                    0xFFF4C77A,
+                                  ).withValues(alpha: isDisabled ? 0.45 : 1),
+                                )
                               : Icon(
                                   Icons.chevron_right_rounded,
-                                  color: Colors.white.withValues(alpha: 0.35),
+                                  color: Colors.white.withValues(
+                                    alpha: isDisabled ? 0.22 : 0.35,
+                                  ),
                                 ),
                           onTap: id == null || busy
                               ? null

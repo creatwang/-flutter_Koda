@@ -133,7 +133,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 26),
                         Text(
                           profileName.trim().isEmpty ? '--' : profileName,
                           style: const TextStyle(
@@ -164,7 +164,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 36),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(

@@ -79,7 +79,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
-            fontSize: 40,
+            fontSize: 36,
             height: 1.05,
           ),
           maxLines: 2,

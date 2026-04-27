@@ -79,7 +79,7 @@ class ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'NEW COLLECTION',
+                            'HOT',
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: Colors.black87,

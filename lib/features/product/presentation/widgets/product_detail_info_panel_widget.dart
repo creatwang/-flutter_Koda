@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
-import 'package:george_pick_mate/features/product/presentation/widgets/product_detail_qty_adjust_button_widget.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductDetailInfoPanel extends StatelessWidget {
@@ -54,6 +56,10 @@ class ProductDetailInfoPanel extends StatelessWidget {
     final canAddToCart = hasMatchedSku && unitPrice > 0;
     final totalPrice = unitPrice * productNum;
     final specRows = selected.specValue ?? const <SpecValue>[];
+    final unit = (selected.unit ?? detail.unit ?? '').trim();
+    final quantityText =
+        unit.isEmpty ? '$productNum' : '$productNum $unit';
+    final isQtyBusy = isBuyNowSubmitting || isAddToCartSubmitting;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,30 +273,12 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            const SizedBox(width: 10),
-            ProductDetailQtyAdjustButton(
-              icon: Icons.remove,
-              onTap: productNum <= 1 ? null : onDecrementQty,
-            ),
-            Container(
-              width: 46,
-              alignment: Alignment.center,
-              child: Text(
-                '$productNum',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            ProductDetailQtyAdjustButton(
-              icon: Icons.add,
-              onTap: onIncrementQty,
-            ),
-          ],
+        _ProductDetailGeorgeQty(
+          productNum: productNum,
+          quantityText: quantityText,
+          isBusy: isQtyBusy,
+          onDecrement: onDecrementQty,
+          onIncrement: onIncrementQty,
         ),
         const SizedBox(height: 10),
         GeorgeFilledButton(
@@ -328,6 +316,76 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 与购物车一致的 [GeorgeQuantityControl] 大号档位，含长按连调。
+class _ProductDetailGeorgeQty extends StatefulWidget {
+  const _ProductDetailGeorgeQty({
+    required this.productNum,
+    required this.quantityText,
+    required this.isBusy,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
+
+  final int productNum;
+  final String quantityText;
+  final bool isBusy;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+
+  @override
+  State<_ProductDetailGeorgeQty> createState() =>
+      _ProductDetailGeorgeQtyState();
+}
+
+class _ProductDetailGeorgeQtyState extends State<_ProductDetailGeorgeQty> {
+  Timer? _quantityPressTimer;
+
+  @override
+  void dispose() {
+    _stopContinuousAdjust();
+    super.dispose();
+  }
+
+  void _stopContinuousAdjust() {
+    _quantityPressTimer?.cancel();
+    _quantityPressTimer = null;
+  }
+
+  void _startContinuousAdjust(int delta) {
+    if (widget.isBusy) return;
+    _stopContinuousAdjust();
+    _quantityPressTimer = Timer.periodic(const Duration(milliseconds: 220), (
+      _,
+    ) {
+      if (delta < 0 && widget.productNum <= 1) {
+        _stopContinuousAdjust();
+        return;
+      }
+      if (delta < 0) {
+        widget.onDecrement();
+      } else {
+        widget.onIncrement();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GeorgeQuantityControl(
+      quantityText: widget.quantityText,
+      size: QuantityControl.large,
+      isDecreaseEnabled: !widget.isBusy && widget.productNum > 1,
+      isIncreaseEnabled: !widget.isBusy,
+      onDecreaseTap: () async => widget.onDecrement(),
+      onIncreaseTap: () async => widget.onIncrement(),
+      onDecreaseLongPressStart: () => _startContinuousAdjust(-1),
+      onDecreaseLongPressEnd: _stopContinuousAdjust,
+      onIncreaseLongPressStart: () => _startContinuousAdjust(1),
+      onIncreaseLongPressEnd: _stopContinuousAdjust,
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:george_pick_mate/core/network/dio_client.dart';
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
-/// ?????????????
+/// 购物车请求路径定义
 class CartRequests {
   CartRequests._();
 
@@ -20,13 +20,13 @@ class CartRequests {
   static const String quotationConfigPath = '/store/quotationConfig';
   static const String exportQuotationPath = '/store/cart/exportQuotation';
 
-  /// ????????? SM??????
+  /// 设置购物车条目与 SM 的关联
   static const String setSmPath = '/store/cart/setSm';
 }
 
-/// ??????????????
+/// 获取购物车商品数量
 ///
-/// [client]?????? [protectedDioClient]?
+/// [client] 默认使用 [protectedDioClient]。
 Future<Response<dynamic>> requestCartNum({DioClient? client}) {
   return (client ?? protectedDioClient).get(
     CartRequests.numPath,
@@ -34,10 +34,10 @@ Future<Response<dynamic>> requestCartNum({DioClient? client}) {
   );
 }
 
-/// ????????????????
+/// 获取购物车列表（按门店聚合）
 ///
-/// [bypassMemoryCache]?? `true` ????????????????
-/// [client]?????? [protectedDioClient]?
+/// [smStatus] 过滤 SM 状态，默认 `0`。
+/// [client] 默认使用 [protectedDioClient]。
 Future<Response<dynamic>> requestCartListBySite({
   DioClient? client,
   int? smStatus = 0,
@@ -51,10 +51,10 @@ Future<Response<dynamic>> requestCartListBySite({
   );
 }
 
-/// ????????????????
+/// 批量设置购物车商品选中状态
 ///
-/// [ids]?? id ??????????????
-/// [selected]?`1` ???`0` ???
+/// [ids] 支持单个或多个购物车条目 id。
+/// [selected] `1` 表示选中，`0` 表示取消选中。
 Future<Response<dynamic>> requestCartSelected({
   required List<int> ids,
   required int selected,
@@ -69,9 +69,9 @@ Future<Response<dynamic>> requestCartSelected({
   );
 }
 
-/// ??????????????
+/// 修改购物车商品数量
 ///
-/// [id]????? id?[productNum]??????
+/// [id] 购物车条目 id，[productNum] 目标数量。
 Future<Response<dynamic>> requestCartChangeQuantity({
   required int id,
   required int productNum,
@@ -83,9 +83,9 @@ Future<Response<dynamic>> requestCartChangeQuantity({
   );
 }
 
-/// ????????????
+/// 删除购物车商品
 ///
-/// [ids]????? id ???
+/// [ids] 要删除的购物车条目 id 列表。
 Future<Response<dynamic>> requestCartDelete({
   required List<int> ids,
   DioClient? client,
@@ -96,9 +96,9 @@ Future<Response<dynamic>> requestCartDelete({
   );
 }
 
-/// ?????????????
+/// 按门店拆单创建订单
 ///
-/// [companyIds]???????? id?[cart]?????????????
+/// [companyIds] 门店 id 列表，[cart] 下单条目数据。
 Future<Response<dynamic>> requestCreateOrderBySites({
   required List<int> companyIds,
   required List<Map<String, dynamic>> cart,
@@ -110,9 +110,9 @@ Future<Response<dynamic>> requestCreateOrderBySites({
   );
 }
 
-/// ??????????????
+/// 更新购物车备注
 ///
-/// [id]????? id?[remark]??????
+/// [id] 购物车条目 id，[remark] 备注内容。
 Future<Response<dynamic>> requestCartRemark({
   required int id,
   required String remark,
@@ -124,9 +124,9 @@ Future<Response<dynamic>> requestCartRemark({
   );
 }
 
-/// ??????????????
+/// 清空指定门店购物车
 ///
-/// [companyId]??? id?
+/// [companyId] 门店 id。
 Future<Response<dynamic>> requestCartClear({
   required int companyId,
   DioClient? client,
@@ -137,7 +137,7 @@ Future<Response<dynamic>> requestCartClear({
   );
 }
 
-/// ???????????????
+/// 获取报价配置
 Future<Response<dynamic>> requestQuotationConfig({DioClient? client}) {
   return (client ?? protectedDioClient).get(
     CartRequests.quotationConfigPath,
@@ -146,7 +146,7 @@ Future<Response<dynamic>> requestQuotationConfig({DioClient? client}) {
   );
 }
 
-/// ???????????
+/// 导出报价单（二进制文件）
 Future<Response<dynamic>> requestExportQuotation({
   required Map<String, dynamic> formData,
   DioClient? client,
@@ -162,7 +162,7 @@ Future<Response<dynamic>> requestExportQuotation({
   );
 }
 
-/// ???????????
+/// 导出报价单预览数据
 Future<Response<dynamic>> requestExportQuotationPreview({
   required Map<String, dynamic> formData,
   DioClient? client,
@@ -175,10 +175,10 @@ Future<Response<dynamic>> requestExportQuotationPreview({
   );
 }
 
-/// ????????
+/// 加入购物车
 ///
-/// [productId] / [subIndex] / [productNum] / [space] / [subName]????
-/// ?????????
+/// [productId]、[subIndex]、[productNum]、[space]、[subName]
+/// 为商品规格与数量参数。
 Future<Response<dynamic>> requestCartCreate({
   required int productId,
   required String subIndex,
@@ -196,16 +196,16 @@ Future<Response<dynamic>> requestCartCreate({
       'product_num': productNum,
       'space': space,
       'sub_name': subName,
-      /// 1?????????????????
+      /// `1` 表示开启 SM 检查（后端约定值）。
       'sm_check': 1,
       'all_shop': 1,
     },
   );
 }
 
-/// ?????????????
+/// 修改购物车商品规格
 ///
-/// [id]?????? id???????????
+/// [id] 购物车条目 id，其余参数为新规格信息。
 Future<Response<dynamic>> requestCartChangeSpec({
   required int id,
   required int productId,
@@ -226,9 +226,9 @@ Future<Response<dynamic>> requestCartChangeSpec({
   );
 }
 
-/// ?????????? SM??????
+/// 为购物车条目设置 SM 信息
 ///
-/// [data]?`[{ shop_department_id, sm_id }, ...]`?????? `id` ???
+/// [data] 结构：`[{ shop_department_id, sm_id }, ...]`。
 Future<Response<dynamic>> requestCartSetSm({
   required List<Map<String, dynamic>> data,
   DioClient? client,

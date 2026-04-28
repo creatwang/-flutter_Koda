@@ -198,6 +198,7 @@ Future<Response<dynamic>> requestCartCreate({
       'sub_name': subName,
       /// 1?????????????????
       'sm_check': 1,
+      'all_shop': 1,
     },
   );
 }

@@ -285,7 +285,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
           width: double.infinity,
           minimumSize: const Size(0, 46),
           borderRadius: 5,
-          onPressed: hasMatchedSku && !isBuyNowSubmitting
+          onPressed: canAddToCart && !isBuyNowSubmitting
               ? () async {
                   await onBuyNow();
                 }

@@ -20,35 +20,24 @@ import 'home_start.dart';
 
 enum HomeSection { products, cart, start, profile }
 
-class HomePage extends ConsumerStatefulWidget {
-  const HomePage({super.key, this.initialTab});
+String _homeLocationForSection(HomeSection section) => switch (section) {
+  HomeSection.start => AppRoutes.home,
+  HomeSection.products => AppRoutes.homeWithTab('products'),
+  HomeSection.cart => AppRoutes.homeWithTab('cart'),
+  HomeSection.profile => AppRoutes.homeWithTab('profile'),
+};
 
-  final String? initialTab;
+class HomePage extends ConsumerStatefulWidget {
+  const HomePage({super.key});
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  HomeSection _section = HomeSection.start;
   bool _isLogoutLoading = false;
   bool _showSwitchSiteEntry = false;
   Timer? _profileSwitchSiteHoldTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _section = _tabToSection(widget.initialTab);
-  }
-
-  @override
-  void didUpdateWidget(covariant HomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialTab == widget.initialTab) return;
-    final nextSection = _tabToSection(widget.initialTab);
-    if (nextSection == _section) return;
-    setState(() => _section = nextSection);
-  }
 
   @override
   void dispose() {
@@ -56,7 +45,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  static const Duration _kProfileSwitchSiteHoldDuration = Duration(seconds: 10);
+  static const Duration _kProfileSwitchSiteHoldDuration = Duration(seconds: 5);
 
   void _beginProfileSwitchSiteHold() {
     _profileSwitchSiteHoldTimer?.cancel();
@@ -84,18 +73,23 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final cartCount = _section == HomeSection.cart
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+    final section = _tabToSection(tab);
+    final cartCount = section == HomeSection.cart
         ? ref.watch(cartListBadgeCountProvider)
         : 0;
 
-    final Widget body = switch (_section) {
+    void goSection(HomeSection next) {
+      context.go(_homeLocationForSection(next));
+    }
+
+    final Widget body = switch (section) {
       HomeSection.products => const ProductListPage(),
       // HomeSection.products => const ProductDetailPage(productId: 117276),
       HomeSection.cart => const CartPage(),
       HomeSection.start => HomeStartPage(
         showSwitchSiteEntry: _showSwitchSiteEntry,
-        onStartShopping: () =>
-            setState(() => _section = HomeSection.products),
+        onStartShopping: () => goSection(HomeSection.products),
       ),
       HomeSection.profile => ProfilePage(
         showSwitchSiteEntry: _showSwitchSiteEntry,
@@ -105,25 +99,25 @@ class _HomePageState extends ConsumerState<HomePage> {
     return AdaptiveScaffold(
       title: l10n.appTitle,
       automaticallyImplyLeading: false,
-      extendBody: _section == HomeSection.start,
+      extendBody: section == HomeSection.start,
       actions: [
         HeaderMenuButton(
           label: 'Home',
           icon: Icons.storefront,
-          selected: _section == HomeSection.start,
-          onTap: () => setState(() => _section = HomeSection.start),
+          selected: section == HomeSection.start,
+          onTap: () => goSection(HomeSection.start),
         ),
         HeaderMenuButton(
           label: l10n.homeProducts,
           icon: Icons.storefront,
-          selected: _section == HomeSection.products,
-          onTap: () => setState(() => _section = HomeSection.products),
+          selected: section == HomeSection.products,
+          onTap: () => goSection(HomeSection.products),
         ),
         HeaderMenuButton(
           label: l10n.homeCartWithCount(cartCount),
           icon: Icons.shopping_cart_outlined,
-          selected: _section == HomeSection.cart,
-          onTap: () => setState(() => _section = HomeSection.cart),
+          selected: section == HomeSection.cart,
+          onTap: () => goSection(HomeSection.cart),
         ),
         Listener(
           onPointerDown: (_) => _beginProfileSwitchSiteHold(),
@@ -132,8 +126,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: HeaderMenuButton(
             label: 'Profile',
             icon: Icons.person_outline,
-            selected: _section == HomeSection.profile,
-            onTap: () => setState(() => _section = HomeSection.profile),
+            selected: section == HomeSection.profile,
+            onTap: () => goSection(HomeSection.profile),
           ),
         ),
         IconButton(
@@ -187,7 +181,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         fit: StackFit.expand,
         children: [
           SafeArea(
-            top: _section != HomeSection.start,
+            top: section != HomeSection.start,
             bottom: false,
             child: body,
           ),
@@ -200,26 +194,26 @@ class _HomePageState extends ConsumerState<HomePage> {
           FrostedBottomMenuItem(
             icon: Icons.home_outlined,
             label: 'Home',
-            selected: _section == HomeSection.start,
-            onTap: () => setState(() => _section = HomeSection.start),
+            selected: section == HomeSection.start,
+            onTap: () => goSection(HomeSection.start),
           ),
           FrostedBottomMenuItem(
             icon: Icons.inventory_2_outlined,
             label: l10n.homeProducts,
-            selected: _section == HomeSection.products,
-            onTap: () => setState(() => _section = HomeSection.products),
+            selected: section == HomeSection.products,
+            onTap: () => goSection(HomeSection.products),
           ),
           FrostedBottomMenuItem(
             icon: Icons.shopping_bag_outlined,
             label: l10n.homeCart,
-            selected: _section == HomeSection.cart,
-            onTap: () => setState(() => _section = HomeSection.cart),
+            selected: section == HomeSection.cart,
+            onTap: () => goSection(HomeSection.cart),
           ),
           FrostedBottomMenuItem(
             icon: Icons.person_outline,
             label: 'Profile',
-            selected: _section == HomeSection.profile,
-            onTap: () => setState(() => _section = HomeSection.profile),
+            selected: section == HomeSection.profile,
+            onTap: () => goSection(HomeSection.profile),
             onPointerDown: (_) => _beginProfileSwitchSiteHold(),
             onPointerUp: (_) => _cancelProfileSwitchSiteHold(),
             onPointerCancel: (_) => _cancelProfileSwitchSiteHold(),

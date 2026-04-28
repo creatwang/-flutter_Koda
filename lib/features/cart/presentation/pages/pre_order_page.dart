@@ -200,7 +200,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
               left: 18,
               top: 12,
               child: GeorgeBackButton(
-                label: 'Back Cart',
+                label: 'Back',
                 onPressed: () => context.pop(),
               ),
             ),

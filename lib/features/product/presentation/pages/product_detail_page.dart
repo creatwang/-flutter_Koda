@@ -13,9 +13,12 @@ import 'package:george_pick_mate/features/product/services/product_sku_cart_help
 import 'package:george_pick_mate/gen/assets.gen.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_back_button.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
+
+enum _DetailCartSubmitKind { buyNow, addToCart }
 
 class ProductDetailPage extends ConsumerStatefulWidget {
   const ProductDetailPage({required this.productId, super.key});
@@ -189,9 +192,16 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
                       onIncrementQty: () => setState(() {
                         _productNum += 1;
                       }),
-                      onBuyNow: () => _onBuyNow(resolved),
-                      onAddToCart: () =>
-                          _onAddToCart(context, detail, resolved),
+                      onBuyNow: () => _onDetailCartSubmit(
+                        detail,
+                        resolved,
+                        _DetailCartSubmitKind.buyNow,
+                      ),
+                      onAddToCart: () => _onDetailCartSubmit(
+                        detail,
+                        resolved,
+                        _DetailCartSubmitKind.addToCart,
+                      ),
                       isBuyNowSubmitting: _isBuyNowSubmitting,
                       isAddToCartSubmitting: _isAddToCartSubmitting,
                     ),
@@ -210,7 +220,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           left: contentPadding.left,
           top: 12,
           child: GeorgeBackButton(
-            label: 'Back to Product List',
+            label: 'Back',
             onPressed: () => context.pop(),
           ),
         ),
@@ -218,9 +228,22 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     );
   }
 
-  Future<void> _onBuyNow(ProductDetailResolvedSelection resolved) async {
-    if (_isBuyNowSubmitting) return;
-    setState(() => _isBuyNowSubmitting = true);
+  Future<void> _onDetailCartSubmit(
+    ProductDetailDto detail,
+    ProductDetailResolvedSelection resolved,
+    _DetailCartSubmitKind kind,
+  ) async {
+    final isBuyNow = kind == _DetailCartSubmitKind.buyNow;
+    if (isBuyNow && _isBuyNowSubmitting) return;
+    if (!isBuyNow && _isAddToCartSubmitting) return;
+
+    setState(() {
+      if (isBuyNow) {
+        _isBuyNowSubmitting = true;
+      } else {
+        _isAddToCartSubmitting = true;
+      }
+    });
     try {
       final ok = await _submitCartCreate(
         qty: _productNum,
@@ -228,36 +251,21 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         skuRowSelection: resolved.skuRowSelection,
       );
       if (!mounted) return;
-      if (ok) {
+      if (!ok) return;
+      final title = resolved.selected.name ?? detail.name ?? '';
+      showGlobalSnackBar(context.l10n.productAddedToCart(title));
+      if (isBuyNow) {
         context.go(AppRoutes.homeWithTab('cart'));
       }
     } finally {
       if (mounted) {
-        setState(() => _isBuyNowSubmitting = false);
-      }
-    }
-  }
-
-  Future<void> _onAddToCart(
-    BuildContext context,
-    ProductDetailDto detail,
-    ProductDetailResolvedSelection resolved,
-  ) async {
-    if (_isAddToCartSubmitting) return;
-    setState(() => _isAddToCartSubmitting = true);
-    try {
-      final ok = await _submitCartCreate(
-        qty: _productNum,
-        resolvedSub: resolved.skuResolved.sub,
-        skuRowSelection: resolved.skuRowSelection,
-      );
-      if (!context.mounted) return;
-      if (ok) {
-        context.go(AppRoutes.homeWithTab('cart'));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isAddToCartSubmitting = false);
+        setState(() {
+          if (isBuyNow) {
+            _isBuyNowSubmitting = false;
+          } else {
+            _isAddToCartSubmitting = false;
+          }
+        });
       }
     }
   }
@@ -306,6 +314,10 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
   }) async {
     final sub = resolvedSub;
     if (sub == null || sub.pid == null) return false;
+    if (ProductDetailController.unitPriceFromResolvedSub(sub) <= 0) {
+      showGlobalErrorMessage(context.l10n.cartAddBlockedZeroSalesPrice);
+      return false;
+    }
     final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
     if (subIndex.isEmpty) return false;
     final subName = ProductSkuCartHelpers.buildCartSubName(

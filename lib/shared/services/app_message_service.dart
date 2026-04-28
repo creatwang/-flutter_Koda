@@ -25,6 +25,17 @@ void showGlobalErrorMessage(String message) {
     );
 }
 
+/// 与 [showGlobalErrorMessage] 相同载体，用于成功提示等（如路由切换后仍可见）。
+void showGlobalSnackBar(String message) {
+  final messenger = appScaffoldMessengerKey.currentState;
+  if (messenger == null || message.trim().isEmpty) return;
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(content: Text(message.trim())),
+    );
+}
+
 Future<void> showSessionExpiredDialog(String message) async {
   if (_sessionExpiredDialogShowing) return;
   _sessionExpiredDialogShowing = true;

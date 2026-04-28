@@ -23,8 +23,7 @@ GoRouter buildAppRouter({
       GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginPage()),
       GoRoute(
         path: AppRoutes.home,
-        builder: (_, state) =>
-            HomePage(initialTab: state.uri.queryParameters['tab']),
+        builder: (_, __) => const HomePage(),
       ),
       GoRoute(
         path: AppRoutes.productDetailPattern,

@@ -175,18 +175,16 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       space: space,
       subName: subName,
     );
-    return result.when(
-      success: (_) {
-        unawaited(refresh());
+    switch (result) {
+      case ApiSuccess():
+        await refresh();
         return true;
-      },
-      failure: (exception) {
+      case ApiFailure(:final exception):
         Future<void>.microtask(
           () => showGlobalErrorMessage(exception.message),
         );
         return false;
-      },
-    );
+    }
   }
 
   /// 预提交：写入所选 SM（校验由调用方在 UI 层先完成）。

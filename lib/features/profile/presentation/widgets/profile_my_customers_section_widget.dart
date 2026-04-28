@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,13 +39,6 @@ class _ProfileMyCustomersSectionWidgetState
   bool _didRunOpenSlide = false;
 
   bool _isClosingOrdersPanel = false;
-
-  /// 订单层右滑关闭：与 ListView 手势竞技场解耦，用指针位移判断。
-  double _orderPanelSwipeDx = 0;
-  double _orderPanelSwipeDyAbs = 0;
-
-  /// 轻甩：与 Scrollable 并行采样，在抬手时用 [VelocityTracker.getVelocity]。
-  VelocityTracker? _orderPanelVelocityTracker;
 
   late final AnimationController _panelAnimationController;
 
@@ -135,65 +127,17 @@ class _ProfileMyCustomersSectionWidgetState
         .setViewUserId(uid);
   }
 
-  void _resetOrderPanelSwipeTracking() {
-    _orderPanelSwipeDx = 0;
-    _orderPanelSwipeDyAbs = 0;
-    _orderPanelVelocityTracker = null;
-  }
-
-  void _onOrderPanelPointerDown(PointerDownEvent event) {
-    _resetOrderPanelSwipeTracking();
-    _orderPanelVelocityTracker = VelocityTracker.withKind(event.kind);
-    _orderPanelVelocityTracker!.addPosition(event.timeStamp, event.position);
-  }
-
-  void _onOrderPanelPointerMove(PointerMoveEvent event) {
-    _orderPanelVelocityTracker?.addPosition(event.timeStamp, event.position);
-    if (_panelAnimationController.value < 0.98) return;
-    _orderPanelSwipeDx += event.delta.dx;
-    _orderPanelSwipeDyAbs += event.delta.dy.abs();
-  }
-
-  void _onOrderPanelPointerUp(PointerUpEvent event) {
-    _orderPanelVelocityTracker?.addPosition(event.timeStamp, event.position);
-    if (_panelAnimationController.value < 0.98) {
-      _resetOrderPanelSwipeTracking();
-      return;
-    }
-    final VelocityTracker? tracker = _orderPanelVelocityTracker;
-    final Velocity v = tracker?.getVelocity() ?? Velocity.zero;
-    final VelocityEstimate? est = tracker?.getVelocityEstimate();
-    double vx = v.pixelsPerSecond.dx;
-    double vy = v.pixelsPerSecond.dy;
-    if (est != null && est.pixelsPerSecond.dx > vx) {
-      vx = est.pixelsPerSecond.dx;
-      vy = est.pixelsPerSecond.dy;
-    }
-    const double flickVxThreshold = 220;
-    final bool flickClose =
-        vx > flickVxThreshold && vx >= vy.abs() * 0.72;
-    const double minRightDx = 48;
-    final bool distanceClose = _orderPanelSwipeDx >= minRightDx &&
-        _orderPanelSwipeDx >= _orderPanelSwipeDyAbs;
-    if (flickClose || distanceClose) {
-      _closeOrdersPanel();
-    }
-    _resetOrderPanelSwipeTracking();
-  }
-
-  void _onOrderPanelPointerCancel(PointerCancelEvent event) {
-    _resetOrderPanelSwipeTracking();
-  }
-
-  void _closeOrdersPanel() {
+  void _closeOrdersPanel({bool shouldResetViewUserId = true}) {
     if (_isClosingOrdersPanel) return;
     if (!_panelAnimationController.isCompleted) return;
     _isClosingOrdersPanel = true;
     _panelAnimationController.reverse().then((_) {
       if (!mounted) return;
-      ref
-          .read(myCustomerOrdersViewUserIdProvider.notifier)
-          .setViewUserId(null);
+      if (shouldResetViewUserId) {
+        ref
+            .read(myCustomerOrdersViewUserIdProvider.notifier)
+            .setViewUserId(null);
+      }
       ref.invalidate(myCustomerUserOrdersProvider);
       setState(() {
         _didRunOpenSlide = false;
@@ -205,6 +149,16 @@ class _ProfileMyCustomersSectionWidgetState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int?>(
+      myCustomerOrdersViewUserIdProvider,
+      (int? previous, int? next) {
+        if (next != null) return;
+        if (_panelAnimationController.isCompleted) {
+          _closeOrdersPanel(shouldResetViewUserId: false);
+        }
+      },
+    );
+
     ref.listen<AsyncValue<ProfileOrderListState>>(
       myCustomerUserOrdersProvider,
       (AsyncValue<ProfileOrderListState>? previous,
@@ -385,14 +339,7 @@ class _ProfileMyCustomersSectionWidgetState
                   builder: (BuildContext context, Widget? child) {
                     return IgnorePointer(
                       ignoring: _panelAnimationController.value < 0.98,
-                      child: Listener(
-                        behavior: HitTestBehavior.translucent,
-                        onPointerDown: _onOrderPanelPointerDown,
-                        onPointerMove: _onOrderPanelPointerMove,
-                        onPointerUp: _onOrderPanelPointerUp,
-                        onPointerCancel: _onOrderPanelPointerCancel,
-                        child: child!,
-                      ),
+                      child: child!,
                     );
                   },
                   child: ProfileProductOrderListWidget(

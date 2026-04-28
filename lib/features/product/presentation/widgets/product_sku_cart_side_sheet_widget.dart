@@ -386,7 +386,7 @@ class _ProductSkuCartSideSheetBodyState
     final title =
         selected.nameCn ?? selected.name ?? detail.nameCn ?? detail.name ?? '';
     final primaryLabel = widget.mode == ProductSkuCartSheetMode.changeSpec
-        ? l10n.cartConfirmChangeSpec
+        ? 'Confirm'
         : l10n.cartConfirmAdd;
 
     // 改规格：数量沿用购物车行，不在侧栏展示加减控件。

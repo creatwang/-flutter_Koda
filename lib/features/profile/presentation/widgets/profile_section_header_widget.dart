@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_back_button.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// Profile 右侧 Settings / My Customers / Order Center / Favorites
@@ -54,10 +55,12 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
     super.key,
     required this.onAddCustomer,
     required this.onSetCommandPassword,
+    this.onBack,
   });
 
   final VoidCallback onAddCustomer;
   final VoidCallback onSetCommandPassword;
+  final VoidCallback? onBack;
 
   static const double _buttonHeight = 34;
 
@@ -102,6 +105,23 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
             ),
           ),
         ),
+        if (onBack != null) ...[
+          const SizedBox(width: 8),
+          SizedBox(
+            height: _buttonHeight,
+            child: GeorgeBackButton(
+              label: 'Back to list',
+              onPressed: onBack,
+              iconSize: 14,
+              iconLabelGap: 6,
+              textStyle: const TextStyle(fontSize: 14),
+              minimumSize: const Size(0, _buttonHeight),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              visualDensity: VisualDensity.compact,
+              borderRadius: 8,
+            ),
+          ),
+        ],
       ],
     );
   }

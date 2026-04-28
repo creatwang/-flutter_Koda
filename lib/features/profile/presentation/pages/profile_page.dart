@@ -7,6 +7,7 @@ import 'package:george_pick_mate/features/auth/controllers/session_providers.dar
 import 'package:george_pick_mate/features/profile/controllers/profile_page_controller.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
+import 'package:george_pick_mate/features/profile/controllers/my_customer_user_orders_providers.dart';
 import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
 import 'package:george_pick_mate/features/profile/models/profile_section_meta.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_content_area_widget.dart';
@@ -177,6 +178,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       visibleMenus,
       _currentSection,
     );
+    final myCustomersViewingUid =
+        ref.watch(myCustomerOrdersViewUserIdProvider);
+    final showMyCustomersBackButton =
+        contentSection == ProfileContentSection.myCustomers &&
+        myCustomersViewingUid != null;
     if (contentSection != _currentSection) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -268,6 +274,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           context: context,
                           ref: ref,
                         );
+                      }
+                    : null,
+                showMyCustomersBackButton: showMyCustomersBackButton,
+                onMyCustomersBack: showMyCustomersBackButton
+                    ? () {
+                        ref
+                            .read(
+                              myCustomerOrdersViewUserIdProvider.notifier,
+                            )
+                            .setViewUserId(null);
                       }
                     : null,
               ),

@@ -35,6 +35,8 @@ class ProfileContentAreaWidget extends StatelessWidget {
     required this.onOrderTabChanged,
     this.onMyCustomersAddCustomer,
     this.onMyCustomersSetCommandPassword,
+    this.onMyCustomersBack,
+    this.showMyCustomersBackButton = false,
   });
 
   final ProfileContentSection currentSection;
@@ -61,6 +63,8 @@ class ProfileContentAreaWidget extends StatelessWidget {
   final ValueChanged<ProfileOrderTab> onOrderTabChanged;
   final VoidCallback? onMyCustomersAddCustomer;
   final VoidCallback? onMyCustomersSetCommandPassword;
+  final VoidCallback? onMyCustomersBack;
+  final bool showMyCustomersBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +89,7 @@ class ProfileContentAreaWidget extends StatelessWidget {
         child: ProfileMyCustomersHeaderActionsWidget(
           onAddCustomer: onMyCustomersAddCustomer!,
           onSetCommandPassword: onMyCustomersSetCommandPassword!,
+          onBack: showMyCustomersBackButton ? onMyCustomersBack : null,
         ),
       );
     } else if (isSettings) {

@@ -28,6 +28,7 @@ class ProductSkuCartSubmitPayload {
   const ProductSkuCartSubmitPayload({
     required this.apiProductId,
     required this.subIndex,
+    required this.sIndex,
     required this.productNum,
     required this.subName,
   });
@@ -37,6 +38,9 @@ class ProductSkuCartSubmitPayload {
 
   /// 对应接口 `sub_index`（`product_sub.index`）。
   final String subIndex;
+
+  /// 对应接口 `_index`（`product_sub.sIndex`）。
+  final String sIndex;
   final int productNum;
   final String subName;
 }
@@ -308,10 +312,7 @@ class _ProductSkuCartSideSheetBodyState
       }
     }
     final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
-    if (subIndex.isEmpty) {
-      setState(() => _errorMessage = context.l10n.cartNoMatchedSku);
-      return;
-    }
+    final sIndex = ProductSkuCartHelpers.sIndexForApi(sub);
     final subName = ProductSkuCartHelpers.buildCartSubName(
       sub: sub,
       skuRowSelection: skuRowSelection,
@@ -327,7 +328,8 @@ class _ProductSkuCartSideSheetBodyState
       context,
       ProductSkuCartSubmitPayload(
         apiProductId: sub.pid!,
-        subIndex: subIndex,
+        subIndex: subIndex ?? '',
+        sIndex: sIndex,
         productNum: qty,
         subName: subName,
       ),

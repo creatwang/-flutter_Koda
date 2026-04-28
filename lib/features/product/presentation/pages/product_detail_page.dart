@@ -319,6 +319,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       return false;
     }
     final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
+    final sIndex = ProductSkuCartHelpers.sIndexForApi(sub);
     final subName = ProductSkuCartHelpers.buildCartSubName(
       sub: sub,
       skuRowSelection: skuRowSelection,
@@ -330,6 +331,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         .createCartItem(
           productId: sub.pid!,
           subIndex: subIndex ?? '',
+          sIndex: sIndex,
           productNum: qty,
           space: space,
           subName: subName,

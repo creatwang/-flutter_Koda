@@ -155,6 +155,7 @@ Future<bool> _addScannedSkuToCart(
   if (productId == null) return false;
   final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
   if (subIndex.isEmpty) return false;
+  final sIndex = ProductSkuCartHelpers.sIndexForApi(sub);
   final subName = ProductSkuCartHelpers.buildCartSubName(
     sub: sub,
     skuRowSelection: scanResult.skuRowSelection,
@@ -166,6 +167,7 @@ Future<bool> _addScannedSkuToCart(
       .createCartItem(
         productId: productId,
         subIndex: subIndex,
+        sIndex: sIndex,
         productNum: 1,
         space: space,
         subName: subName,

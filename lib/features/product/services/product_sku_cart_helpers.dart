@@ -21,4 +21,11 @@ abstract final class ProductSkuCartHelpers {
 
   /// 接口 `sub_index` 对应 `product_sub.index`（非 `_index`）。
   static String subIndexForApi(ProductSub sub) => (sub.index ?? '').trim();
+
+  /// 接口 `_index` 对应 `product_sub.s_index`，缺失时回退 `sub_index`。
+  static String sIndexForApi(ProductSub sub) {
+    final sIndex = (sub.sIndex ?? '').trim();
+    if (sIndex.isNotEmpty) return sIndex;
+    return subIndexForApi(sub);
+  }
 }

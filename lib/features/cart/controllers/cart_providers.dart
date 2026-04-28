@@ -152,6 +152,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
   Future<bool> createCartItem({
     required int productId,
     required String subIndex,
+    required String sIndex,
     required int productNum,
     required String space,
     required String subName,
@@ -171,6 +172,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     final result = await createCartItemService(
       productId: productId,
       subIndex: subIndex,
+      sIndex: sIndex,
       productNum: productNum,
       space: space,
       subName: subName,

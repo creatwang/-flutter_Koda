@@ -387,6 +387,7 @@ Future<ApiResult<void>> setCartSmForPreSubmitService({
 Future<ApiResult<void>> createCartItemService({
   required int productId,
   required String subIndex,
+  required String sIndex,
   required int productNum,
   required String space,
   required String subName,
@@ -395,6 +396,7 @@ Future<ApiResult<void>> createCartItemService({
     final response = await requestCartCreate(
       productId: productId,
       subIndex: subIndex,
+      sIndex: sIndex,
       productNum: productNum,
       space: space,
       subName: subName,

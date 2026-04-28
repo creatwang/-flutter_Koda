@@ -177,11 +177,12 @@ Future<Response<dynamic>> requestExportQuotationPreview({
 
 /// 加入购物车
 ///
-/// [productId]、[subIndex]、[productNum]、[space]、[subName]
+/// [productId]、[subIndex]、[sIndex]、[productNum]、[space]、[subName]
 /// 为商品规格与数量参数。
 Future<Response<dynamic>> requestCartCreate({
   required int productId,
   required String subIndex,
+  required String sIndex,
   required int productNum,
   required String space,
   required String subName,
@@ -193,6 +194,7 @@ Future<Response<dynamic>> requestCartCreate({
     data: <String, dynamic>{
       'product_id': productId,
       'sub_index': subIndex,
+      '_index': sIndex,
       'product_num': productNum,
       'space': space,
       'sub_name': subName,

@@ -305,6 +305,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
               .createCartItem(
                 productId: payload.apiProductId,
                 subIndex: payload.subIndex,
+                sIndex: payload.sIndex,
                 productNum: payload.productNum,
                 space: space,
                 subName: payload.subName,

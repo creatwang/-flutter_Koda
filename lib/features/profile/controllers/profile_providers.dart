@@ -26,8 +26,7 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
 
     final result = await fetchUserInfoService();
     if (result is ApiSuccess<UserInfoBase>) {
-      await _cacheProfile(result.data);
-      return result.data;
+      return _cacheProfile(result.data);
     }
     throw (result as ApiFailure<UserInfoBase>).exception;
   }
@@ -48,8 +47,7 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
     state = await AsyncValue.guard(() async {
       final result = await fetchUserInfoService();
       if (result is ApiSuccess<UserInfoBase>) {
-        await _cacheProfile(result.data);
-        return result.data;
+        return _cacheProfile(result.data);
       }
       throw (result as ApiFailure<UserInfoBase>).exception;
     });
@@ -78,7 +76,11 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
     return secureStorageService.readUserInfoBase();
   }
 
-  Future<void> _cacheProfile(UserInfoBase profile) async {
-    await secureStorageService.saveUserInfoBase(profile);
+  Future<UserInfoBase> _cacheProfile(UserInfoBase profile) async {
+    final companyId = await secureStorageService.getCompanyId();
+    return secureStorageService.mergeAndSaveUserInfoBase(
+      profile,
+      fallbackCompanyId: companyId,
+    );
   }
 }

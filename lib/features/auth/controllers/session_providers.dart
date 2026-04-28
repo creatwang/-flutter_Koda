@@ -303,17 +303,27 @@ class SessionSyncController extends AsyncNotifier<void> {
     if (companyId == null) return;
 
     await Future.wait<void>([
-      _refreshUserInfoCache(),
+      _refreshUserInfoCache(
+        companyId: companyId,
+        fallbackToken: session?.token,
+      ),
       syncSiteInfoToLocal(companyId: companyId),
     ]);
     ref.invalidate(canExportQuotationProvider);
     ref.invalidate(profileUserInfoProvider);
   }
 
-  Future<void> _refreshUserInfoCache() async {
+  Future<void> _refreshUserInfoCache({
+    required int companyId,
+    String? fallbackToken,
+  }) async {
     final result = await fetchUserInfoService();
     if (result is ApiSuccess<UserInfoBase>) {
-      await secureStorageService.saveUserInfoBase(result.data);
+      await secureStorageService.mergeAndSaveUserInfoBase(
+        result.data,
+        fallbackCompanyId: companyId,
+        fallbackToken: fallbackToken,
+      );
     }
   }
 }

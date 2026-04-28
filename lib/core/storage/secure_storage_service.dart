@@ -47,6 +47,55 @@ class SecureStorageService {
     await _storage.write(key: _userInfoBase, value: jsonString);
   }
 
+  /// 合并并保存用户信息：仅用新值覆盖非空字段，缺失字段保留旧值。
+  Future<UserInfoBase> mergeAndSaveUserInfoBase(
+    UserInfoBase latest, {
+    int? fallbackCompanyId,
+    String? fallbackToken,
+  }) async {
+    final cached = await readUserInfoBase();
+    final storedCompanyId = await getCompanyId();
+    final resolvedCompanyId =
+        latest.companyId ??
+        cached?.companyId ??
+        fallbackCompanyId ??
+        storedCompanyId;
+    final resolvedToken =
+        _nonEmpty(latest.token) ??
+        _nonEmpty(cached?.token) ??
+        _nonEmpty(fallbackToken) ??
+        await _readTokenFromMapByCompanyId(resolvedCompanyId);
+    final merged = UserInfoBase(
+      id: latest.id ?? cached?.id,
+      accountId: latest.accountId ?? cached?.accountId,
+      name: latest.name ?? cached?.name,
+      username: latest.username ?? cached?.username,
+      companyId: resolvedCompanyId,
+      avatar: latest.avatar ?? cached?.avatar,
+      telephone: latest.telephone ?? cached?.telephone,
+      description: latest.description ?? cached?.description,
+      status: latest.status ?? cached?.status,
+      type: latest.type ?? cached?.type,
+      updatedAt: latest.updatedAt ?? cached?.updatedAt,
+      createdAt: latest.createdAt ?? cached?.createdAt,
+      deletedAt: latest.deletedAt ?? cached?.deletedAt,
+      registerFrom: latest.registerFrom ?? cached?.registerFrom,
+      languageId: latest.languageId ?? cached?.languageId,
+      tourist: latest.tourist ?? cached?.tourist,
+      email: latest.email ?? cached?.email,
+      nickname: latest.nickname ?? cached?.nickname,
+      wechat: latest.wechat ?? cached?.wechat,
+      customerId: latest.customerId ?? cached?.customerId,
+      lastOrderTime: latest.lastOrderTime ?? cached?.lastOrderTime,
+      userMainId: latest.userMainId ?? cached?.userMainId,
+      shopId: latest.shopId ?? cached?.shopId,
+      token: resolvedToken,
+      isAuthAccount: latest.isAuthAccount ?? cached?.isAuthAccount,
+    );
+    await saveUserInfoBase(merged);
+    return merged;
+  }
+
   /// 获取用户信息。
   Future<UserInfoBase?> readUserInfoBase() async {
     String? jsonString = await _storage.read(key: _userInfoBase);
@@ -146,5 +195,16 @@ class SecureStorageService {
     } catch (_) {
       return <String, dynamic>{};
     }
+  }
+
+  String? _nonEmpty(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+
+  Future<String?> _readTokenFromMapByCompanyId(num? companyId) async {
+    if (companyId == null) return null;
+    return _nonEmpty(await getTokenByCompanyId(companyId.toInt()));
   }
 }

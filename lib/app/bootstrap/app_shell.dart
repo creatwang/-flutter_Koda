@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -26,22 +25,14 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell>
-    with WidgetsBindingObserver {
-  // 前台回归同步最小间隔，避免频繁切前后台导致重复请求。
-  static const Duration _resumeSyncMinInterval = Duration(seconds: 60);
+class _AppShellState extends ConsumerState<AppShell> {
   final _routerSessionState = _RouterSessionState();
   late final GoRouter _router;
   late final ProviderSubscription<AsyncValue<Session>> _sessionSubscription;
-  DateTime? _lastResumeSyncAt;
-  // 并发保护：同一时刻只允许一个同步任务执行。
-  bool _isResumedSyncing = false;
 
   @override
   void initState() {
     super.initState();
-    // 注册生命周期监听，接收前后台切换事件。
-    WidgetsBinding.instance.addObserver(this);
     _syncRouterSessionState(ref.read(sessionControllerProvider));
     _router = buildAppRouter(
       isLoading: () => _routerSessionState.isLoading,
@@ -57,44 +48,9 @@ class _AppShellState extends ConsumerState<AppShell>
 
   @override
   void dispose() {
-    // 页面销毁时移除监听，避免内存泄漏与重复回调。
-    WidgetsBinding.instance.removeObserver(this);
     _sessionSubscription.close();
     _routerSessionState.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Flutter 生命周期回调：
-    // resumed/inactive/paused/detached 均会进入这里。
-    // 仅在 resumed（重新可交互）时做数据同步。
-    if (state != AppLifecycleState.resumed) return;
-    unawaited(_handleAppResumed());
-  }
-
-  Future<void> _handleAppResumed() async {
-    // 并发保护：上一次前台同步未完成时直接跳过。
-    if (_isResumedSyncing) return;
-    final session = ref.read(sessionControllerProvider).asData?.value;
-    // 未登录不需要同步用户/站点信息。
-    if (session?.isAuthenticated != true) return;
-
-    final now = DateTime.now();
-    final lastSyncAt = _lastResumeSyncAt;
-    // 节流：短时间频繁切前后台只执行一次同步。
-    if (lastSyncAt != null &&
-        now.difference(lastSyncAt) < _resumeSyncMinInterval) {
-      return;
-    }
-
-    _isResumedSyncing = true;
-    try {
-      await ref.read(sessionSyncProvider.notifier).refreshOnResume();
-      _lastResumeSyncAt = DateTime.now();
-    } finally {
-      _isResumedSyncing = false;
-    }
   }
 
   void _syncRouterSessionState(AsyncValue<Session> sessionState) {

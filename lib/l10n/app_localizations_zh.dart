@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'iPad 商城';
+  String get appTitle => 'George 商城';
 
   @override
   String get commonLoading => '加载中...';
@@ -53,7 +53,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get loginTitle => 'iPad 商城登录';
+  String get loginTitle => 'George 商城登录';
 
   @override
   String get authLoginHeading => '登录';

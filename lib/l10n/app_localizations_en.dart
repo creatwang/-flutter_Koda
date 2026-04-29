@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'iPad Mall';
+  String get appTitle => 'George Mall';
 
   @override
   String get commonLoading => 'Loading...';
@@ -53,7 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get loginTitle => 'iPad Mall Sign In';
+  String get loginTitle => 'George Mall Sign In';
 
   @override
   String get authLoginHeading => 'Login';

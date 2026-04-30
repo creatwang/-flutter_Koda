@@ -538,12 +538,16 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     }
     final exportData =
         (exportResult as ApiSuccess<CartQuotationExportResultDto>).data;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Quotation exported: ${exportData.fileName}\n${exportData.filePath}',
-        ),
-      ),
+    if (!mounted) return;
+    await showGeorgeConfirmDialog(
+      context: context,
+      title: 'Quotation exported',
+      message:
+          'File: ${exportData.fileName}\n\nSaved to:\n${exportData.filePath}',
+      showCancelButton: false,
+      confirmLabel: 'OK',
+      icon: Icons.folder_copy_outlined,
+      barrierDismissible: true,
     );
   }
 

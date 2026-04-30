@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-/// 统一确认弹窗的内容区（图标、标题、正文、双按钮）。
+/// 统一确认弹窗的内容区（图标、标题、正文、单/双按钮）。
 ///
 /// 外层由调用方包 [GeorgeDialogSurface] / [Dialog] 等；与购物车
 /// [showGeorgeConfirmDialog] 使用同一套视觉。
@@ -14,6 +14,7 @@ class GeorgeConfirmDialogPanel extends StatelessWidget {
     required this.accentColor,
     required this.cancelLabel,
     required this.confirmLabel,
+    this.showCancelButton = true,
     this.confirmChild,
     this.onCancel,
     this.onConfirm,
@@ -25,6 +26,9 @@ class GeorgeConfirmDialogPanel extends StatelessWidget {
   final Color accentColor;
   final String cancelLabel;
   final String confirmLabel;
+
+  /// 为 `false` 时仅展示主按钮（如纯信息确认）。
+  final bool showCancelButton;
 
   /// 非空时作为主按钮子组件（例如 loading），并忽略 [confirmLabel] 文案。
   final Widget? confirmChild;
@@ -76,7 +80,7 @@ class GeorgeConfirmDialogPanel extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           message,
-          maxLines: 5,
+          maxLines: showCancelButton ? 5 : 12,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: ProMaxTokens.textSecondary.withValues(alpha: 0.95),
@@ -85,70 +89,79 @@ class GeorgeConfirmDialogPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 26),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              flex: 2,
-              child: OutlinedButton(
-                onPressed: onCancel,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.22),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                      bottomLeft: Radius.circular(14),
-                    ),
-                  ),
-                ),
-                child: Text(
-                  cancelLabel,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 3,
-              child: FilledButton(
-                onPressed: onConfirm,
-                style: FilledButton.styleFrom(
-                  backgroundColor: accentColor.withValues(alpha: 0.92),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(14),
-                      bottomRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(10),
-                    ),
-                  ),
-                ),
-                child: confirmChild ??
-                    Text(
-                      confirmLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        letterSpacing: 0.2,
+        showCancelButton
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    flex: 2,
+                    child: OutlinedButton(
+                      onPressed: onCancel,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white70,
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.22),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
+                            bottomLeft: Radius.circular(14),
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        cancelLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 3,
+                    child: _buildConfirmButton(),
+                  ),
+                ],
+              )
+            : SizedBox(
+                width: double.infinity,
+                child: _buildConfirmButton(),
               ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  Widget _buildConfirmButton() {
+    return FilledButton(
+      onPressed: onConfirm,
+      style: FilledButton.styleFrom(
+        backgroundColor: accentColor.withValues(alpha: 0.92),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(10),
+            topRight: Radius.circular(14),
+            bottomRight: Radius.circular(16),
+            bottomLeft: Radius.circular(10),
+          ),
+        ),
+      ),
+      child: confirmChild ??
+          Text(
+            confirmLabel,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              letterSpacing: 0.2,
+            ),
+          ),
     );
   }
 }

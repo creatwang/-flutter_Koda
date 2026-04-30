@@ -4,12 +4,15 @@ import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 
 /// 统一确认弹窗。按钮文案为英文；标题与正文由调用方传入（可为英文）。
+///
+/// [showCancelButton] 为 `false` 时仅展示 [confirmLabel] 主按钮（如导出成功提示）。
 Future<bool?> showGeorgeConfirmDialog({
   required BuildContext context,
   required String title,
   required String message,
   String cancelLabel = 'Cancel',
   String confirmLabel = 'Confirm',
+  bool showCancelButton = true,
   IconData icon = Icons.help_outline_rounded,
   Color accentColor = const Color(0xFFFF8B6A),
   bool barrierDismissible = true,
@@ -34,9 +37,12 @@ Future<bool?> showGeorgeConfirmDialog({
                 message: message,
                 cancelLabel: cancelLabel,
                 confirmLabel: confirmLabel,
+                showCancelButton: showCancelButton,
                 icon: icon,
                 accentColor: accentColor,
-                onCancel: () => Navigator.of(dialogContext).pop(false),
+                onCancel: showCancelButton
+                    ? () => Navigator.of(dialogContext).pop(false)
+                    : null,
                 onConfirm: () => Navigator.of(dialogContext).pop(true),
               ),
             ),

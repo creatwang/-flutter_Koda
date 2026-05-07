@@ -26,6 +26,8 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   int _selectedShopCategoryId = 0;
   String? _sort;
   int _orderBy = 0;
+  bool _onlyShowroomSample = false;
+  String _keyword = '';
   int _queryVersion = 0;
 
   @override
@@ -37,6 +39,8 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
       shopCateGoryId: _selectedShopCategoryId,
       sort: _sort,
       orderBy: _orderBy,
+      onlyShowroomSample: _onlyShowroomSample,
+      keyword: _keyword.isEmpty ? null : _keyword,
     );
     return result.when(
       success: (data) => PaginatedProductsState(
@@ -59,6 +63,8 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
         shopCateGoryId: _selectedShopCategoryId,
         sort: _sort,
         orderBy: _orderBy,
+        onlyShowroomSample: _onlyShowroomSample,
+        keyword: _keyword.isEmpty ? null : _keyword,
       );
       if (version != _queryVersion) {
         throw StateError('Stale products refresh response');
@@ -88,12 +94,16 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
     final selectedShopCategoryId = _selectedShopCategoryId;
     final sort = _sort;
     final orderBy = _orderBy;
+    final onlyShowroomSample = _onlyShowroomSample;
+    final keyword = _keyword.isEmpty ? null : _keyword;
     final result = await fetchProductsPageService(
       page: nextPage,
       pageSize: _pageSize,
       shopCateGoryId: selectedShopCategoryId,
       sort: sort,
       orderBy: orderBy,
+      onlyShowroomSample: onlyShowroomSample,
+      keyword: keyword,
     );
     if (version != _queryVersion) return;
 
@@ -129,6 +139,17 @@ class ProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   Future<void> applySort({String? sort, int orderBy = 0}) async {
     _sort = sort;
     _orderBy = orderBy;
+    await refresh();
+  }
+
+  Future<void> applyShowroomSampleFilter(bool onlyShowroomSample) async {
+    _onlyShowroomSample = onlyShowroomSample;
+    await refresh();
+  }
+
+  /// 点击搜索后生效；空字符串表示不传 keyword。
+  Future<void> applyKeywordSearch(String keyword) async {
+    _keyword = keyword.trim();
     await refresh();
   }
 }

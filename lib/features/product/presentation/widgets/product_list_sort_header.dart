@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/base_widget/buttons/george_checkbox_button.dart';
 
 class SortOption {
   const SortOption({
@@ -48,6 +49,10 @@ class ProductSortHeader extends StatelessWidget {
     required this.isSidebarCollapsed,
     this.onToggleSidebar,
     this.onOpenFilters,
+    this.inShowroomSelected = false,
+    this.onInShowroomChanged,
+    this.searchKeywordController,
+    this.onSearchPressed,
     super.key,
   });
 
@@ -57,6 +62,14 @@ class ProductSortHeader extends StatelessWidget {
   final bool isSidebarCollapsed;
   final VoidCallback? onToggleSidebar;
   final VoidCallback? onOpenFilters;
+
+  /// 「In Showroom」筛选（与 [onInShowroomChanged] 成对出现）。
+  final bool inShowroomSelected;
+  final ValueChanged<bool>? onInShowroomChanged;
+
+  /// 关键词搜索（与 [onSearchPressed] 成对出现，插在展厅筛选与排序之间）。
+  final TextEditingController? searchKeywordController;
+  final VoidCallback? onSearchPressed;
 
   Widget _buildExpandSidebarButton() {
     return Tooltip(
@@ -145,20 +158,134 @@ class ProductSortHeader extends StatelessWidget {
     );
   }
 
+  Widget _buildInShowroomToggle({required bool compact}) {
+    final onChanged = onInShowroomChanged;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GeorgeCheckboxButton(
+          value: inShowroomSelected,
+          touchExtent: 30,
+          borderColor: Colors.white54,
+          checkedFillColor: Colors.white.withValues(alpha: 0.35),
+          checkColor: Colors.white,
+          semanticLabel: 'In Showroom',
+          onChanged: onChanged,
+        ),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onChanged == null
+              ? null
+              : () => onChanged(!inShowroomSelected),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
+            child: Text(
+              'In Showroom',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.92),
+                fontSize: compact ? 11 : 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKeywordSearch({
+    required bool compact,
+    required TextEditingController controller,
+    required VoidCallback onPressed,
+  }) {
+    final hintSize = compact ? 11.0 : 12.0;
+    final btnPadding = compact
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 6)
+        : const EdgeInsets.symmetric(horizontal: 14, vertical: 8);
+    return Container(
+      height: 40,
+      constraints: BoxConstraints(
+        minWidth: compact ? 140 : 200,
+        maxWidth: compact ? 240 : 340,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.95),
+                fontSize: hintSize,
+                fontWeight: FontWeight.w500,
+              ),
+              cursorColor: Colors.white70,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Please',
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.45),
+                  fontSize: hintSize,
+                  fontWeight: FontWeight.w500,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => onPressed(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: btnPadding,
+                  child: Text(
+                    'Search',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontSize: compact ? 11 : 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 1180;
+        final searchController = searchKeywordController;
+        final searchAction = onSearchPressed;
         return Row(
           children: [
             if (isSidebarCollapsed && onToggleSidebar != null) ...[
               _buildExpandSidebarButton(),
               const SizedBox(width: 8),
             ],
-            Expanded(
+            Container(
               child: Text(
-                'Curated Product Library',
+                'Product Library',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -189,6 +316,19 @@ class ProductSortHeader extends StatelessWidget {
                                 icon: const Icon(Icons.tune),
                                 label: const Text('Filters'),
                               ),
+                        const SizedBox(width: 8),
+                      ],
+                      if (onInShowroomChanged != null) ...[
+                        _buildInShowroomToggle(compact: compact),
+                        const SizedBox(width: 8),
+                      ],
+                      if (searchController != null &&
+                          searchAction != null) ...[
+                        _buildKeywordSearch(
+                          compact: compact,
+                          controller: searchController,
+                          onPressed: searchAction,
+                        ),
                         const SizedBox(width: 8),
                       ],
                       ConstrainedBox(

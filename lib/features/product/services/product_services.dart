@@ -24,13 +24,16 @@ class FavoriteProductsPageResult {
 /// 商品分页列表（当前站点）。
 ///
 /// [page] / [pageSize]：分页；[shopCateGoryId]：店铺分类；
-/// [sort] / [orderBy]：排序参数。
+/// [sort] / [orderBy]：排序参数；
+/// [onlyShowroomSample]：仅展厅有样板；[keyword]：搜索关键词。
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
   int shopCateGoryId = 0,
   String? sort,
   int orderBy = 0,
+  bool onlyShowroomSample = false,
+  String? keyword,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
@@ -44,6 +47,8 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
       shopCateGoryId: shopCateGoryId,
       sort: sort,
       orderBy: orderBy,
+      onlyShowroomSample: onlyShowroomSample,
+      keyword: keyword,
     );
     final data = response.data;
     if (data is! Map<String, dynamic>) {

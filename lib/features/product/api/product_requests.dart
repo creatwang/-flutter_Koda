@@ -10,6 +10,10 @@ class ProductRequests {
   /// `GET` 商品列表
   static const String productsPath = '/store/product/lists';
 
+  /// 列表筛选：展厅是否有样板（值为「是」时筛选展厅样板）。
+  static const String showroomSampleFilterQueryKey =
+      'params[展厅是否有样板/Is there a sample in the exhibition hall]';
+
   /// `POST` 添加收藏
   static const String createFavorPath = '/store/collect/create';
 
@@ -47,7 +51,9 @@ Future<Response<dynamic>> requestProductDetail({
 /// 商品分页列表（需鉴权）。
 ///
 /// [page] / [pageSize]：分页；[companyId]：站点；
-/// [shopCateGoryId]：店铺分类；[sort] / [orderBy]：排序。
+/// [shopCateGoryId]：店铺分类；[sort] / [orderBy]：排序；
+/// [onlyShowroomSample]：仅展厅有样板（传后端约定参数）；
+/// [keyword]：搜索关键词（非空时传 `keyword`）。
 Future<Response<dynamic>> requestProductsPage({
   required int page,
   required int pageSize,
@@ -55,6 +61,8 @@ Future<Response<dynamic>> requestProductsPage({
   int shopCateGoryId = 0,
   String? sort,
   int orderBy = 0,
+  bool onlyShowroomSample = false,
+  String? keyword,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).get(
@@ -66,6 +74,9 @@ Future<Response<dynamic>> requestProductsPage({
       'page_size': pageSize,
       'company_id': companyId,
       'page': page,
+      if (onlyShowroomSample)
+        ProductRequests.showroomSampleFilterQueryKey: '是',
+      if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
     },
   );
 }

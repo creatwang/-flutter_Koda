@@ -8,6 +8,9 @@ class ProductListController {
   int selectedSortValue = 0;
   bool isFilterCollapsed = false;
 
+  /// 「In Showroom」：仅筛选展厅有样板。
+  bool inShowroomOnly = false;
+
   SortOption get currentSortOption {
     return sortByOptions.firstWhere(
       (e) => e.value == selectedSortValue,
@@ -39,4 +42,6 @@ class ProductListController {
   void toggleSidebar() => isFilterCollapsed = !isFilterCollapsed;
 
   void collapseSidebar() => isFilterCollapsed = true;
+
+  void setInShowroomOnly(bool value) => inShowroomOnly = value;
 }

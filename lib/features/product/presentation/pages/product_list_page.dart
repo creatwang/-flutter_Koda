@@ -48,6 +48,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   final Set<int> _collectSubmitting = <int>{};
   final Set<int> _addToCartSubmitting = <int>{};
   int _addToCartFlowEpoch = 0;
+  final TextEditingController _searchKeywordController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -95,6 +97,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     _addToCartSubmitting.clear();
     _sidebarLayoutSwitchToken++;
     _productsSubscription.close();
+    _searchKeywordController.dispose();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -181,6 +184,10 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                       isSidebarCollapsed: _controller.isFilterCollapsed,
                       onToggleSidebar: isTabletUp ? _onToggleSidebar : null,
                       onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
+                      inShowroomSelected: _controller.inShowroomOnly,
+                      onInShowroomChanged: _onInShowroomChanged,
+                      searchKeywordController: _searchKeywordController,
+                      onSearchPressed: _onSearchKeywordSubmitted,
                     ),
                     const SizedBox(height: 12),
                     Expanded(
@@ -216,6 +223,20 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
     ref
         .read(productsProvider.notifier)
         .applySort(sort: query.sort, orderBy: query.orderBy);
+  }
+
+  void _onInShowroomChanged(bool selected) {
+    _cancelInFlightAddToCartFlow();
+    setState(() => _controller.setInShowroomOnly(selected));
+    ref
+        .read(productsProvider.notifier)
+        .applyShowroomSampleFilter(selected);
+  }
+
+  void _onSearchKeywordSubmitted() {
+    _cancelInFlightAddToCartFlow();
+    final keyword = _searchKeywordController.text.trim();
+    ref.read(productsProvider.notifier).applyKeywordSearch(keyword);
   }
 
   /// 点击收藏。

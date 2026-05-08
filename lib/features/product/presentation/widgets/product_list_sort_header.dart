@@ -68,6 +68,7 @@ class ProductSortHeader extends StatelessWidget {
   final ValueChanged<bool>? onInShowroomChanged;
 
   /// 关键词搜索（与 [onSearchPressed] 成对出现，插在展厅筛选与排序之间）。
+  /// 键盘「搜索」与清空按钮都会触发 [onSearchPressed]。
   final TextEditingController? searchKeywordController;
   final VoidCallback? onSearchPressed;
 
@@ -196,12 +197,10 @@ class ProductSortHeader extends StatelessWidget {
   Widget _buildKeywordSearch({
     required bool compact,
     required TextEditingController controller,
-    required VoidCallback onPressed,
+    required VoidCallback onSearchSubmitted,
   }) {
     final hintSize = compact ? 11.0 : 12.0;
-    final btnPadding = compact
-        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 6)
-        : const EdgeInsets.symmetric(horizontal: 14, vertical: 8);
+    final iconSize = compact ? 14.0 : 15.0;
     return Container(
       height: 40,
       constraints: BoxConstraints(
@@ -240,30 +239,42 @@ class ProductSortHeader extends StatelessWidget {
                 ),
               ),
               textInputAction: TextInputAction.search,
-              onSubmitted: (_) => onPressed(),
+              onSubmitted: (_) => onSearchSubmitted(),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: onPressed,
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: btnPadding,
-                  child: Text(
-                    'Search',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontSize: compact ? 11 : 12,
-                      fontWeight: FontWeight.w700,
+          ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) {
+              final hasText = controller.text.trim().isNotEmpty;
+              if (!hasText) {
+                return const SizedBox(width: 4);
+              }
+              return Padding(
+                padding: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Tooltip(
+                    message: 'Clear search',
+                    child: InkWell(
+                      onTap: () {
+                        controller.clear();
+                        onSearchSubmitted();
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: EdgeInsets.all(compact ? 4 : 5),
+                        child: Icon(
+                          Icons.close,
+                          size: iconSize,
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -327,7 +338,7 @@ class ProductSortHeader extends StatelessWidget {
                         _buildKeywordSearch(
                           compact: compact,
                           controller: searchController,
-                          onPressed: searchAction,
+                          onSearchSubmitted: searchAction,
                         ),
                         const SizedBox(width: 8),
                       ],

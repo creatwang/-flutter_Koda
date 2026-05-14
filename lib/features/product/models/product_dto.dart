@@ -42,29 +42,30 @@ class ProductDto {
         this.productImgs});
 
   ProductDto.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    categoryId = json['category_id'];
-    mainImage = json['main_image'];
-    subImages = (json['sub_images'] as List?)?.whereType<String>().toList(growable: false);
-    name = json['name'];
-    unit = json['unit'];
-    viewed = json['viewed'];
-    sales = json['sales'];
+    id = _toIntOrNull(json['id']);
+    categoryId = _toNum(json['category_id']);
+    mainImage = _toStringOrNull(json['main_image']);
+    subImages = _toStringList(json['sub_images']);
+    name = _toStringOrNull(json['name']);
+    unit = _toStringOrNull(json['unit']);
+    viewed = _toNum(json['viewed']);
+    sales = _toNum(json['sales']);
     price = _toDouble(json['price']);
-    cnyPrice = json['cny_price'];
-    categoryName = json['category_name'];
+    cnyPrice = _toNum(json['cny_price']);
+    categoryName = _toStringOrNull(json['category_name']);
     isCollect = _toBool(json['is_collect']);
     maxPrice = _toDouble(json['max_price']);
-    isHot = json['is_hot'];
-    sortOrder = json['sort_order'];
-    uniqid = json['uniqid'];
-    formulaType = json['formula_type'];
-    shopCategoryId = json['shop_category_id'];
-    if (json['product_imgs'] != null) {
-      productImgs = <ProductImgs>[];
-      json['product_imgs'].forEach((v) {
-        productImgs!.add(ProductImgs.fromJson(v));
-      });
+    isHot = _toNum(json['is_hot']);
+    sortOrder = _toNum(json['sort_order']);
+    uniqid = _toStringOrNull(json['uniqid']);
+    formulaType = _toStringOrNull(json['formula_type']);
+    shopCategoryId = _toNum(json['shop_category_id']);
+    final rawProductImgs = json['product_imgs'];
+    if (rawProductImgs is List) {
+      productImgs = rawProductImgs
+          .whereType<Map>()
+          .map((e) => ProductImgs.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false);
     }
   }
 
@@ -104,10 +105,10 @@ class ProductImgs {
   ProductImgs({this.url, this.id, this.priovity, this.waterUrl});
 
   ProductImgs.fromJson(Map<String, dynamic> json) {
-    url = json['url'];
-    id = json['id'];
-    priovity = json['priovity'];
-    waterUrl = json['water_url'];
+    url = _toStringOrNull(json['url']);
+    id = _toNum(json['id']);
+    priovity = _toNum(json['priovity']);
+    waterUrl = _toStringOrNull(json['water_url']);
   }
 
   Map<String, dynamic> toJson() {
@@ -144,6 +145,27 @@ double? _toDouble(dynamic value) {
   return null;
 }
 
+num? _toNum(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value);
+  return null;
+}
+
+String? _toStringOrNull(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return value;
+  return value.toString();
+}
+
+List<String>? _toStringList(dynamic value) {
+  if (value is! List) return null;
+  return value
+      .where((element) => element != null)
+      .map((element) => element.toString())
+      .toList(growable: false);
+}
+
 bool? _toBool(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
@@ -161,4 +183,11 @@ int _toInt(dynamic value) {
   if (value is num) return value.toInt();
   if (value is String) return int.tryParse(value) ?? 0;
   return 0;
+}
+
+int? _toIntOrNull(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
 }

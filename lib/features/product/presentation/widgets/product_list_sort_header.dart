@@ -29,6 +29,8 @@ const List<SortOption> sortByOptions = <SortOption>[
   SortOption(text: 'Rating(Lowest)', value: 4),
   SortOption(text: 'Model(A - Z)', value: 5),
   SortOption(text: 'Model(Z - A)', value: 6),
+  SortOption(text: 'Date Added(Old >New)', value: 7),
+  SortOption(text: 'Date Added(New >Old)', value: 8),
 ];
 
 const Map<int, SortQuery> sortByQueryMap = <int, SortQuery>{
@@ -39,6 +41,8 @@ const Map<int, SortQuery> sortByQueryMap = <int, SortQuery>{
   4: SortQuery(sort: 'asc', orderBy: 2),
   5: SortQuery(sort: 'asc', orderBy: 3),
   6: SortQuery(sort: 'desc', orderBy: 3),
+  7: SortQuery(sort: 'asc', orderBy: 4),
+  8: SortQuery(sort: 'desc', orderBy: 4),
 };
 
 class ProductSortHeader extends StatelessWidget {

@@ -44,7 +44,7 @@ Future<Response<dynamic>> requestProductDetail({
         ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
       },
     ),
-    queryParameters: <String, dynamic>{'id': id},
+    queryParameters: <String, dynamic>{'id': id, 'apiType': 'store'},
   );
 }
 

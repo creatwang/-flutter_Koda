@@ -91,6 +91,16 @@ class _UserPageState extends State<UserPage> {
               _btn('Loading → Hide', _manualLoadingHide),
             ],
           ),
+          const SizedBox(height: 12),
+          _hint('长时间 loading，便于观察双弧起步加速与巡航转速'),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _btn('长时间 Loading (8s)', _longLoadingForSpinDemo),
+              _btn('长时间 Loading+Mask (8s)', _longLoadingForSpinDemoWithMask),
+            ],
+          ),
           const SizedBox(height: 20),
           _sectionTitle('四、YnToast.task'),
           _hint('内置 loading；成功需 controller.done；异常自动 error'),
@@ -217,6 +227,44 @@ class _UserPageState extends State<UserPage> {
     );
     Future<void>.delayed(const Duration(milliseconds: 1500), () {
       controller.hide();
+    });
+  }
+
+  /// 持久 loading 8s，结束后 success，用于调试旋转加速曲线。
+  void _longLoadingForSpinDemo() {
+    final controller = YnToast.show(
+      context,
+      type: YnToastType.info,
+      options: const YnToastShowOptions(
+        loadingDuration: Duration(days: 1),
+        persist: true,
+      ),
+    );
+    Future<void>.delayed(const Duration(seconds: 8), () {
+      if (!mounted) return;
+      controller.done(
+        YnToastType.success,
+        message: '8s loading done',
+      );
+    });
+  }
+
+  void _longLoadingForSpinDemoWithMask() {
+    final controller = YnToast.show(
+      context,
+      type: YnToastType.info,
+      options: const YnToastShowOptions(
+        loadingDuration: Duration(days: 1),
+        persist: true,
+        mask: true,
+      ),
+    );
+    Future<void>.delayed(const Duration(seconds: 8), () {
+      if (!mounted) return;
+      controller.done(
+        YnToastType.success,
+        message: '8s masked loading done',
+      );
     });
   }
 

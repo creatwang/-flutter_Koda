@@ -336,7 +336,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   static const _ballSize = 32.0;
   static const _top = 26.0;
   static const _messagePadding = EdgeInsets.only(left: 6, right: 14);
-  static const _spinRampDuration = Duration(milliseconds: 1400);
+  /// loading 环恒定角速度（deg/s），无加速 ramp。
+  static const _spinSpeedDegPerSecond = 720.0;
   static const _expandDuration = Duration(milliseconds: 620);
   static const _exitDuration = Duration(milliseconds: 320);
   static const _quickExitDuration = Duration(milliseconds: 180);
@@ -417,17 +418,11 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     final dt = (relativeElapsed - _lastSpinElapsed).inMicroseconds / 1000000;
     _lastSpinElapsed = relativeElapsed;
     if (dt <= 0) return;
-    final totalMs = _spinRampDuration.inMilliseconds;
-    final progress = totalMs <= 0
-        ? 1.0
-        : (relativeElapsed.inMilliseconds / totalMs).clamp(0.0, 1.0);
-    final smooth = math.pow(progress, 3).toDouble();
-    final speedDegPerSecond = 420 + smooth * 4300;
-    final spinAngleDeg =
-        (_accumulatedAngleRad * 180 / math.pi + speedDegPerSecond * dt) % 360;
-    final visualSoftness = (progress * 1.35).clamp(0.0, 1.0);
+    final spinAngleDeg = (_accumulatedAngleRad * 180 / math.pi +
+            _spinSpeedDegPerSecond * dt) %
+        360;
     _accumulatedAngleRad = spinAngleDeg * (math.pi / 180);
-    _accumulatedRingOpacity = 0.92 - visualSoftness * 0.22;
+    _accumulatedRingOpacity = 0.92;
     _spinFrameCounter++;
     if (_spinFrameCounter % 2 != 0) return;
     _spinSnapshotNotifier.value = _SpinSnapshot(

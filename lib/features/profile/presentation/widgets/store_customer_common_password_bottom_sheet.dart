@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
@@ -167,9 +168,7 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
     setState(() => _submitting = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Updated successfully.')));
+        showGlobalSnackBar('Updated successfully.');
         Navigator.of(context).pop();
       },
       failure: (exception) {

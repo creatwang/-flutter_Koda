@@ -9,6 +9,7 @@ import 'package:george_pick_mate/features/auth/controllers/login_remember_provid
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 
 import '../../../../gen/assets.gen.dart';
@@ -345,27 +346,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final password = _passwordController.text.trim();
       final confirm = _confirmPasswordController.text.trim();
       if (username.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authRegisterUsernameRequired)),
+        showGlobalWarningMessage(
+          l10n.authRegisterUsernameRequired,
+          context: context,
         );
         return;
       }
       if (password.length < 6) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authRegisterPasswordMinLength)),
+        showGlobalWarningMessage(
+          l10n.authRegisterPasswordMinLength,
+          context: context,
         );
         return;
       }
       if (confirm.length < 6) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authRegisterPasswordMinLength)),
+        showGlobalWarningMessage(
+          l10n.authRegisterPasswordMinLength,
+          context: context,
         );
         return;
       }
       if (password != confirm) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authPasswordMismatch)),
-        );
+        showGlobalWarningMessage(l10n.authPasswordMismatch, context: context);
         return;
       }
       final ok = await ref.read(sessionControllerProvider.notifier).register(
@@ -382,11 +384,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               error: (e, _) => e is AppException ? e.message : null,
               orElse: () => null,
             );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message ?? l10n.authRegisterFailed),
-          ),
-        );
+        showGlobalErrorMessage(message ?? l10n.authRegisterFailed);
       }
       return;
     }
@@ -400,9 +398,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (ok) {
       context.go(AppRoutes.home);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.loginFailed)),
-      );
+      showGlobalErrorMessage(l10n.loginFailed);
     }
   }
 

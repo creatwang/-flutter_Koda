@@ -12,6 +12,7 @@ import 'package:george_pick_mate/features/profile/presentation/pages/profile_pag
 import 'package:george_pick_mate/features/product/presentation/pages/product_list_page.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/global_product_scan_fab_widget.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/frosted_bottom_menu.dart';
 import 'package:george_pick_mate/shared/widgets/header_menu_button.dart';
@@ -144,19 +145,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   result.when(
                     success: (_) => context.go(AppRoutes.login),
                     failure: (exception) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: SelectableText.rich(
-                            TextSpan(
-                              text: exception.message,
-                              style: const TextStyle(
-                                color: Color(0xFFFFD7D8),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
+                      showGlobalErrorMessage(exception.message);
                     },
                   );
                 },

@@ -18,6 +18,7 @@ import 'package:george_pick_mate/features/profile/presentation/widgets/store_cus
 import 'package:george_pick_mate/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -87,9 +88,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _oldPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Updated successfully.')));
+        showGlobalSnackBar('Updated successfully.');
       },
       failure: (exception) => _settingsErrorMessage = exception.message,
     );
@@ -131,15 +130,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (!mounted) return;
       result.when(
         success: (_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Switched to main account.')),
-          );
+          showGlobalSnackBar('Switched to main account.');
           context.go(AppRoutes.home);
         },
         failure: (exception) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(exception.message)));
+          showGlobalErrorMessage(exception.message);
         },
       );
     } finally {

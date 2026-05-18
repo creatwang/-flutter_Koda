@@ -11,6 +11,7 @@ import 'package:george_pick_mate/features/product/presentation/widgets/product_c
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:george_pick_mate/features/product/services/product_services.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
@@ -108,9 +109,10 @@ class _ProfileFavoritesSectionWidgetState
     final session = ref.read(sessionControllerProvider).asData?.value;
     if (session?.isAuthenticated != true) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.cartAddRequireLogin)));
+      showGlobalWarningMessage(
+        context.l10n.cartAddRequireLogin,
+        context: context,
+      );
       context.go(AppRoutes.login);
       return;
     }
@@ -153,18 +155,12 @@ class _ProfileFavoritesSectionWidgetState
       if (!mounted) return;
       if (epoch != _addToCartFlowEpoch) return;
       if (added) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.productAddedToCart(product.name)),
-          ),
-        );
+        showGlobalSnackBar(context.l10n.productAddedToCart(product.name));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _addToCartSubmitting.remove(productId));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
-        );
+        showGlobalErrorMessage(context.l10n.productDetailLoadFailed('$e'));
       } else {
         _addToCartSubmitting.remove(productId);
       }

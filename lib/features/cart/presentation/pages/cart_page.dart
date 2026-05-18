@@ -520,9 +520,7 @@ class _CartPageState extends ConsumerState<CartPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
-      );
+      showGlobalErrorMessage(context.l10n.productDetailLoadFailed('$e'));
     } finally {
       if (mounted) {
         setState(() {

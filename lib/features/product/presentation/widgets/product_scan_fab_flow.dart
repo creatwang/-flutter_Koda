@@ -20,8 +20,9 @@ Future<void> runProductQrScanFlow({
   final session = ref.read(sessionControllerProvider).asData?.value;
   if (session?.isAuthenticated != true) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.productScanRequireLogin)),
+    showGlobalWarningMessage(
+      context.l10n.productScanRequireLogin,
+      context: context,
     );
     context.go(AppRoutes.login);
     return;
@@ -113,17 +114,13 @@ Future<void> runProductQrScanFlow({
 
   if (!context.mounted) return;
   if (loadError != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(context.l10n.productDetailLoadFailed('$loadError')),
-      ),
+    showGlobalErrorMessage(
+      context.l10n.productDetailLoadFailed('$loadError'),
     );
     return;
   }
   if (scanResult == null) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.cartNoMatchedSku)));
+    showGlobalWarningMessage(context.l10n.cartNoMatchedSku, context: context);
     return;
   }
   final resultDialogContext = appNavigatorKey.currentContext;
@@ -140,9 +137,7 @@ Future<void> runProductQrScanFlow({
   );
   if (!context.mounted || !added) return;
   final title = scanResult.selected.name ?? scanResult.detail.name ?? '--';
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(context.l10n.productAddedToCart(title))),
-  );
+  showGlobalSnackBar(context.l10n.productAddedToCart(title));
 }
 
 Future<bool> _addScannedSkuToCart(

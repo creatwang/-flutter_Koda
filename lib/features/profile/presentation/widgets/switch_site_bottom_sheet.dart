@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/auth/controllers/store_company_providers.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 底部弹出：可选站点列表并调用 [SessionController.switchShop]。
@@ -61,7 +62,6 @@ class _SwitchSiteSheetScaffoldState
 
   Future<void> _pickSite(int id) async {
     setState(() => _busySiteId = id);
-    final messenger = ScaffoldMessenger.maybeOf(widget.parentContext);
     final result = await ref
         .read(sessionControllerProvider.notifier)
         .switchShop(companyId: id, shopId: id);
@@ -75,7 +75,7 @@ class _SwitchSiteSheetScaffoldState
       },
       failure: (exception) {
         setState(() => _busySiteId = null);
-        messenger?.showSnackBar(SnackBar(content: Text(exception.message)));
+        showGlobalErrorMessage(exception.message);
       },
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
 import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
@@ -225,9 +226,7 @@ class _StoreCustomerFormSheetBodyState
     setState(() => _submitting = false);
     result.when(
       success: (_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Success')));
+        showGlobalSnackBar('Success');
         Navigator.of(context).pop();
       },
       failure: (exception) {

@@ -420,9 +420,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.productDetailLoadFailed('$e'))),
-      );
+      showGlobalErrorMessage(context.l10n.productDetailLoadFailed('$e'));
     } finally {
       if (mounted) {
         setState(() {
@@ -569,7 +567,6 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
   }
 
   Future<void> _onCheckout() async {
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isCheckingOut = true);
     final payload = ref
         .read(preOrderCartControllerProvider.notifier)
@@ -584,15 +581,13 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     if (!mounted) return;
     setState(() => _isCheckingOut = false);
     if (!ok) {
-      messenger.showSnackBar(const SnackBar(content: Text('Checkout failed')));
+      showGlobalErrorMessage('Checkout failed');
       return;
     }
     await ref.read(preOrderCartControllerProvider.notifier).refresh();
     ref.invalidate(cartControllerProvider);
     if (!mounted) return;
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Order created successfully')),
-    );
+    showGlobalSnackBar('Order created successfully');
   }
 }
 

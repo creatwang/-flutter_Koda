@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 
 /// 购物车 / 预订单共用的「Clear」确认与执行（选中则删选中，否则清空全部）。
@@ -45,15 +46,15 @@ Future<void> runCartClearAllConfirmFlow({
         ? await cartNotifier.removeSelectedItems()
         : await cartNotifier.clearAllSitesCart();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? (hasSelectedItems ? '已删除选中商品' : '购物车已清空')
-              : (hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试'),
-        ),
-      ),
-    );
+    if (ok) {
+      showGlobalSnackBar(
+        hasSelectedItems ? '已删除选中商品' : '购物车已清空',
+      );
+    } else {
+      showGlobalErrorMessage(
+        hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试',
+      );
+    }
   } finally {
     if (context.mounted) {
       onBusy?.call(false);

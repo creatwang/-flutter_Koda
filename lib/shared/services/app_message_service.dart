@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/shared/base_widget/toast/yn_toast_widget.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
@@ -34,6 +35,23 @@ void showGlobalSnackBar(String message) {
     ..showSnackBar(
       SnackBar(content: Text(message.trim())),
     );
+}
+
+/// 全局约束/校验类提示（顶部 [YnToast.warning]）。
+///
+/// [context] 可选；未传时使用 [appNavigatorKey] 或
+/// [appScaffoldMessengerKey] 的上下文。
+void showGlobalWarningMessage(
+  String message, {
+  BuildContext? context,
+}) {
+  if (message.trim().isEmpty) return;
+  final ctx = context ??
+      appNavigatorKey.currentContext ??
+      appScaffoldMessengerKey.currentContext;
+  if (ctx == null || !ctx.mounted) return;
+  appScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+  YnToast.warning(ctx, message: message.trim());
 }
 
 Future<void> showSessionExpiredDialog(String message) async {

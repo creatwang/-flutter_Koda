@@ -79,19 +79,11 @@ class _ProfileMyCustomersSectionWidgetState
           // 先导航再提示：否则 SnackBar 绑在即将 dispose 的 subtree 上，
           // 动画回调会触发「deactivated widget's ancestor」断言。
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final messenger = appScaffoldMessengerKey.currentState;
-            if (messenger == null) return;
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Logged in as customer.')),
-              );
+            showGlobalSnackBar('Logged in as customer.');
           });
         },
         failure: (e) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(e.message)));
+          showGlobalErrorMessage(e.message);
         },
       );
     } finally {
@@ -107,9 +99,7 @@ class _ProfileMyCustomersSectionWidgetState
       builder: (_) => _DeleteStoreCustomerDialog(item: item),
     );
     if (deleted != true || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleted')),
-    );
+    showGlobalSnackBar('Deleted');
   }
 
   void _onViewCustomerOrders(StoreCustomerItemDto item) {
@@ -177,9 +167,7 @@ class _ProfileMyCustomersSectionWidgetState
                 _pendingOrdersRowCustomerId = null;
                 _didRunOpenSlide = false;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${next.error}')),
-              );
+              showGlobalErrorMessage('${next.error}');
             }
           }
           return;
@@ -714,9 +702,7 @@ class _DeleteStoreCustomerDialogState
       },
       failure: (e) {
         setState(() => _isDeleting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        showGlobalErrorMessage(e.message);
       },
     );
   }

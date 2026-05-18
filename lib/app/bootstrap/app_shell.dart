@@ -167,6 +167,9 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
             ),
             content,
+            Positioned.fill(
+              child: Overlay(key: appToastOverlayKey),
+            ),
             /*     Positioned(
               right: 14,
               bottom: 14,

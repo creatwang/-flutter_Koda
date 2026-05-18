@@ -27,6 +27,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _confirmPasswordController = TextEditingController();
   bool _rememberMe = true;
   final bool _isRegister = false;
+  bool _isSubmitting = false;
 
   static const String _heroImageUrl =
       'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=80';
@@ -64,8 +65,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final sessionState = ref.watch(sessionControllerProvider);
-    final isLoading = sessionState.isLoading;
     final isCompact = MediaQuery.of(context).size.width < 860;
 
     return DismissKeyboardOnTap(
@@ -88,7 +87,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: isCompact
-                        ? _buildRightPanel(context, l10n, isLoading, compact: true)
+                        ? _buildRightPanel(context, l10n, compact: true)
                         : Row(
                       children: [
                         Expanded(
@@ -108,7 +107,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         Expanded(
                           flex: 9,
-                          child: _buildRightPanel(context, l10n, isLoading),
+                          child: _buildRightPanel(context, l10n),
                         ),
                       ],
                     ),
@@ -124,8 +123,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildRightPanel(
     BuildContext context,
-    AppLocalizations l10n,
-    bool isLoading, {
+    AppLocalizations l10n, {
     bool compact = false,
   }) {
     return Stack(
@@ -292,15 +290,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               borderRadius: BorderRadius.circular(7),
                             ),
                           ),
-                          onPressed: isLoading
+                          onPressed: _isSubmitting
                               ? null
                               : () => _handleSubmit(context, l10n),
-                          child: isLoading
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(_isRegister ? l10n.authRegisterAction : l10n.loginAction),
+                          child: Text(
+                            _isRegister ? l10n.authRegisterAction : l10n.loginAction,
+                          ),
                         ),
                       ),
                      /* const SizedBox(height: 24),
@@ -389,16 +384,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
-    final ok = await ref.read(sessionControllerProvider.notifier).signIn(
-          username: _usernameController.text.trim(),
-          password: _passwordController.text.trim(),
-          shouldRememberPassword: _rememberMe,
-        );
+    setState(() => _isSubmitting = true);
+    final errorMessage = await runGlobalYnToastTask(
+      context: context,
+      task: () async {
+        final error = await ref.read(sessionControllerProvider.notifier).signIn(
+              username: _usernameController.text.trim(),
+              password: _passwordController.text.trim(),
+              shouldRememberPassword: _rememberMe,
+            );
+        if (error == null) return null;
+        return error.trim().isEmpty ? l10n.loginFailed : error;
+      },
+    );
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+    }
     if (!context.mounted) return;
-    if (ok) {
+    if (errorMessage == null) {
       context.go(AppRoutes.home);
-    } else {
-      showGlobalErrorMessage(l10n.loginFailed);
     }
   }
 

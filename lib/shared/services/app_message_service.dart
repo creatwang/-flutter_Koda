@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/shared/base_widget/toast/yn_toast_widget.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
+/// 置于 [MaterialApp.builder] 最顶层的 Overlay，避免 Toast 被装饰层挡住。
+final GlobalKey<OverlayState> appToastOverlayKey = GlobalKey<OverlayState>();
 
 typedef SessionExpiredHandler = Future<void> Function();
 SessionExpiredHandler? _sessionExpiredHandler;
@@ -16,25 +20,148 @@ void registerSessionExpiredHandler(SessionExpiredHandler handler) {
   _sessionExpiredHandler = handler;
 }
 
-void showGlobalErrorMessage(String message) {
-  final messenger = appScaffoldMessengerKey.currentState;
-  if (messenger == null || message.trim().isEmpty) return;
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+BuildContext? _globalToastContext(BuildContext? context) {
+  final ctx = context ??
+      appNavigatorKey.currentContext ??
+      appScaffoldMessengerKey.currentContext;
+  if (ctx == null || !ctx.mounted) return null;
+  return ctx;
 }
 
-/// 与 [showGlobalErrorMessage] 相同载体，用于成功提示等（如路由切换后仍可见）。
-void showGlobalSnackBar(String message) {
-  final messenger = appScaffoldMessengerKey.currentState;
-  if (messenger == null || message.trim().isEmpty) return;
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(content: Text(message.trim())),
+YnToastController? _beginGlobalYnToastLoading({
+  BuildContext? context,
+  YnToastType type = YnToastType.info,
+  bool mask = false,
+}) {
+  final overlay = appToastOverlayKey.currentState;
+  if (overlay != null) {
+    return YnToast.showLoadingOnOverlay(
+      overlay,
+      type: type,
+      mask: mask,
     );
+  }
+  final ctx = _globalToastContext(context);
+  if (ctx == null) return null;
+  return YnToast.show(
+    ctx,
+    type: type,
+    options: YnToastShowOptions(
+      loadingDuration: const Duration(days: 1),
+      persist: true,
+      mask: mask,
+    ),
+  );
+}
+
+/// 包裹异步任务：先展示 YnToast loading，结束后用 [YnToastController.done] 切
+/// success / error。返回 `null` 表示成功，非空字符串为错误文案。
+///
+/// [successMessage] 为空时成功态仅收起 loading，不展示成功文案。
+/// [successHold]：成功 [done] 后额外等待时长，便于用户看到反馈再跳转。
+Future<String?> runGlobalYnToastTask({
+  required Future<String?> Function() task,
+  BuildContext? context,
+  String? successMessage,
+  Duration successDuration = const Duration(milliseconds: 450),
+  Duration successHold = Duration.zero,
+  Duration errorDuration = const Duration(milliseconds: 2600),
+  bool mask = false,
+}) async {
+  final controller = _beginGlobalYnToastLoading(context: context, mask: mask);
+  if (controller == null) {
+    return task();
+  }
+
+  try {
+    final errorMessage = await task();
+    if (errorMessage == null) {
+      if (successMessage != null && successMessage.trim().isNotEmpty) {
+        controller.done(
+          YnToastType.success,
+          message: successMessage.trim(),
+          options: YnToastDoneOptions(duration: successDuration),
+        );
+        if (successHold > Duration.zero) {
+          await Future<void>.delayed(successHold);
+        }
+      } else {
+        controller.hide();
+      }
+      return null;
+    }
+    controller.done(
+      YnToastType.error,
+      message: errorMessage.trim(),
+      options: YnToastDoneOptions(duration: errorDuration),
+    );
+    return errorMessage;
+  } catch (error, stackTrace) {
+    FlutterError.reportError(
+      FlutterErrorDetails(exception: error, stack: stackTrace),
+    );
+    final message = error is AppException
+        ? error.message
+        : error.toString();
+    controller.done(
+      YnToastType.error,
+      message: message,
+      options: YnToastDoneOptions(duration: errorDuration),
+    );
+    return message;
+  }
+}
+
+void _showGlobalYnToast(
+  YnToastType type,
+  String message, {
+  BuildContext? context,
+}) {
+  final trimmed = message.trim();
+  if (trimmed.isEmpty) return;
+
+  final overlay = appToastOverlayKey.currentState;
+  if (overlay != null) {
+    YnToast.showOnOverlay(overlay, type: type, message: trimmed);
+    return;
+  }
+
+  final ctx = _globalToastContext(context);
+  if (ctx == null) return;
+  switch (type) {
+    case YnToastType.success:
+      YnToast.success(ctx, message: trimmed);
+    case YnToastType.warning:
+      YnToast.warning(ctx, message: trimmed);
+    case YnToastType.error:
+      YnToast.error(ctx, message: trimmed);
+    case YnToastType.info:
+      YnToast.info(ctx, message: trimmed);
+  }
+}
+
+/// 全局错误/失败类提示（顶部 [YnToast.error]）。
+///
+/// 保留此函数名以兼容既有调用；展示载体为 YnToast，非底部 SnackBar。
+/// [context] 可选；未传时使用 [appNavigatorKey] 或
+/// [appScaffoldMessengerKey] 的上下文。
+void showGlobalErrorMessage(
+  String message, {
+  BuildContext? context,
+}) {
+  _showGlobalYnToast(YnToastType.error, message, context: context);
+}
+
+/// 全局成功/完成类提示（顶部 [YnToast.success]）。
+///
+/// 保留此函数名以兼容既有调用；展示载体为 YnToast，非底部 SnackBar。
+/// [context] 可选；未传时使用 [appNavigatorKey] 或
+/// [appScaffoldMessengerKey] 的上下文。
+void showGlobalSnackBar(
+  String message, {
+  BuildContext? context,
+}) {
+  _showGlobalYnToast(YnToastType.success, message, context: context);
 }
 
 /// 全局约束/校验类提示（顶部 [YnToast.warning]）。
@@ -45,27 +172,18 @@ void showGlobalWarningMessage(
   String message, {
   BuildContext? context,
 }) {
-  if (message.trim().isEmpty) return;
-  final ctx = context ??
-      appNavigatorKey.currentContext ??
-      appScaffoldMessengerKey.currentContext;
-  if (ctx == null || !ctx.mounted) return;
-  appScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-  YnToast.warning(ctx, message: message.trim());
+  _showGlobalYnToast(YnToastType.warning, message, context: context);
 }
 
 Future<void> showSessionExpiredDialog(String message) async {
   if (_sessionExpiredDialogShowing) return;
   _sessionExpiredDialogShowing = true;
-  final messenger = appScaffoldMessengerKey.currentState;
   final rootContext =
       appNavigatorKey.currentContext ?? appScaffoldMessengerKey.currentContext;
   if (rootContext == null) {
     _sessionExpiredDialogShowing = false;
     return;
   }
-  messenger?.hideCurrentSnackBar();
-
   await showGeorgeSessionExpiredDialog(
     context: rootContext,
     useRootNavigator: true,

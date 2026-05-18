@@ -46,13 +46,15 @@ class SessionController extends AsyncNotifier<Session> {
 
   /// 用户名密码登录；成功则 [state] 为已认证会话。
   ///
+  /// 返回 `null` 表示成功；非空为失败文案（由登录页 [runGlobalYnToastTask] 展示）。
+  /// 不触发 [AsyncLoading]，避免路由全局 loading 与页面 dispose。
+  ///
   /// [shouldRememberPassword]：为 `true` 时在成功后将密码写入安全存储。
-  Future<bool> signIn({
+  Future<String?> signIn({
     required String username,
     required String password,
     bool shouldRememberPassword = false,
   }) async {
-    state = const AsyncLoading();
     final result = await ref.read(authLoginServiceProvider)(
       username: username,
       password: password,
@@ -73,11 +75,11 @@ class SessionController extends AsyncNotifier<Session> {
         ),
       );
       _invalidateAfterStoreContextChanged();
-      return true;
+      return null;
     }
+
     final failure = result as ApiFailure<TokenPair>;
-    state = AsyncError(failure.exception, StackTrace.current);
-    return false;
+    return failure.exception.message;
   }
 
   /// 注册成功后的数据格式与登录一致；落盘后直接视为已登录。

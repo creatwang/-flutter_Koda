@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:george_pick_mate/core/network/api_business_code.dart';
 import 'package:george_pick_mate/core/network/dio_client.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
@@ -129,7 +130,15 @@ Future<ApiResult<TokenPair>> authLoginService({
         error: 'Invalid login response format',
       );
     }
-    final userInfoBase = UserInfoBase.fromJson(data);
+    if (!isApiBusinessSuccessCode(data['code'])) {
+      final raw = data['message'] ?? data['msg'] ?? data['error'];
+      final message = raw is String && raw.trim().isNotEmpty
+          ? raw.trim()
+          : 'Login request failed';
+      return ApiFailure(AppException(message));
+    }
+    final payload = data['result'] ?? data;
+    final userInfoBase = UserInfoBase.fromJson(payload);
     final companyId = userInfoBase.companyId?.toInt();
     if (companyId == null) {
       throw DioException(

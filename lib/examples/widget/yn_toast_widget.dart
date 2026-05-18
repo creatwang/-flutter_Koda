@@ -205,13 +205,64 @@ class YnToast {
     );
   }
 
+  /// 在指定 [overlay] 上展示（用于 [MaterialApp.builder] 之上的全局 Toast 层）。
+  static YnToastController showOnOverlay(
+    OverlayState overlay, {
+    required YnToastType type,
+    String? message,
+    YnToastDoneOptions options = const YnToastDoneOptions(),
+  }) {
+    return _insertOnOverlay(
+      overlay,
+      type: type,
+      message: message,
+      showOptions: YnToastShowOptions(
+        duration: options.duration,
+        loadingDuration: Duration.zero,
+        persist: options.persist,
+      ),
+    );
+  }
+
+  /// 在 [overlay] 上展示持久 loading，由调用方 [YnToastController.done] 结束。
+  static YnToastController showLoadingOnOverlay(
+    OverlayState overlay, {
+    YnToastType type = YnToastType.info,
+    String? message,
+    bool mask = false,
+  }) {
+    return _insertOnOverlay(
+      overlay,
+      type: type,
+      message: message,
+      showOptions: YnToastShowOptions(
+        loadingDuration: const Duration(days: 1),
+        persist: true,
+        mask: mask,
+      ),
+    );
+  }
+
   static YnToastController _insert(
     BuildContext context, {
     required YnToastType type,
     String? message,
     required YnToastShowOptions showOptions,
   }) {
-    final overlay = Overlay.of(context, rootOverlay: true);
+    return _insertOnOverlay(
+      Overlay.of(context, rootOverlay: true),
+      type: type,
+      message: message,
+      showOptions: showOptions,
+    );
+  }
+
+  static YnToastController _insertOnOverlay(
+    OverlayState overlay, {
+    required YnToastType type,
+    String? message,
+    required YnToastShowOptions showOptions,
+  }) {
     final controller = YnToastController();
     late final OverlayEntry entry;
 

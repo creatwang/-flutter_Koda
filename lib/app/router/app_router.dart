@@ -49,8 +49,10 @@ GoRouter buildAppRouter({
       final atSplash = state.matchedLocation == AppRoutes.splash;
       final atLogin = state.matchedLocation == AppRoutes.login;
 
+      // 仅启动阶段会话恢复使用 splash loading；登录提交由页面局部 YnToast 承担。
       if (isLoadingNow) {
-        return atSplash ? null : AppRoutes.splash;
+        if (atSplash) return null;
+        return AppRoutes.splash;
       }
 
       if (!isLoggedInNow) {

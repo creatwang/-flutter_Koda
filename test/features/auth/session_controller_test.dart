@@ -15,7 +15,10 @@ void main() {
           authReadTokenServiceProvider.overrideWithValue(() async => null),
           authLoginServiceProvider.overrideWithValue(
             ({required username, required password}) async {
-              const pair = TokenPair(accessToken: 'access_1', refreshToken: 'refresh_1');
+              const pair = TokenPair(
+                accessToken: 'access_1',
+                refreshToken: 'refresh_1',
+              );
               return const ApiSuccess(pair);
             },
           ),
@@ -34,17 +37,17 @@ void main() {
       final initial = await container.read(sessionControllerProvider.future);
       expect(initial.isAuthenticated, false);
 
-      final ok = await container.read(sessionControllerProvider.notifier).signIn(
+      final error = await container.read(sessionControllerProvider.notifier).signIn(
             username: 'u',
             password: 'p',
           );
-      expect(ok, true);
+      expect(error, isNull);
 
       final after = container.read(sessionControllerProvider).asData!.value;
       expect(after.isAuthenticated, true);
     });
 
-    test('登录失败：直接验证错误分支', () async {
+    test('登录失败：返回错误文案且不写 AsyncError', () async {
       final container = ProviderContainer(
         overrides: [
           authLoginServiceProvider.overrideWithValue(
@@ -66,12 +69,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container.read(sessionControllerProvider.future);
-      final ok = await container.read(sessionControllerProvider.notifier).signIn(
+      final error = await container.read(sessionControllerProvider.notifier).signIn(
             username: 'u',
             password: 'wrong',
           );
-      expect(ok, false);
-      expect(container.read(sessionControllerProvider).hasError, true);
+      expect(error, 'bad credentials');
+      expect(container.read(sessionControllerProvider).hasError, false);
     });
   });
 }

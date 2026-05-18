@@ -609,7 +609,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       children: [
         if (_loadingMask && _phase == _YnToastPhase.loading)
           Positioned.fill(
-            child: IgnorePointer(
+            child: AbsorbPointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: _withAlpha(const Color(0xFF20231D), 0.18),

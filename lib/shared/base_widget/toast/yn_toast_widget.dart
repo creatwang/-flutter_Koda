@@ -819,7 +819,7 @@ class _ToastGlyph extends StatelessWidget {
             child: Transform.scale(
               scale: 0.5 + appear * 0.5,
               child: SizedBox.square(
-                dimension: 14,
+                dimension: 16,
                 child: CustomPaint(
                   painter: _ToastGlyphPainter(type: type, progress: draw),
                 ),
@@ -848,13 +848,24 @@ class _ToastGlyphPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final path = _toastGlyphPath(type, size);
-    final metrics = path.computeMetrics();
-    final iterator = metrics.iterator;
-    if (!iterator.moveNext()) return;
-    final metric = iterator.current;
-    final drawLength = metric.length * progress.clamp(0.0, 1.0);
-    final drawPath = metric.extractPath(0, drawLength);
-    canvas.drawPath(drawPath, strokePaint);
+    final clampedProgress = progress.clamp(0.0, 1.0);
+    for (final metric in path.computeMetrics()) {
+      final drawLength = metric.length * clampedProgress;
+      if (drawLength <= 0) continue;
+      canvas.drawPath(metric.extractPath(0, drawLength), strokePaint);
+    }
+
+    final dot = _toastGlyphDotLayout(type, size);
+    if (dot == null) return;
+    final dotReveal = ((clampedProgress - 0.5) / 0.5).clamp(0.0, 1.0);
+    if (dotReveal <= 0) return;
+    canvas.drawCircle(
+      dot.center,
+      dot.radius * dotReveal,
+      Paint()
+        ..color = const Color(0xFFF3EDDF)
+        ..style = PaintingStyle.fill,
+    );
   }
 
   @override
@@ -866,6 +877,7 @@ class _ToastGlyphPainter extends CustomPainter {
 Path _toastGlyphPath(YnToastType type, Size size) {
   final w = size.width;
   final h = size.height;
+  final cx = w * 0.5;
   final path = Path();
   switch (type) {
     case YnToastType.success:
@@ -875,24 +887,38 @@ Path _toastGlyphPath(YnToastType type, Size size) {
         ..lineTo(w * 0.8, h * 0.28);
     case YnToastType.info:
       path
-        ..moveTo(w * 0.5, h * 0.34)
-        ..lineTo(w * 0.5, h * 0.68)
-        ..moveTo(w * 0.5, h * 0.23)
-        ..lineTo(w * 0.5, h * 0.23);
+        ..moveTo(cx, h * 0.36)
+        ..lineTo(cx, h * 0.74);
     case YnToastType.warning:
-      path
-        ..moveTo(w * 0.5, h * 0.25)
-        ..lineTo(w * 0.5, h * 0.62)
-        ..moveTo(w * 0.5, h * 0.76)
-        ..lineTo(w * 0.5, h * 0.76);
     case YnToastType.error:
       path
-        ..moveTo(w * 0.28, h * 0.28)
-        ..lineTo(w * 0.72, h * 0.72)
-        ..moveTo(w * 0.72, h * 0.28)
-        ..lineTo(w * 0.28, h * 0.72);
+        ..moveTo(cx, h * 0.22)
+        ..lineTo(cx, h * 0.48);
   }
   return path;
+}
+
+class _ToastGlyphDotLayout {
+  const _ToastGlyphDotLayout({required this.center, required this.radius});
+
+  final Offset center;
+  final double radius;
+}
+
+_ToastGlyphDotLayout? _toastGlyphDotLayout(YnToastType type, Size size) {
+  final cx = size.width * 0.5;
+  final h = size.height;
+  return switch (type) {
+    YnToastType.info => _ToastGlyphDotLayout(
+      center: Offset(cx, h * 0.26),
+      radius: h * 0.09,
+    ),
+    YnToastType.warning || YnToastType.error => _ToastGlyphDotLayout(
+      center: Offset(cx, h * 0.80),
+      radius: h * 0.10,
+    ),
+    _ => null,
+  };
 }
 
 class _ToastRingPainter extends CustomPainter {

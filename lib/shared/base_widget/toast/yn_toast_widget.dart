@@ -15,7 +15,7 @@ import 'package:flutter/scheduler.dart';
 
 enum YnToastType { success, info, warning, error }
 
-enum _YnToastPhase { idle, loading, success }
+enum _YnToastPhase { idle, loading, success, exiting }
 
 class YnToastShowOptions {
   const YnToastShowOptions({
@@ -59,13 +59,13 @@ class YnToastController {
     state.finish(type, message: message, options: options);
   }
 
-  void hide() {
+  void hide({bool quick = false}) {
     final state = _state;
     if (state == null) {
       _hasPendingHide = true;
       return;
     }
-    state.hide();
+    state.hide(quick: quick);
   }
 
   void _attach(_YnToastOverlayState state) {
@@ -108,7 +108,7 @@ class YnToast {
     final previous = _activeSyncController;
     if (previous == null) return;
     _activeSyncController = null;
-    previous.hide();
+    previous.hide(quick: true);
   }
 
   static void _trackActiveSyncToast(YnToastController controller) {
@@ -339,6 +339,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   static const _top = 26.0;
   static const _messagePadding = EdgeInsets.only(left: 6, right: 14);
   static const _spinRampDuration = Duration(milliseconds: 1400);
+  static const _exitDuration = Duration(milliseconds: 320);
+  static const _quickExitDuration = Duration(milliseconds: 180);
 
   late final Ticker _spinTicker;
   late final ValueNotifier<_SpinSnapshot> _spinSnapshotNotifier;
@@ -359,6 +361,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   double _cachedMeasureMaxWidth = -1;
   double _swipeY = 0;
   double _swipeStartY = 0;
+  bool _isQuickExit = false;
 
   @override
   void initState() {
@@ -439,16 +442,19 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     _hideTimer = Timer(options.duration, hide);
   }
 
-  void hide() {
+  void hide({bool quick = false}) {
     if (!mounted || _isRemoved) return;
+    if (_phase == _YnToastPhase.exiting) return;
     _clearTimers();
     _stopSpin();
+    _isQuickExit = quick;
+    final dismissDuration = quick ? _quickExitDuration : _exitDuration;
     setState(() {
       _loadingMask = false;
-      _phase = _YnToastPhase.idle;
+      _phase = _YnToastPhase.exiting;
       _swipeY = 0;
     });
-    _hideTimer = Timer(const Duration(milliseconds: 280), _removeEntry);
+    _hideTimer = Timer(dismissDuration, _removeEntry);
   }
 
   void _startLoading() {
@@ -496,7 +502,9 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   }
 
   void _handleVerticalDragUpdate(DragUpdateDetails details) {
-    if (_phase == _YnToastPhase.idle) return;
+    if (_phase != _YnToastPhase.loading && _phase != _YnToastPhase.success) {
+      return;
+    }
     final deltaY = details.globalPosition.dy - _swipeStartY;
     setState(() {
       _swipeY = math.min(0, deltaY);
@@ -550,7 +558,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: IgnorePointer(
-        ignoring: _phase == _YnToastPhase.idle,
+        ignoring:
+            _phase == _YnToastPhase.idle || _phase == _YnToastPhase.exiting,
         child: Material(
           color: Colors.transparent,
           child: Stack(
@@ -582,6 +591,9 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
                           height: size.height,
                           maxMessageWidth: size.messageWidth,
                           shouldWrapMessage: size.shouldWrap,
+                          dismissDuration: _isQuickExit
+                              ? _quickExitDuration
+                              : _exitDuration,
                           spinSnapshotListenable: _spinSnapshotNotifier,
                           onVerticalDragStart: _handleVerticalDragStart,
                           onVerticalDragUpdate: _handleVerticalDragUpdate,
@@ -610,6 +622,7 @@ class _ToastPill extends StatelessWidget {
     required this.height,
     required this.maxMessageWidth,
     required this.shouldWrapMessage,
+    required this.dismissDuration,
     required this.spinSnapshotListenable,
     required this.onVerticalDragStart,
     required this.onVerticalDragUpdate,
@@ -624,6 +637,7 @@ class _ToastPill extends StatelessWidget {
   final double height;
   final double maxMessageWidth;
   final bool shouldWrapMessage;
+  final Duration dismissDuration;
   final ValueListenable<_SpinSnapshot> spinSnapshotListenable;
   final GestureDragStartCallback onVerticalDragStart;
   final GestureDragUpdateCallback onVerticalDragUpdate;
@@ -631,11 +645,17 @@ class _ToastPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isVisible = phase != _YnToastPhase.idle;
-    final isSuccess = phase == _YnToastPhase.success;
-    final showMessage = hasMessage && isSuccess;
-    final targetWidth = isSuccess ? width : _YnToastOverlayState._height;
-    final targetHeight = isSuccess ? height : _YnToastOverlayState._height;
+    final isExiting = phase == _YnToastPhase.exiting;
+    final isActive =
+        phase == _YnToastPhase.loading || phase == _YnToastPhase.success;
+    final isExpanded =
+        phase == _YnToastPhase.success || phase == _YnToastPhase.exiting;
+    final showMessage = hasMessage && isExpanded;
+    final targetWidth =
+        isExpanded ? width : _YnToastOverlayState._height;
+    final targetHeight =
+        isExpanded ? height : _YnToastOverlayState._height;
+    final exitDuration = dismissDuration;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -643,18 +663,24 @@ class _ToastPill extends StatelessWidget {
       onVerticalDragUpdate: onVerticalDragUpdate,
       onVerticalDragEnd: onVerticalDragEnd,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 250),
-        opacity: isVisible ? 1 : 0,
+        duration: isExiting ? exitDuration : const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        opacity: isActive ? 1 : 0,
         child: AnimatedSlide(
-          duration: const Duration(milliseconds: 350),
+          duration: isExiting ? exitDuration : const Duration(milliseconds: 350),
           curve: Curves.easeOutCubic,
-          offset: isVisible ? Offset.zero : const Offset(0, -0.333),
+          offset: isExiting
+              ? const Offset(0, -0.12)
+              : (isActive ? Offset.zero : const Offset(0, -0.333)),
           child: AnimatedScale(
-            duration: const Duration(milliseconds: 350),
+            duration:
+                isExiting ? exitDuration : const Duration(milliseconds: 350),
             curve: Curves.easeOutCubic,
-            scale: isVisible ? 1 : 0.92,
+            scale: isExiting ? 0.94 : (isActive ? 1 : 0.92),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 620),
+              duration: isExiting
+                  ? Duration.zero
+                  : const Duration(milliseconds: 620),
               curve: Curves.easeOutCubic,
               width: targetWidth,
               height: targetHeight,
@@ -664,18 +690,7 @@ class _ToastPill extends StatelessWidget {
                 borderRadius: BorderRadius.circular(
                   targetHeight > _YnToastOverlayState._height ? 18 : 999,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _withAlpha(const Color(0xFF3E372A), 0.14),
-                    blurRadius: 45,
-                    offset: const Offset(0, 18),
-                  ),
-                  BoxShadow(
-                    color: _withAlpha(const Color(0xFF3E372A), 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                boxShadow: _toastPillShadows,
               ),
               child: Row(
                 crossAxisAlignment: targetHeight > _YnToastOverlayState._height
@@ -689,14 +704,17 @@ class _ToastPill extends StatelessWidget {
                       child: _ToastBall(
                         type: type,
                         phase: phase,
+                        dismissDuration: dismissDuration,
                         spinSnapshotListenable: spinSnapshotListenable,
                       ),
                     ),
                   ),
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 620),
+                    duration: isExiting
+                        ? Duration.zero
+                        : const Duration(milliseconds: 620),
                     curve: Curves.easeOutCubic,
-                    width: isSuccess ? maxMessageWidth : 0,
+                    width: isExpanded ? maxMessageWidth : 0,
                     child: Padding(
                       padding: _YnToastOverlayState._messagePadding,
                       child: Opacity(
@@ -731,17 +749,21 @@ class _ToastBall extends StatelessWidget {
   const _ToastBall({
     required this.type,
     required this.phase,
+    required this.dismissDuration,
     required this.spinSnapshotListenable,
   });
 
   final YnToastType type;
   final _YnToastPhase phase;
+  final Duration dismissDuration;
   final ValueListenable<_SpinSnapshot> spinSnapshotListenable;
 
   @override
   Widget build(BuildContext context) {
     final isLoading = phase == _YnToastPhase.loading;
-    final isSuccess = phase == _YnToastPhase.success;
+    final isSuccess =
+        phase == _YnToastPhase.success || phase == _YnToastPhase.exiting;
+    final isExiting = phase == _YnToastPhase.exiting;
 
     return SizedBox.square(
       dimension: _YnToastOverlayState._ballSize,
@@ -766,11 +788,13 @@ class _ToastBall extends StatelessWidget {
             ),
           ),
           AnimatedScale(
-            duration: const Duration(milliseconds: 580),
+            duration:
+                isExiting ? dismissDuration : const Duration(milliseconds: 580),
             curve: Curves.easeOutCubic,
             scale: isSuccess ? 1 : 0.35,
             child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
+              duration:
+                  isExiting ? dismissDuration : const Duration(milliseconds: 200),
               opacity: isSuccess ? 1 : 0,
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -782,10 +806,15 @@ class _ToastBall extends StatelessWidget {
             ),
           ),
           AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
+            duration:
+                isExiting ? dismissDuration : const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             opacity: isSuccess ? 1 : 0,
-            child: _ToastGlyph(type: type, isSuccess: isSuccess),
+            child: _ToastGlyph(
+              type: type,
+              isSuccess: isSuccess,
+              freezeAtComplete: isExiting,
+            ),
           ),
         ],
       ),
@@ -794,14 +823,27 @@ class _ToastBall extends StatelessWidget {
 }
 
 class _ToastGlyph extends StatelessWidget {
-  const _ToastGlyph({required this.type, required this.isSuccess});
+  const _ToastGlyph({
+    required this.type,
+    required this.isSuccess,
+    this.freezeAtComplete = false,
+  });
 
   static const _ease = Cubic(0.22, 1, 0.36, 1);
   final YnToastType type;
   final bool isSuccess;
+  final bool freezeAtComplete;
 
   @override
   Widget build(BuildContext context) {
+    if (freezeAtComplete) {
+      return SizedBox.square(
+        dimension: 16,
+        child: CustomPaint(
+          painter: _ToastGlyphPainter(type: type, progress: 1),
+        ),
+      );
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: isSuccess ? 1 : 0),
       duration: const Duration(milliseconds: 680),
@@ -1073,6 +1115,19 @@ class _ToastSizeCalculator {
     return painter.height;
   }
 }
+
+const List<BoxShadow> _toastPillShadows = [
+  BoxShadow(
+    color: Color(0x243E372A),
+    blurRadius: 28,
+    offset: Offset(0, 14),
+  ),
+  BoxShadow(
+    color: Color(0x143E372A),
+    blurRadius: 12,
+    offset: Offset(0, 4),
+  ),
+];
 
 Color _toastColor(YnToastType type) {
   return switch (type) {

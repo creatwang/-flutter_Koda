@@ -1,3 +1,9 @@
+/// 加购时购物车仍有未下单商品（`POST /store/cart/create`）。
+const int cartUnorderedItemsBusinessCode = 100000;
+
+bool isCartUnorderedItemsBusinessCode(String? code) =>
+    code == cartUnorderedItemsBusinessCode.toString();
+
 /// 与 [ResponseDataModeInterceptor]、各 `*_services` 对齐的业务成功 `code` 判定。
 ///
 /// 约定：成功为 `0` / `200`（数值或字符串），或字符串 `success`；缺省 `code`

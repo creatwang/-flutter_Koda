@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/cart/models/create_cart_item_result.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
@@ -245,17 +246,23 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       }
     });
     try {
-      final ok = await _submitCartCreate(
+      final result = await _submitCartCreate(
         qty: _productNum,
         resolvedSub: resolved.skuResolved.sub,
         skuRowSelection: resolved.skuRowSelection,
       );
       if (!mounted) return;
-      if (!ok) return;
-      final title = resolved.selected.name ?? detail.name ?? '';
-      showGlobalSnackBar(context.l10n.productAddedToCart(title));
-      if (isBuyNow) {
-        context.go(AppRoutes.homeWithTab('cart'));
+      switch (result) {
+        case CreateCartItemSuccess():
+          final title = resolved.selected.name ?? detail.name ?? '';
+          showGlobalSnackBar(context.l10n.productAddedToCart(title));
+          if (isBuyNow) {
+            context.go(AppRoutes.homeWithTab('cart'));
+          }
+        case CreateCartItemUnordered(:final message):
+          await showCartUnorderedItemsConfirmDialog(message);
+        case CreateCartItemFailure():
+          break;
       }
     } finally {
       if (mounted) {
@@ -307,16 +314,18 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     });
   }
 
-  Future<bool> _submitCartCreate({
+  Future<CreateCartItemResult> _submitCartCreate({
     required int qty,
     required ProductSub? resolvedSub,
     required List<Options> skuRowSelection,
   }) async {
     final sub = resolvedSub;
-    if (sub == null || sub.pid == null) return false;
+    if (sub == null || sub.pid == null) {
+      return const CreateCartItemFailure();
+    }
     if (ProductDetailController.unitPriceFromResolvedSub(sub) <= 0) {
       showGlobalErrorMessage(context.l10n.cartAddBlockedZeroSalesPrice);
-      return false;
+      return const CreateCartItemFailure();
     }
     final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
     final sIndex = ProductSkuCartHelpers.sIndexForApi(sub);
@@ -325,7 +334,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       skuRowSelection: skuRowSelection,
     );
     final space = await resolveSpaceForCartAdd(context);
-    if (space == null) return false;
+    if (space == null) return const CreateCartItemFailure();
     return ref
         .read(cartControllerProvider.notifier)
         .createCartItem(

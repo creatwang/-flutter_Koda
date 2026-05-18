@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
+import 'package:george_pick_mate/features/cart/services/cart_create_flow_services.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/presentation/pages/qr_scan_page.dart';
@@ -157,7 +158,7 @@ Future<bool> _addScannedSkuToCart(
   );
   final space = await resolveSpaceForCartAdd(dialogContext);
   if (space == null) return false;
-  return ref
+  final result = await ref
       .read(cartControllerProvider.notifier)
       .createCartItem(
         productId: productId,
@@ -167,4 +168,5 @@ Future<bool> _addScannedSkuToCart(
         space: space,
         subName: subName,
       );
+  return resolveCreateCartItemSubmitSuccess(result);
 }

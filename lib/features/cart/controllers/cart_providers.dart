@@ -3,11 +3,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:george_pick_mate/core/network/api_business_code.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/auth/models/session.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/features/cart/models/create_cart_item_result.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
 import 'package:george_pick_mate/features/cart/services/cart_persistence_services.dart';
@@ -149,7 +151,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     );
   }
 
-  Future<bool> createCartItem({
+  Future<CreateCartItemResult> createCartItem({
     required int productId,
     required String subIndex,
     required String sIndex,
@@ -161,13 +163,13 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       Future<void>.microtask(
         () => showGlobalErrorMessage('Please sign in first.'),
       );
-      return false;
+      return const CreateCartItemFailure();
     }
     if (productNum < 1) {
       Future<void>.microtask(
         () => showGlobalErrorMessage('Invalid product quantity.'),
       );
-      return false;
+      return const CreateCartItemFailure();
     }
     final result = await createCartItemService(
       productId: productId,
@@ -180,12 +182,15 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     switch (result) {
       case ApiSuccess():
         await refresh();
-        return true;
+        return const CreateCartItemSuccess();
       case ApiFailure(:final exception):
+        if (isCartUnorderedItemsBusinessCode(exception.code)) {
+          return CreateCartItemUnordered(exception.message);
+        }
         Future<void>.microtask(
           () => showGlobalErrorMessage(exception.message),
         );
-        return false;
+        return const CreateCartItemFailure();
     }
   }
 

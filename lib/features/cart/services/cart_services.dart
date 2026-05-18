@@ -412,10 +412,11 @@ Future<ApiResult<void>> createCartItemService({
     }
     final map = Map<String, dynamic>.from(payload);
     final code = map['code'];
-    if (code is num && code == 100000) {
+    if (code is num && code == cartUnorderedItemsBusinessCode) {
       return ApiFailure(
         AppException(
-          'There are still unordered items in the shopping cart',
+          map['message']?.toString() ??
+              'There are still unordered items in the shopping cart',
           code: code.toString(),
         ),
       );

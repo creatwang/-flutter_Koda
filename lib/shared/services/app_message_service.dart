@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/shared/base_widget/toast/yn_toast_widget.dart';
+import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
@@ -15,6 +16,7 @@ final GlobalKey<OverlayState> appToastOverlayKey = GlobalKey<OverlayState>();
 typedef SessionExpiredHandler = Future<void> Function();
 SessionExpiredHandler? _sessionExpiredHandler;
 bool _sessionExpiredDialogShowing = false;
+bool _cartUnorderedItemsDialogShowing = false;
 
 void registerSessionExpiredHandler(SessionExpiredHandler handler) {
   _sessionExpiredHandler = handler;
@@ -181,6 +183,34 @@ void showGlobalWarningMessage(
   BuildContext? context,
 }) {
   _showGlobalYnToast(YnToastType.warning, message, context: context);
+}
+
+/// 加购返回 `code == 100000`：提示未下单商品并可选跳转购物车 Tab。
+Future<void> showCartUnorderedItemsConfirmDialog(String message) async {
+  if (_cartUnorderedItemsDialogShowing) return;
+  _cartUnorderedItemsDialogShowing = true;
+  final rootContext =
+      appNavigatorKey.currentContext ?? appScaffoldMessengerKey.currentContext;
+  if (rootContext == null) {
+    _cartUnorderedItemsDialogShowing = false;
+    return;
+  }
+  final trimmed = message.trim();
+  final result = await showGeorgeConfirmDialog(
+    context: rootContext,
+    title: 'Notice',
+    message: trimmed.isEmpty
+        ? 'There are still unordered items in the shopping cart.'
+        : trimmed,
+    cancelLabel: 'Cancel',
+    confirmLabel: 'Go to Cart',
+    icon: Icons.shopping_cart_outlined,
+    accentColor: const Color(0xFFFF8B6A),
+  );
+  if (result == true && rootContext.mounted) {
+    GoRouter.of(rootContext).go(AppRoutes.homeWithTab('cart'));
+  }
+  _cartUnorderedItemsDialogShowing = false;
 }
 
 Future<void> showSessionExpiredDialog(String message) async {

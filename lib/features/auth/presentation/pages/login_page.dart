@@ -387,6 +387,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isSubmitting = true);
     final errorMessage = await runGlobalYnToastTask(
       context: context,
+      mask: true,
       task: () async {
         final error = await ref.read(sessionControllerProvider.notifier).signIn(
               username: _usernameController.text.trim(),

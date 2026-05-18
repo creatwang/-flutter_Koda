@@ -331,17 +331,21 @@ class _YnToastOverlay extends StatefulWidget {
 }
 
 class _YnToastOverlayState extends State<_YnToastOverlay>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _height = 36.0;
   static const _ballSize = 32.0;
   static const _top = 26.0;
   static const _messagePadding = EdgeInsets.only(left: 6, right: 14);
   static const _spinRampDuration = Duration(milliseconds: 1400);
+  static const _expandDuration = Duration(milliseconds: 620);
   static const _exitDuration = Duration(milliseconds: 320);
   static const _quickExitDuration = Duration(milliseconds: 180);
 
   late final Ticker _spinTicker;
   late final ValueNotifier<_SpinSnapshot> _spinSnapshotNotifier;
+  late final ValueNotifier<double> _swipeYOffset;
+  late final AnimationController _exitController;
+  late final Animation<double> _exitAnimation;
   Timer? _loadingTimer;
   Timer? _hideTimer;
   Timer? _enterTimer;
@@ -357,13 +361,24 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   String _cachedMeasureMessage = '';
   bool _cachedMeasureHasMessage = false;
   double _cachedMeasureMaxWidth = -1;
-  double _swipeY = 0;
   double _swipeStartY = 0;
   bool _isQuickExit = false;
+  double _accumulatedAngleRad = 0;
+  double _accumulatedRingOpacity = 0.92;
+  int _spinFrameCounter = 0;
 
   @override
   void initState() {
     super.initState();
+    _swipeYOffset = ValueNotifier(0);
+    _exitController = AnimationController(
+      vsync: this,
+      duration: _exitDuration,
+    );
+    _exitAnimation = CurvedAnimation(
+      parent: _exitController,
+      curve: Curves.easeOutCubic,
+    );
     _spinTicker = createTicker(_onSpinTick);
     _spinSnapshotNotifier = ValueNotifier(
       const _SpinSnapshot(angleRad: 0, ringOpacity: 0.92),
@@ -375,8 +390,10 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   @override
   void dispose() {
     _clearTimers();
+    _exitController.dispose();
     _spinTicker.dispose();
     _spinSnapshotNotifier.dispose();
+    _swipeYOffset.dispose();
     widget.controller._detach(this);
     super.dispose();
   }
@@ -396,19 +413,24 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     final smooth = math.pow(progress, 3).toDouble();
     final speedDegPerSecond = 420 + smooth * 4300;
     final spinAngleDeg =
-        (_spinSnapshotNotifier.value.angleRad * 180 / math.pi +
-            speedDegPerSecond * dt) %
-        360;
+        (_accumulatedAngleRad * 180 / math.pi + speedDegPerSecond * dt) % 360;
     final visualSoftness = (progress * 1.35).clamp(0.0, 1.0);
+    _accumulatedAngleRad = spinAngleDeg * (math.pi / 180);
+    _accumulatedRingOpacity = 0.92 - visualSoftness * 0.22;
+    _spinFrameCounter++;
+    if (_spinFrameCounter % 2 != 0) return;
     _spinSnapshotNotifier.value = _SpinSnapshot(
-      angleRad: spinAngleDeg * (math.pi / 180),
-      ringOpacity: 0.92 - visualSoftness * 0.22,
+      angleRad: _accumulatedAngleRad,
+      ringOpacity: _accumulatedRingOpacity,
     );
   }
 
   void _startSpin() {
     _spinEpochElapsed = null;
     _lastSpinElapsed = Duration.zero;
+    _spinFrameCounter = 0;
+    _accumulatedAngleRad = 0;
+    _accumulatedRingOpacity = 0.92;
     _spinSnapshotNotifier.value = const _SpinSnapshot(
       angleRad: 0,
       ringOpacity: 0.92,
@@ -434,8 +456,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       _hasMessage = _message.trim().isNotEmpty;
       _loadingMask = false;
       _phase = _YnToastPhase.success;
-      _swipeY = 0;
     });
+    _swipeYOffset.value = 0;
     if (options.persist) return;
     _hideTimer = Timer(options.duration, hide);
   }
@@ -447,12 +469,20 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     _stopSpin();
     _isQuickExit = quick;
     final dismissDuration = quick ? _quickExitDuration : _exitDuration;
+    _exitController.duration = dismissDuration;
+    if (_exitController.isAnimating) {
+      _exitController.stop();
+    }
     setState(() {
       _loadingMask = false;
       _phase = _YnToastPhase.exiting;
-      _swipeY = 0;
     });
-    _hideTimer = Timer(dismissDuration, _removeEntry);
+    _swipeYOffset.value = 0;
+    _exitController.forward(from: 0).whenComplete(() {
+      if (mounted && !_isRemoved) {
+        _removeEntry();
+      }
+    });
   }
 
   void _startLoading() {
@@ -504,19 +534,15 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       return;
     }
     final deltaY = details.globalPosition.dy - _swipeStartY;
-    setState(() {
-      _swipeY = math.min(0, deltaY);
-    });
+    _swipeYOffset.value = math.min(0, deltaY);
   }
 
   void _handleVerticalDragEnd(DragEndDetails details) {
-    if (_swipeY < -32) {
+    if (_swipeYOffset.value < -32) {
       hide();
       return;
     }
-    setState(() {
-      _swipeY = 0;
-    });
+    _swipeYOffset.value = 0;
   }
 
   String _resolveMessage(YnToastType type, String? message) {
@@ -554,63 +580,81 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        ignoring:
-            _phase == _YnToastPhase.idle || _phase == _YnToastPhase.exiting,
-        child: Material(
-          color: Colors.transparent,
-          child: Stack(
-            children: [
-              if (_loadingMask && _phase == _YnToastPhase.loading)
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: _withAlpha(const Color(0xFF20231D), 0.18),
-                    ),
-                  ),
+    final ignoreToastPointer =
+        _phase == _YnToastPhase.idle || _phase == _YnToastPhase.exiting;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (_loadingMask && _phase == _YnToastPhase.loading)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _withAlpha(const Color(0xFF20231D), 0.18),
                 ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: _top),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            ignoring: ignoreToastPointer,
+            child: Material(
+              type: MaterialType.transparency,
+              child: Padding(
+                padding: const EdgeInsets.only(top: _top),
+                child: Center(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final maxWidth = constraints.maxWidth * 0.9;
                       final size = _measureToastSize(context, maxWidth);
-                      return Transform.translate(
-                        offset: Offset(0, _swipeY),
-                        child: _ToastPill(
-                          phase: _phase,
-                          type: _type,
-                          message: _message,
-                          hasMessage: _hasMessage,
-                          width: size.width,
-                          height: size.height,
-                          maxMessageWidth: size.messageWidth,
-                          shouldWrapMessage: size.shouldWrap,
-                          dismissDuration: _isQuickExit
-                              ? _quickExitDuration
-                              : _exitDuration,
-                          spinSnapshotListenable: _spinSnapshotNotifier,
-                          onVerticalDragStart: _handleVerticalDragStart,
-                          onVerticalDragUpdate: _handleVerticalDragUpdate,
-                          onVerticalDragEnd: _handleVerticalDragEnd,
+                      return RepaintBoundary(
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _swipeYOffset,
+                          builder: (context, swipeY, child) {
+                            return Transform.translate(
+                              offset: Offset(0, swipeY),
+                              child: child,
+                            );
+                          },
+                          child: _ToastPill(
+                            phase: _phase,
+                            type: _type,
+                            message: _message,
+                            hasMessage: _hasMessage,
+                            width: size.width,
+                            height: size.height,
+                            maxMessageWidth: size.messageWidth,
+                            shouldWrapMessage: size.shouldWrap,
+                            dismissDuration: _isQuickExit
+                                ? _quickExitDuration
+                                : _exitDuration,
+                            exitAnimation: _phase == _YnToastPhase.exiting
+                                ? _exitAnimation
+                                : null,
+                            spinSnapshotListenable: _spinSnapshotNotifier,
+                            onVerticalDragStart: _handleVerticalDragStart,
+                            onVerticalDragUpdate: _handleVerticalDragUpdate,
+                            onVerticalDragEnd: _handleVerticalDragEnd,
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _ToastPill extends StatelessWidget {
+class _ToastPill extends StatefulWidget {
   const _ToastPill({
     required this.phase,
     required this.type,
@@ -621,6 +665,7 @@ class _ToastPill extends StatelessWidget {
     required this.maxMessageWidth,
     required this.shouldWrapMessage,
     required this.dismissDuration,
+    required this.exitAnimation,
     required this.spinSnapshotListenable,
     required this.onVerticalDragStart,
     required this.onVerticalDragUpdate,
@@ -636,105 +681,185 @@ class _ToastPill extends StatelessWidget {
   final double maxMessageWidth;
   final bool shouldWrapMessage;
   final Duration dismissDuration;
+  final Animation<double>? exitAnimation;
   final ValueListenable<_SpinSnapshot> spinSnapshotListenable;
   final GestureDragStartCallback onVerticalDragStart;
   final GestureDragUpdateCallback onVerticalDragUpdate;
   final GestureDragEndCallback onVerticalDragEnd;
 
   @override
-  Widget build(BuildContext context) {
-    final isExiting = phase == _YnToastPhase.exiting;
-    final isActive =
-        phase == _YnToastPhase.loading || phase == _YnToastPhase.success;
-    final isExpanded =
-        phase == _YnToastPhase.success || phase == _YnToastPhase.exiting;
-    final showMessage = hasMessage && isExpanded;
-    final targetWidth =
-        isExpanded ? width : _YnToastOverlayState._height;
-    final targetHeight =
-        isExpanded ? height : _YnToastOverlayState._height;
-    final exitDuration = dismissDuration;
+  State<_ToastPill> createState() => _ToastPillState();
+}
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onVerticalDragStart: onVerticalDragStart,
-      onVerticalDragUpdate: onVerticalDragUpdate,
-      onVerticalDragEnd: onVerticalDragEnd,
-      child: AnimatedOpacity(
-        duration: isExiting ? exitDuration : const Duration(milliseconds: 250),
+class _ToastPillState extends State<_ToastPill> {
+  bool _showFullShadow = true;
+  Timer? _shadowTimer;
+
+  @override
+  void didUpdateWidget(covariant _ToastPill oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.phase == _YnToastPhase.loading &&
+        widget.phase == _YnToastPhase.success) {
+      _showFullShadow = false;
+      _shadowTimer?.cancel();
+      _shadowTimer = Timer(_YnToastOverlayState._expandDuration, () {
+        if (mounted) setState(() => _showFullShadow = true);
+      });
+    }
+    if (widget.phase == _YnToastPhase.loading) {
+      _showFullShadow = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _shadowTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isExiting = widget.phase == _YnToastPhase.exiting;
+    final isActive = widget.phase == _YnToastPhase.loading ||
+        widget.phase == _YnToastPhase.success;
+    final isExpanded = widget.phase == _YnToastPhase.success ||
+        widget.phase == _YnToastPhase.exiting;
+    final showMessage = widget.hasMessage && isExpanded;
+    final targetWidth =
+        isExpanded ? widget.width : _YnToastOverlayState._height;
+    final targetHeight =
+        isExpanded ? widget.height : _YnToastOverlayState._height;
+    final borderRadius = targetHeight > _YnToastOverlayState._height
+        ? 18.0
+        : targetHeight / 2;
+
+    final pillBody = _buildPillBody(
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+      borderRadius: borderRadius,
+      isExpanded: isExpanded,
+      showMessage: showMessage,
+      isExiting: isExiting,
+    );
+
+    Widget content;
+    if (isExiting && widget.exitAnimation != null) {
+      content = AnimatedBuilder(
+        animation: widget.exitAnimation!,
+        builder: (context, child) {
+          final t = widget.exitAnimation!.value;
+          return Opacity(
+            opacity: 1 - t,
+            child: Transform.translate(
+              offset: Offset(0, -14 * t),
+              child: Transform.scale(
+                scale: 1 - 0.06 * t,
+                child: child,
+              ),
+            ),
+          );
+        },
+        child: pillBody,
+      );
+    } else {
+      content = AnimatedOpacity(
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         opacity: isActive ? 1 : 0,
         child: AnimatedSlide(
-          duration: isExiting ? exitDuration : const Duration(milliseconds: 350),
+          duration: const Duration(milliseconds: 350),
           curve: Curves.easeOutCubic,
-          offset: isExiting
-              ? const Offset(0, -0.12)
-              : (isActive ? Offset.zero : const Offset(0, -0.333)),
+          offset: isActive ? Offset.zero : const Offset(0, -0.333),
           child: AnimatedScale(
-            duration:
-                isExiting ? exitDuration : const Duration(milliseconds: 350),
+            duration: const Duration(milliseconds: 350),
             curve: Curves.easeOutCubic,
-            scale: isExiting ? 0.94 : (isActive ? 1 : 0.92),
-            child: AnimatedContainer(
-              duration: isExiting
-                  ? Duration.zero
-                  : const Duration(milliseconds: 620),
-              curve: Curves.easeOutCubic,
-              width: targetWidth,
-              height: targetHeight,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: _withAlpha(const Color(0xFFF6F1E6), 0.92),
-                borderRadius: BorderRadius.circular(
-                  targetHeight > _YnToastOverlayState._height ? 18 : 999,
-                ),
-                boxShadow: _toastPillShadows,
-              ),
-              child: Row(
-                crossAxisAlignment: targetHeight > _YnToastOverlayState._height
-                    ? CrossAxisAlignment.start
-                    : CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: _YnToastOverlayState._height,
-                    height: targetHeight,
-                    child: Center(
-                      child: _ToastBall(
-                        type: type,
-                        phase: phase,
-                        dismissDuration: dismissDuration,
-                        spinSnapshotListenable: spinSnapshotListenable,
-                      ),
+            scale: isActive ? 1 : 0.92,
+            child: pillBody,
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: widget.onVerticalDragStart,
+      onVerticalDragUpdate: widget.onVerticalDragUpdate,
+      onVerticalDragEnd: widget.onVerticalDragEnd,
+      child: content,
+    );
+  }
+
+  Widget _buildPillBody({
+    required double targetWidth,
+    required double targetHeight,
+    required double borderRadius,
+    required bool isExpanded,
+    required bool showMessage,
+    required bool isExiting,
+  }) {
+    final shadows =
+        _showFullShadow ? _toastPillShadows : _toastPillShadowsExpanding;
+
+    return RepaintBoundary(
+      child: AnimatedContainer(
+        duration: isExiting
+            ? Duration.zero
+            : _YnToastOverlayState._expandDuration,
+        curve: Curves.easeOutCubic,
+        width: targetWidth,
+        height: targetHeight,
+        decoration: BoxDecoration(
+          boxShadow: shadows,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: ColoredBox(
+            color: _withAlpha(const Color(0xFFF6F1E6), 0.92),
+            child: Row(
+              crossAxisAlignment:
+                  targetHeight > _YnToastOverlayState._height
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: _YnToastOverlayState._height,
+                  height: targetHeight,
+                  child: Center(
+                    child: _ToastBall(
+                      type: widget.type,
+                      phase: widget.phase,
+                      dismissDuration: widget.dismissDuration,
+                      spinSnapshotListenable: widget.spinSnapshotListenable,
                     ),
                   ),
-                  AnimatedContainer(
-                    duration: isExiting
-                        ? Duration.zero
-                        : const Duration(milliseconds: 620),
-                    curve: Curves.easeOutCubic,
-                    width: isExpanded ? maxMessageWidth : 0,
-                    child: Padding(
-                      padding: _YnToastOverlayState._messagePadding,
-                      child: Opacity(
-                        opacity: showMessage ? 1 : 0,
-                        child: Text(
-                          message,
-                          softWrap: shouldWrapMessage,
-                          maxLines: shouldWrapMessage ? null : 1,
-                          overflow: TextOverflow.visible,
-                          style: const TextStyle(
-                            color: Color(0xFF20231D),
-                            fontSize: 12.8,
-                            fontWeight: FontWeight.w800,
-                            height: 1.25,
-                            letterSpacing: 1.8,
-                          ),
+                ),
+                AnimatedContainer(
+                  duration: isExiting
+                      ? Duration.zero
+                      : _YnToastOverlayState._expandDuration,
+                  curve: Curves.easeOutCubic,
+                  width: isExpanded ? widget.maxMessageWidth : 0,
+                  child: Padding(
+                    padding: _YnToastOverlayState._messagePadding,
+                    child: Opacity(
+                      opacity: showMessage ? 1 : 0,
+                      child: Text(
+                        widget.message,
+                        softWrap: widget.shouldWrapMessage,
+                        maxLines: widget.shouldWrapMessage ? null : 1,
+                        overflow: TextOverflow.visible,
+                        style: const TextStyle(
+                          color: Color(0xFF20231D),
+                          fontSize: 12.8,
+                          fontWeight: FontWeight.w800,
+                          height: 1.25,
+                          letterSpacing: 1.8,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -763,28 +888,29 @@ class _ToastBall extends StatelessWidget {
         phase == _YnToastPhase.success || phase == _YnToastPhase.exiting;
     final isExiting = phase == _YnToastPhase.exiting;
 
-    return SizedBox.square(
-      dimension: _YnToastOverlayState._ballSize,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-            opacity: isLoading ? 1 : 0,
-            child: ValueListenableBuilder<_SpinSnapshot>(
-              valueListenable: spinSnapshotListenable,
-              builder: (context, spin, child) {
-                return CustomPaint(
-                  size: const Size(28, 28),
-                  painter: _ToastRingPainter(
-                    spinAngleRad: spin.angleRad,
-                    ringOpacity: spin.ringOpacity,
-                  ),
-                );
-              },
+    return RepaintBoundary(
+      child: SizedBox.square(
+        dimension: _YnToastOverlayState._ballSize,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              opacity: isLoading ? 1 : 0,
+              child: ValueListenableBuilder<_SpinSnapshot>(
+                valueListenable: spinSnapshotListenable,
+                builder: (context, spin, child) {
+                  return CustomPaint(
+                    size: const Size(28, 28),
+                    painter: _ToastRingPainter(
+                      spinAngleRad: spin.angleRad,
+                      ringOpacity: spin.ringOpacity,
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
           AnimatedScale(
             duration:
                 isExiting ? dismissDuration : const Duration(milliseconds: 580),
@@ -814,7 +940,8 @@ class _ToastBall extends StatelessWidget {
               animateIn: isSuccess && !isExiting,
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1019,6 +1146,14 @@ class _ToastSizeCalculator {
     return painter.height;
   }
 }
+
+const List<BoxShadow> _toastPillShadowsExpanding = [
+  BoxShadow(
+    color: Color(0x183E372A),
+    blurRadius: 10,
+    offset: Offset(0, 4),
+  ),
+];
 
 const List<BoxShadow> _toastPillShadows = [
   BoxShadow(

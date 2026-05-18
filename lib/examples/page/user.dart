@@ -116,7 +116,7 @@ class _UserPageState extends State<UserPage> {
                 () => YnToast.warning(
                   context,
                   message:
-                      'THIS IS A VERY LONG WARNING MESSAGE FOR WRAP TEST',
+                      'THIS IS A VERY LONG WARNING MESSAGE FOR WRAP TEST THIS IS A VERY LONG WARNING MESSAGE FOR WRAP TEST THIS IS A VERY LONG WARNING MESSAGE FOR WRAP TEST THIS IS A VERY LONG WARNING MESSAGE FOR WRAP TEST',
                 ),
               ),
             ],

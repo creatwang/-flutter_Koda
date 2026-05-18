@@ -485,6 +485,11 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     if (_phase == _YnToastPhase.exiting) return;
     _clearTimers();
     _stopSpin();
+    // 仅从 loading 收起：勿走 exiting（会按 initialType 展开成 info!/error! 等）。
+    if (_phase == _YnToastPhase.loading) {
+      _removeEntry();
+      return;
+    }
     _isQuickExit = quick;
     final dismissDuration = quick ? _quickExitDuration : _exitDuration;
     _exitController.duration = dismissDuration;

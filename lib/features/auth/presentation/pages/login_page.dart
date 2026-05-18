@@ -388,6 +388,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final errorMessage = await runGlobalYnToastTask(
       context: context,
       mask: true,
+      successMessage: 'ok!',
+      successHold: const Duration(milliseconds: 280),
       task: () async {
         final error = await ref.read(sessionControllerProvider.notifier).signIn(
               username: _usernameController.text.trim(),

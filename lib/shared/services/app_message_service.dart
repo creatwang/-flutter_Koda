@@ -57,7 +57,8 @@ YnToastController? _beginGlobalYnToastLoading({
 /// 包裹异步任务：先展示 YnToast loading，结束后用 [YnToastController.done] 切
 /// success / error。返回 `null` 表示成功，非空字符串为错误文案。
 ///
-/// [successMessage] 为空时成功态仅收起 loading，不展示成功文案。
+/// [successMessage] 为空时以 success 态收起 loading（无文案），
+/// 避免 loading 默认 info 在退出动画中误展示为 info。
 /// [successHold]：成功 [done] 后额外等待时长，便于用户看到反馈再跳转。
 Future<String?> runGlobalYnToastTask({
   required Future<String?> Function() task,
@@ -86,7 +87,14 @@ Future<String?> runGlobalYnToastTask({
           await Future<void>.delayed(successHold);
         }
       } else {
-        controller.hide();
+        controller.done(
+          YnToastType.success,
+          message: '',
+          options: YnToastDoneOptions(duration: successDuration),
+        );
+        if (successHold > Duration.zero) {
+          await Future<void>.delayed(successHold);
+        }
       }
       return null;
     }

@@ -346,6 +346,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   late final ValueNotifier<double> _swipeYOffset;
   late final AnimationController _exitController;
   late final Animation<double> _exitAnimation;
+  late final AnimationController _expandController;
+  late final Animation<double> _expandAnimation;
   Timer? _loadingTimer;
   Timer? _hideTimer;
   Timer? _enterTimer;
@@ -379,6 +381,14 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       parent: _exitController,
       curve: Curves.easeOutCubic,
     );
+    _expandController = AnimationController(
+      vsync: this,
+      duration: _expandDuration,
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeOutCubic,
+    );
     _spinTicker = createTicker(_onSpinTick);
     _spinSnapshotNotifier = ValueNotifier(
       const _SpinSnapshot(angleRad: 0, ringOpacity: 0.92),
@@ -391,6 +401,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   void dispose() {
     _clearTimers();
     _exitController.dispose();
+    _expandController.dispose();
     _spinTicker.dispose();
     _spinSnapshotNotifier.dispose();
     _swipeYOffset.dispose();
@@ -450,6 +461,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     if (!mounted || _isRemoved) return;
     _clearTimers();
     _stopSpin();
+    final wasLoading = _phase == _YnToastPhase.loading;
+    _cachedSize = null;
     setState(() {
       _type = type;
       _message = _resolveMessage(type, message);
@@ -458,6 +471,11 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       _phase = _YnToastPhase.success;
     });
     _swipeYOffset.value = 0;
+    if (wasLoading) {
+      _expandController.forward(from: 0);
+    } else {
+      _expandController.value = 1;
+    }
     if (options.persist) return;
     _hideTimer = Timer(options.duration, hide);
   }
@@ -495,6 +513,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
       setState(() {
         _phase = _YnToastPhase.loading;
       });
+      _expandController.value = 0;
       _startSpin();
       _loadingTimer = Timer(widget.showOptions.loadingDuration, () {
         finish(
@@ -582,6 +601,8 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   Widget build(BuildContext context) {
     final ignoreToastPointer =
         _phase == _YnToastPhase.idle || _phase == _YnToastPhase.exiting;
+    final maxWidth = MediaQuery.sizeOf(context).width * 0.9;
+    final size = _measureToastSize(context, maxWidth);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -607,42 +628,38 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
               child: Padding(
                 padding: const EdgeInsets.only(top: _top),
                 child: Center(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final maxWidth = constraints.maxWidth * 0.9;
-                      final size = _measureToastSize(context, maxWidth);
-                      return RepaintBoundary(
-                        child: ValueListenableBuilder<double>(
-                          valueListenable: _swipeYOffset,
-                          builder: (context, swipeY, child) {
-                            return Transform.translate(
-                              offset: Offset(0, swipeY),
-                              child: child,
-                            );
-                          },
-                          child: _ToastPill(
-                            phase: _phase,
-                            type: _type,
-                            message: _message,
-                            hasMessage: _hasMessage,
-                            width: size.width,
-                            height: size.height,
-                            maxMessageWidth: size.messageWidth,
-                            shouldWrapMessage: size.shouldWrap,
-                            dismissDuration: _isQuickExit
-                                ? _quickExitDuration
-                                : _exitDuration,
-                            exitAnimation: _phase == _YnToastPhase.exiting
-                                ? _exitAnimation
-                                : null,
-                            spinSnapshotListenable: _spinSnapshotNotifier,
-                            onVerticalDragStart: _handleVerticalDragStart,
-                            onVerticalDragUpdate: _handleVerticalDragUpdate,
-                            onVerticalDragEnd: _handleVerticalDragEnd,
-                          ),
-                        ),
-                      );
-                    },
+                  child: RepaintBoundary(
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _swipeYOffset,
+                      builder: (context, swipeY, child) {
+                        return Transform.translate(
+                          offset: Offset(0, swipeY),
+                          child: child,
+                        );
+                      },
+                      child: _ToastPill(
+                        key: const ValueKey<String>('yn-toast-pill'),
+                        phase: _phase,
+                        type: _type,
+                        message: _message,
+                        hasMessage: _hasMessage,
+                        width: size.width,
+                        height: size.height,
+                        maxMessageWidth: size.messageWidth,
+                        shouldWrapMessage: size.shouldWrap,
+                        dismissDuration: _isQuickExit
+                            ? _quickExitDuration
+                            : _exitDuration,
+                        expandAnimation: _expandAnimation,
+                        exitAnimation: _phase == _YnToastPhase.exiting
+                            ? _exitAnimation
+                            : null,
+                        spinSnapshotListenable: _spinSnapshotNotifier,
+                        onVerticalDragStart: _handleVerticalDragStart,
+                        onVerticalDragUpdate: _handleVerticalDragUpdate,
+                        onVerticalDragEnd: _handleVerticalDragEnd,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -656,6 +673,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
 
 class _ToastPill extends StatefulWidget {
   const _ToastPill({
+    super.key,
     required this.phase,
     required this.type,
     required this.message,
@@ -665,6 +683,7 @@ class _ToastPill extends StatefulWidget {
     required this.maxMessageWidth,
     required this.shouldWrapMessage,
     required this.dismissDuration,
+    required this.expandAnimation,
     required this.exitAnimation,
     required this.spinSnapshotListenable,
     required this.onVerticalDragStart,
@@ -681,6 +700,7 @@ class _ToastPill extends StatefulWidget {
   final double maxMessageWidth;
   final bool shouldWrapMessage;
   final Duration dismissDuration;
+  final Animation<double> expandAnimation;
   final Animation<double>? exitAnimation;
   final ValueListenable<_SpinSnapshot> spinSnapshotListenable;
   final GestureDragStartCallback onVerticalDragStart;
@@ -722,25 +742,21 @@ class _ToastPillState extends State<_ToastPill> {
     final isExiting = widget.phase == _YnToastPhase.exiting;
     final isActive = widget.phase == _YnToastPhase.loading ||
         widget.phase == _YnToastPhase.success;
-    final isExpanded = widget.phase == _YnToastPhase.success ||
-        widget.phase == _YnToastPhase.exiting;
-    final showMessage = widget.hasMessage && isExpanded;
-    final targetWidth =
-        isExpanded ? widget.width : _YnToastOverlayState._height;
-    final targetHeight =
-        isExpanded ? widget.height : _YnToastOverlayState._height;
-    final borderRadius = targetHeight > _YnToastOverlayState._height
-        ? 18.0
-        : targetHeight / 2;
 
-    final pillBody = _buildPillBody(
-      targetWidth: targetWidth,
-      targetHeight: targetHeight,
-      borderRadius: borderRadius,
-      isExpanded: isExpanded,
-      showMessage: showMessage,
-      isExiting: isExiting,
-    );
+    final Widget pillBody;
+    if (isExiting) {
+      pillBody = _buildPillBody(expandProgress: 1);
+    } else {
+      pillBody = AnimatedBuilder(
+        animation: widget.expandAnimation,
+        builder: (context, child) {
+          final progress = widget.phase == _YnToastPhase.loading
+              ? 0.0
+              : widget.expandAnimation.value;
+          return _buildPillBody(expandProgress: progress);
+        },
+      );
+    }
 
     Widget content;
     if (isExiting && widget.exitAnimation != null) {
@@ -789,25 +805,21 @@ class _ToastPillState extends State<_ToastPill> {
     );
   }
 
-  Widget _buildPillBody({
-    required double targetWidth,
-    required double targetHeight,
-    required double borderRadius,
-    required bool isExpanded,
-    required bool showMessage,
-    required bool isExiting,
-  }) {
+  Widget _buildPillBody({required double expandProgress}) {
+    final collapsed = _YnToastOverlayState._height;
+    final t = expandProgress.clamp(0.0, 1.0);
+    final displayWidth = collapsed + (widget.width - collapsed) * t;
+    final displayHeight = collapsed + (widget.height - collapsed) * t;
+    final borderRadius =
+        displayHeight > collapsed + 0.5 ? 18.0 : displayHeight / 2;
+    final showMessage = widget.hasMessage && t > 0;
     final shadows =
         _showFullShadow ? _toastPillShadows : _toastPillShadowsExpanding;
 
     return RepaintBoundary(
-      child: AnimatedContainer(
-        duration: isExiting
-            ? Duration.zero
-            : _YnToastOverlayState._expandDuration,
-        curve: Curves.easeOutCubic,
-        width: targetWidth,
-        height: targetHeight,
+      child: Container(
+        width: displayWidth,
+        height: displayHeight,
         decoration: BoxDecoration(
           boxShadow: shadows,
         ),
@@ -816,14 +828,13 @@ class _ToastPillState extends State<_ToastPill> {
           child: ColoredBox(
             color: _withAlpha(const Color(0xFFF6F1E6), 0.92),
             child: Row(
-              crossAxisAlignment:
-                  targetHeight > _YnToastOverlayState._height
-                      ? CrossAxisAlignment.start
-                      : CrossAxisAlignment.center,
+              crossAxisAlignment: displayHeight > collapsed
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: _YnToastOverlayState._height,
-                  height: targetHeight,
+                  width: collapsed,
+                  height: displayHeight,
                   child: Center(
                     child: _ToastBall(
                       type: widget.type,
@@ -833,16 +844,12 @@ class _ToastPillState extends State<_ToastPill> {
                     ),
                   ),
                 ),
-                AnimatedContainer(
-                  duration: isExiting
-                      ? Duration.zero
-                      : _YnToastOverlayState._expandDuration,
-                  curve: Curves.easeOutCubic,
-                  width: isExpanded ? widget.maxMessageWidth : 0,
+                SizedBox(
+                  width: widget.maxMessageWidth * t,
                   child: Padding(
                     padding: _YnToastOverlayState._messagePadding,
                     child: Opacity(
-                      opacity: showMessage ? 1 : 0,
+                      opacity: showMessage ? t : 0,
                       child: Text(
                         widget.message,
                         softWrap: widget.shouldWrapMessage,

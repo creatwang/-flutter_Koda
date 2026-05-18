@@ -36,12 +36,17 @@ Future<Response<dynamic>> requestAuthLogin({
       'password': password,
       'terminal': 3,
     },
+    options: Options(
+      extra: <String, dynamic>{
+        ResponseDataModeInterceptor.suppressGlobalErrorMessageExtraKey: true,
+      },
+    ),
   );
 }
 
 /// 用户注册（开放接口）。
 ///
-/// 默认抑制全局错误提示，由登录页自行展示 [SnackBar]。
+/// 默认抑制全局错误提示，由登录页 [runGlobalYnToastTask] 展示。
 Future<Response<dynamic>> requestAuthRegister({
   required String username,
   required String password,

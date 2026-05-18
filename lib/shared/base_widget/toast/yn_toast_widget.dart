@@ -3,9 +3,7 @@
 // 迁移到其他项目时仅需复制本文件，并在目标页面引入：
 // `import 'yn_toast_widget.dart';`
 //
-// 依赖：
-// - flutter/material.dart
-// - flutter/scheduler.dart
+// 依赖：flutter/material.dart
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -400,7 +398,7 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
     final spinAngleDeg =
         (_spinSnapshotNotifier.value.angleRad * 180 / math.pi +
             speedDegPerSecond * dt) %
-            360;
+        360;
     final visualSoftness = (progress * 1.35).clamp(0.0, 1.0);
     _spinSnapshotNotifier.value = _SpinSnapshot(
       angleRad: spinAngleDeg * (math.pi / 180),
@@ -801,7 +799,7 @@ class _ToastBall extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: _toastColor(type),
                 ),
-                child: SizedBox.square(dimension: isSuccess ? 28 : 8),
+                child: const SizedBox.square(dimension: 28),
               ),
             ),
           ),
@@ -810,10 +808,10 @@ class _ToastBall extends StatelessWidget {
                 isExiting ? dismissDuration : const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             opacity: isSuccess ? 1 : 0,
-            child: _ToastGlyph(
+            child: _ToastStatusIcon(
               type: type,
-              isSuccess: isSuccess,
-              freezeAtComplete: isExiting,
+              show: isSuccess,
+              animateIn: isSuccess && !isExiting,
             ),
           ),
         ],
@@ -822,145 +820,51 @@ class _ToastBall extends StatelessWidget {
   }
 }
 
-class _ToastGlyph extends StatelessWidget {
-  const _ToastGlyph({
+class _ToastStatusIcon extends StatelessWidget {
+  const _ToastStatusIcon({
     required this.type,
-    required this.isSuccess,
-    this.freezeAtComplete = false,
+    required this.show,
+    required this.animateIn,
   });
 
-  static const _ease = Cubic(0.22, 1, 0.36, 1);
+  static const _iconColor = Color(0xFFF3EDDF);
+  static const _iconSize = 18.0;
+
   final YnToastType type;
-  final bool isSuccess;
-  final bool freezeAtComplete;
+  final bool show;
+  final bool animateIn;
 
   @override
   Widget build(BuildContext context) {
-    if (freezeAtComplete) {
-      return SizedBox.square(
-        dimension: 16,
-        child: CustomPaint(
-          painter: _ToastGlyphPainter(type: type, progress: 1),
-        ),
-      );
+    final icon = Icon(
+      _iconData(type),
+      size: _iconSize,
+      color: _iconColor,
+    );
+    if (!animateIn) {
+      return show ? icon : const SizedBox.shrink();
     }
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: isSuccess ? 1 : 0),
-      duration: const Duration(milliseconds: 680),
-      curve: Curves.linear,
-      builder: (context, t, child) {
-        final appearT = ((t - 0.32) / 0.68).clamp(0.0, 1.0);
-        final drawT = ((t - 0.26) / 0.74).clamp(0.0, 1.0);
-        final appear = _ease.transform(appearT);
-        final draw = _ease.transform(drawT);
-        final rotation = (-12 * (1 - appear)) * (math.pi / 180);
-        return Opacity(
-          opacity: appear,
-          child: Transform.rotate(
-            angle: rotation,
-            child: Transform.scale(
-              scale: 0.5 + appear * 0.5,
-              child: SizedBox.square(
-                dimension: 16,
-                child: CustomPaint(
-                  painter: _ToastGlyphPainter(type: type, progress: draw),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ToastGlyphPainter extends CustomPainter {
-  const _ToastGlyphPainter({required this.type, required this.progress});
-
-  final YnToastType type;
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final strokePaint = Paint()
-      ..color = const Color(0xFFF3EDDF)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = _toastGlyphPath(type, size);
-    final clampedProgress = progress.clamp(0.0, 1.0);
-    for (final metric in path.computeMetrics()) {
-      final drawLength = metric.length * clampedProgress;
-      if (drawLength <= 0) continue;
-      canvas.drawPath(metric.extractPath(0, drawLength), strokePaint);
-    }
-
-    final dot = _toastGlyphDotLayout(type, size);
-    if (dot == null) return;
-    final dotReveal = ((clampedProgress - 0.5) / 0.5).clamp(0.0, 1.0);
-    if (dotReveal <= 0) return;
-    canvas.drawCircle(
-      dot.center,
-      dot.radius * dotReveal,
-      Paint()
-        ..color = const Color(0xFFF3EDDF)
-        ..style = PaintingStyle.fill,
+      tween: Tween<double>(begin: 0, end: show ? 1 : 0),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.scale(
+          scale: 0.55 + t * 0.45,
+          child: child,
+        ),
+      ),
+      child: icon,
     );
   }
 
-  @override
-  bool shouldRepaint(covariant _ToastGlyphPainter oldDelegate) {
-    return oldDelegate.type != type || oldDelegate.progress != progress;
-  }
-}
-
-Path _toastGlyphPath(YnToastType type, Size size) {
-  final w = size.width;
-  final h = size.height;
-  final cx = w * 0.5;
-  final path = Path();
-  switch (type) {
-    case YnToastType.success:
-      path
-        ..moveTo(w * 0.22, h * 0.56)
-        ..lineTo(w * 0.43, h * 0.76)
-        ..lineTo(w * 0.8, h * 0.28);
-    case YnToastType.info:
-      path
-        ..moveTo(cx, h * 0.36)
-        ..lineTo(cx, h * 0.74);
-    case YnToastType.warning:
-    case YnToastType.error:
-      path
-        ..moveTo(cx, h * 0.22)
-        ..lineTo(cx, h * 0.48);
-  }
-  return path;
-}
-
-class _ToastGlyphDotLayout {
-  const _ToastGlyphDotLayout({required this.center, required this.radius});
-
-  final Offset center;
-  final double radius;
-}
-
-_ToastGlyphDotLayout? _toastGlyphDotLayout(YnToastType type, Size size) {
-  final cx = size.width * 0.5;
-  final h = size.height;
-  return switch (type) {
-    YnToastType.info => _ToastGlyphDotLayout(
-      center: Offset(cx, h * 0.26),
-      radius: h * 0.09,
-    ),
-    YnToastType.warning || YnToastType.error => _ToastGlyphDotLayout(
-      center: Offset(cx, h * 0.80),
-      radius: h * 0.10,
-    ),
-    _ => null,
-  };
+  static IconData _iconData(YnToastType type) => switch (type) {
+        YnToastType.success => Icons.check_rounded,
+        YnToastType.info => Icons.info_outline_rounded,
+        YnToastType.warning => Icons.warning_amber_rounded,
+        YnToastType.error => Icons.priority_high_rounded,
+      };
 }
 
 class _ToastRingPainter extends CustomPainter {

@@ -92,7 +92,7 @@ class _UserPageState extends State<UserPage> {
             ],
           ),
           const SizedBox(height: 12),
-          _hint('长时间 loading，便于观察双弧起步加速与巡航转速'),
+          _hint('长时间 loading，便于观察三瓣 Y 环加速与巡航转速'),
           Wrap(
             spacing: 8,
             runSpacing: 8,

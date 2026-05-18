@@ -910,7 +910,7 @@ class _ToastBall extends StatelessWidget {
                 builder: (context, spin, child) {
                   return CustomPaint(
                     size: const Size(28, 28),
-                    painter: _ToastRingPainter(
+                    painter: _ToastYPetalPainter(
                       spinAngleRad: spin.angleRad,
                       ringOpacity: spin.ringOpacity,
                     ),
@@ -1001,52 +1001,88 @@ class _ToastStatusIcon extends StatelessWidget {
       };
 }
 
-class _ToastRingPainter extends CustomPainter {
-  const _ToastRingPainter({
+/// 三瓣 Y 环 loading（与参考 SVG 同路径，整体随 [spinAngleRad] 旋转）。
+///
+/// ```svg
+/// <path d="M22 6a16 16 0 0 1 13.9 22"/>
+/// <path d="M35.856 30a16 16 0 0 1-26.002 1.038" opacity=".65"/>
+/// <path d="M8.144 30A16 16 0 0 1 20.246 6.962" opacity=".35"/>
+/// ```
+class _ToastYPetalPainter extends CustomPainter {
+  const _ToastYPetalPainter({
     required this.spinAngleRad,
     required this.ringOpacity,
   });
+
+  static const _viewSize = 44.0;
+  static const _center = Offset(22, 22);
+  static const _radius = 16.0;
+  static const _strokeWidth = 3.5;
+  static const _baseColor = Color(0xFF333333);
+  static const _petalOpacities = <double>[1.0, 0.65, 0.35];
+  static const _petalArcs = <(Offset start, Offset end)>[
+    (Offset(22, 6), Offset(35.9, 28)),
+    (Offset(35.856, 30), Offset(9.854, 31.038)),
+    (Offset(8.144, 30), Offset(20.246, 6.962)),
+  ];
 
   final double spinAngleRad;
   final double ringOpacity;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2 - 2;
-    const dashSweep = math.pi * 0.3;
-    final basePrimary = -math.pi / 2 + math.pi * 2 * 0.08;
-    final baseSecondary = -math.pi / 2 + math.pi * 2 * 0.58;
-    final trackPaint = Paint()
-      ..color = _withAlpha(const Color(0xFF20231D), 0.08)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final arcPaint = Paint()
-      ..color = _withAlpha(const Color(0xFF20231D), ringOpacity)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2.35;
-    final rect = Rect.fromCircle(center: center, radius: radius);
+    final scale = size.width / _viewSize;
+    canvas.save();
+    canvas.scale(scale);
+    canvas.translate(_center.dx, _center.dy);
+    canvas.rotate(spinAngleRad);
+    canvas.translate(-_center.dx, -_center.dy);
 
-    canvas.drawCircle(center, radius, trackPaint);
+    for (var i = 0; i < _petalArcs.length; i++) {
+      final arc = _petalArcs[i];
+      final paint = Paint()
+        ..color = _withAlpha(_baseColor, ringOpacity * _petalOpacities[i])
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = _strokeWidth;
+      _drawSvgSweepArc(
+        canvas,
+        center: _center,
+        radius: _radius,
+        start: arc.$1,
+        end: arc.$2,
+        paint: paint,
+      );
+    }
+    canvas.restore();
+  }
+
+  /// 与 SVG `A/a` 一致：sweep-flag=1，取顺时针弧段。
+  static void _drawSvgSweepArc(
+    Canvas canvas, {
+    required Offset center,
+    required double radius,
+    required Offset start,
+    required Offset end,
+    required Paint paint,
+  }) {
+    final startAngle = math.atan2(start.dy - center.dy, start.dx - center.dx);
+    final endAngle = math.atan2(end.dy - center.dy, end.dx - center.dx);
+    var sweep = endAngle - startAngle;
+    while (sweep <= 0) {
+      sweep += math.pi * 2;
+    }
     canvas.drawArc(
-      rect,
-      basePrimary + spinAngleRad,
-      dashSweep,
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweep,
       false,
-      arcPaint,
-    );
-    canvas.drawArc(
-      rect,
-      baseSecondary - spinAngleRad,
-      dashSweep,
-      false,
-      arcPaint,
+      paint,
     );
   }
 
   @override
-  bool shouldRepaint(covariant _ToastRingPainter oldDelegate) {
+  bool shouldRepaint(covariant _ToastYPetalPainter oldDelegate) {
     return oldDelegate.spinAngleRad != spinAngleRad ||
         oldDelegate.ringOpacity != ringOpacity;
   }

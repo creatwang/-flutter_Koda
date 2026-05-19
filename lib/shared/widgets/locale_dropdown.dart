@@ -4,16 +4,26 @@ import 'package:george_pick_mate/app/providers/locale_provider.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class LocaleDropdown extends ConsumerWidget {
-  const LocaleDropdown({super.key});
+  const LocaleDropdown({
+    super.key,
+    this.foregroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+  });
+
+  final Color? foregroundColor;
+  final EdgeInsetsGeometry? padding;
+
   static const double _radius = 10;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(appLocaleModeProvider);
     final l10n = context.l10n;
-    final iconTextColor =
+    final iconTextColor = foregroundColor ??
         Theme.of(context).appBarTheme.foregroundColor ??
-        (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87);
+        (Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black87);
     final label = switch (mode) {
       AppLocaleMode.system => l10n.languageSystem,
       AppLocaleMode.zh => l10n.languageChinese,
@@ -21,7 +31,7 @@ class LocaleDropdown extends ConsumerWidget {
     };
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: padding ?? EdgeInsets.zero,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.transparent,

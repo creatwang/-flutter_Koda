@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
-import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_settings_account_action_button_widget.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_settings_form_validators.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/widgets/locale_dropdown.dart';
+import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
+import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
 /// 设置分区：个人信息、密码与账号操作（不含顶部进度条）。
@@ -57,6 +59,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final languageLabelColor = Colors.white.withValues(alpha: 0.88);
     final isPasswordGroupRequired = profileSettingsHasAnyPasswordInput(
       oldPassword: oldPasswordController.text,
       newPassword: newPasswordController.text,
@@ -321,6 +325,31 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                                 ),
                               ),
                             ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.language_outlined,
+                            size: 18,
+                            color: languageLabelColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.languageLabel,
+                            style: TextStyle(
+                              color: languageLabelColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          LocaleDropdown(
+                            foregroundColor: languageLabelColor,
+                            padding: EdgeInsets.zero,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
@@ -68,6 +69,7 @@ class ProfileOrderTabSwitcherWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
@@ -80,13 +82,13 @@ class ProfileOrderTabSwitcherWidget extends StatelessWidget {
         children: [
           _OrderTabButton(
             isSelected: currentTab == ProfileOrderTab.my,
-            label: 'My',
+            label: l10n.profileOrderTabMy,
             onTap: () => onTabChanged(ProfileOrderTab.my),
           ),
           const SizedBox(width: 4),
           _OrderTabButton(
             isSelected: currentTab == ProfileOrderTab.customer,
-            label: 'Customer',
+            label: l10n.profileOrderTabCustomer,
             onTap: () => onTabChanged(ProfileOrderTab.customer),
           ),
         ],

@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 enum YnToastType { success, info, warning, error }
 
@@ -200,7 +201,7 @@ class YnToast {
     } catch (error) {
       controller.done(
         YnToastType.error,
-        message: error is Error ? error.toString() : 'error!',
+        message: error is Error ? error.toString() : appL10n.toastError,
       );
       rethrow;
     }
@@ -567,10 +568,10 @@ class _YnToastOverlayState extends State<_YnToastOverlay>
   String _resolveMessage(YnToastType type, String? message) {
     if (message != null) return message;
     return switch (type) {
-      YnToastType.success => 'success!',
-      YnToastType.info => 'info!',
-      YnToastType.warning => 'warning!',
-      YnToastType.error => 'error!',
+      YnToastType.success => appL10n.toastSuccess,
+      YnToastType.info => appL10n.toastInfo,
+      YnToastType.warning => appL10n.toastWarning,
+      YnToastType.error => appL10n.toastError,
     };
   }
 

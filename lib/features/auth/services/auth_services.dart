@@ -7,6 +7,7 @@ import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/core/storage/token_pair.dart';
 import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
 import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 import '../models/user_info_bean.dart';
 
@@ -42,15 +43,15 @@ Future<ApiResult<void>> logoutStoreUserService({DioClient? client}) async {
           : null;
       throw DioException(
         requestOptions: response.requestOptions,
-        error: message ?? 'Logout failed',
-        message: message ?? 'Logout failed',
+        error: message ?? appL10n.errorLogoutFailed,
+        message: message ?? appL10n.errorLogoutFailed,
       );
     }
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Logout request failed',
+        e.message ?? appL10n.errorLogoutRequestFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -127,14 +128,14 @@ Future<ApiResult<TokenPair>> authLoginService({
     if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid login response format',
+        error: appL10n.errorInvalidLoginResponseFormat,
       );
     }
     if (!isApiBusinessSuccessCode(data['code'])) {
       final raw = data['message'] ?? data['msg'] ?? data['error'];
       final message = raw is String && raw.trim().isNotEmpty
           ? raw.trim()
-          : 'Login request failed';
+          : appL10n.errorLoginRequestFailed;
       return ApiFailure(AppException(message));
     }
     final payload = data['result'] ?? data;
@@ -143,7 +144,7 @@ Future<ApiResult<TokenPair>> authLoginService({
     if (companyId == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid company_id in login response',
+        error: appL10n.errorInvalidCompanyIdInLoginResponse,
       );
     }
     await persistAuthenticatedUserSnapshot(userInfoBase);
@@ -153,7 +154,7 @@ Future<ApiResult<TokenPair>> authLoginService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Login request failed',
+        e.message ?? appL10n.errorLoginRequestFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

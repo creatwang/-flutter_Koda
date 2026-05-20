@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_back_button.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
@@ -78,6 +79,7 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -86,9 +88,9 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
           child: TextButton.icon(
             onPressed: onAddCustomer,
             icon: const Icon(Icons.add, size: 14),
-            label: const Text(
-              'Add Customer',
-              style: TextStyle(fontSize: 14),
+            label: Text(
+              l10n.profileAddCustomer,
+              style: const TextStyle(fontSize: 14),
             ),
             style: _pillButtonStyle(),
           ),
@@ -99,9 +101,9 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
           child: TextButton(
             onPressed: onSetCommandPassword,
             style: _pillButtonStyle(),
-            child: const Text(
-              'Set Command Password',
-              style: TextStyle(fontSize: 14),
+            child: Text(
+              l10n.profileSetCommandPassword,
+              style: const TextStyle(fontSize: 14),
             ),
           ),
         ),
@@ -110,7 +112,7 @@ class ProfileMyCustomersHeaderActionsWidget extends StatelessWidget {
           SizedBox(
             height: _buttonHeight,
             child: GeorgeBackButton(
-              label: 'Back to list',
+              label: l10n.profileBackToList,
               onPressed: onBack,
               iconSize: 14,
               iconLabelGap: 6,

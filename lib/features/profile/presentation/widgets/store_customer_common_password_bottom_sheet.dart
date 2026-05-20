@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
@@ -14,7 +16,7 @@ Future<void> showStoreCustomerCommonPasswordBottomSheet({
   required BuildContext context,
   required WidgetRef ref,
 }) {
-  const String title = 'Set Command Password';
+  final title = AppLocalizations.of(context)!.profileCommandPasswordTitle;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -50,13 +52,13 @@ Future<void> showStoreCustomerCommonPasswordBottomSheet({
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: ProMaxTokens.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -144,7 +146,7 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
 
   bool _validate() {
     if (_passwordController.text.trim().length < 6) {
-      _errorMessage = 'Password must be at least 6 characters.';
+      _errorMessage = context.l10n.profileCustomerPasswordMinLength;
       return false;
     }
     _errorMessage = null;
@@ -168,7 +170,7 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
     setState(() => _submitting = false);
     result.when(
       success: (_) {
-        showGlobalSnackBar('Updated successfully.');
+        showGlobalSnackBar(context.l10n.profileSettingsUpdated);
         Navigator.of(context).pop();
       },
       failure: (exception) {
@@ -179,6 +181,7 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final double bottom = MediaQuery.paddingOf(context).bottom;
     return DismissKeyboardOnTap(
       child: SingleChildScrollView(
@@ -191,19 +194,19 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
             KeyedSubtree(
               key: _blockKey,
               child: ProMaxInputFieldWidget(
-                label: 'PASSWORD',
+                label: l10n.profileCustomerPasswordLabel,
                 controller: _passwordController,
                 focusNode: _passwordFocus,
                 obscureText: true,
                 errorText:
                     _showValidation &&
                         _passwordController.text.trim().length < 6
-                    ? 'Min 6 characters'
+                    ? l10n.commonMinSixChars
                     : null,
               ),
             ),
             Text(
-              'Applies as the shared customer account password for this store.',
+              l10n.profileCommandPasswordHint,
               style: TextStyle(
                 color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                 fontSize: 11,
@@ -239,7 +242,7 @@ class _CommonPasswordSheetBodyState extends State<_CommonPasswordSheetBody> {
                         color: Color(0xFFF4C77A),
                       ),
                     )
-                  : const Text('Done'),
+                  : Text(l10n.commonDone),
             ),
           ],
         ),

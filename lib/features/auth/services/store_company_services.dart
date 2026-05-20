@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/auth/api/store_company_requests.dart';
 import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
 import 'package:george_pick_mate/features/auth/services/site_info_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 // 门店列表与切换店铺：开放列表解析、切换后会话落盘。
 
@@ -20,13 +21,13 @@ Future<ApiResult<List<Map<String, dynamic>>>> fetchStoreCompanyItemsService({
     final dynamic body = response.data;
     if (body is! Map) {
       return ApiFailure(
-        AppException('Invalid company list response'),
+        AppException(appL10n.errorInvalidCompanyListResponse),
       );
     }
     final map = Map<String, dynamic>.from(body);
     final dynamic itemsRaw = map['items'];
     if (itemsRaw is! List) {
-      return ApiFailure(AppException('Missing items in company list'));
+      return ApiFailure(AppException(appL10n.errorMissingItemsInCompanyList));
     }
     final out = <Map<String, dynamic>>[];
     for (final dynamic e in itemsRaw) {
@@ -38,7 +39,7 @@ Future<ApiResult<List<Map<String, dynamic>>>> fetchStoreCompanyItemsService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch company list failed',
+        e.message ?? appL10n.errorFetchCompanyListFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -66,7 +67,7 @@ Future<ApiResult<UserInfoBase>> switchShopService({
     final dynamic data = response.data;
     if (data is! Map) {
       return ApiFailure(
-        AppException('Invalid switch shop response'),
+        AppException(appL10n.errorInvalidSwitchShopResponse),
       );
     }
     final user = UserInfoBase.fromJson(Map<String, dynamic>.from(data));
@@ -74,12 +75,12 @@ Future<ApiResult<UserInfoBase>> switchShopService({
     final token = user.token?.toString();
     if (resolvedCompanyId == null) {
       return ApiFailure(
-        AppException('Missing company_id in switch response'),
+        AppException(appL10n.errorMissingCompanyIdInSwitchResponse),
       );
     }
     if (token == null || token.isEmpty) {
       return ApiFailure(
-        AppException('Missing token in switch response'),
+        AppException(appL10n.errorMissingTokenInSwitchResponse),
       );
     }
     await persistAuthenticatedUserSnapshot(user);
@@ -87,7 +88,7 @@ Future<ApiResult<UserInfoBase>> switchShopService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Switch shop failed',
+        e.message ?? appL10n.errorSwitchShopFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

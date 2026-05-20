@@ -14,6 +14,7 @@ import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
 import 'package:george_pick_mate/features/cart/services/cart_persistence_services.dart';
 import 'package:george_pick_mate/features/cart/services/cart_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 /// 购物车主状态（监听会话以在站点切换时自动刷新）。
@@ -161,13 +162,13 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
   }) async {
     if (!_isAuthenticated()) {
       Future<void>.microtask(
-        () => showGlobalErrorMessage('Please sign in first.'),
+        () => showGlobalErrorMessage(appL10n.errorPleaseSignInFirst),
       );
       return const CreateCartItemFailure();
     }
     if (productNum < 1) {
       Future<void>.microtask(
-        () => showGlobalErrorMessage('Invalid product quantity.'),
+        () => showGlobalErrorMessage(appL10n.errorInvalidProductQuantity),
       );
       return const CreateCartItemFailure();
     }
@@ -199,11 +200,11 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required Map<int, int> reportedSmIdByCompanyId,
   }) async {
     if (!_isAuthenticated()) {
-      return ApiFailure(AppException('Please sign in first.'));
+      return ApiFailure(AppException(appL10n.errorPleaseSignInFirst));
     }
     final groups = state.asData?.value;
     if (groups == null) {
-      return ApiFailure(AppException('Cart not ready.'));
+      return ApiFailure(AppException(appL10n.errorCartNotReady));
     }
     return setCartSmForPreSubmitService(
       groups: groups,
@@ -217,7 +218,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required int smId,
   }) async {
     if (!_isAuthenticated()) {
-      return ApiFailure(AppException('Please sign in first.'));
+      return ApiFailure(AppException(appL10n.errorPleaseSignInFirst));
     }
     final result = await setCartSmForShopDepartmentService(
       shopDepartmentId: shopDepartmentId,
@@ -442,7 +443,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
 
   Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfig() async {
     if (!_isAuthenticated()) {
-      return ApiFailure(AppException('Please sign in first.'));
+      return ApiFailure(AppException(appL10n.errorPleaseSignInFirst));
     }
     return fetchQuotationConfigService();
   }
@@ -451,7 +452,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required Map<String, dynamic> formData,
   }) async {
     if (!_isAuthenticated()) {
-      return ApiFailure(AppException('Please sign in first.'));
+      return ApiFailure(AppException(appL10n.errorPleaseSignInFirst));
     }
     return exportQuotationService(formData: formData);
   }
@@ -460,7 +461,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required Map<String, dynamic> formData,
   }) async {
     if (!_isAuthenticated()) {
-      return ApiFailure(AppException('Please sign in first.'));
+      return ApiFailure(AppException(appL10n.errorPleaseSignInFirst));
     }
     return previewQuotationService(formData: formData);
   }

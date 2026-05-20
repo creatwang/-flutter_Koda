@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
@@ -24,6 +26,7 @@ Future<Map<String, dynamic>?> showCartQuotationFormBottomSheet({
           minChildSize: 0.36,
           maxChildSize: 0.92,
           builder: (BuildContext context, ScrollController scrollController) {
+            final l10n = context.l10n;
             return DecoratedBox(
               decoration: const BoxDecoration(
                 color: Color(0xFF1A1D24),
@@ -41,13 +44,13 @@ Future<Map<String, dynamic>?> showCartQuotationFormBottomSheet({
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Export Quotation',
-                        style: TextStyle(
+                        l10n.cartExportQuotation,
+                        style: const TextStyle(
                           color: ProMaxTokens.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -149,20 +152,20 @@ class _CartQuotationFormSheetBodyState
     setState(() => _fieldErrors.remove(field.field));
   }
 
-  bool _validate() {
+  bool _validate(AppLocalizations l10n) {
     _fieldErrors.clear();
     for (final field in widget.fields) {
       if (!field.isRequired) continue;
       if (field.type == CartQuotationFormFieldType.select) {
         final selected = _selectedLabels[field.field];
         if (selected == null || selected.trim().isEmpty) {
-          _fieldErrors[field.field] = 'Required';
+          _fieldErrors[field.field] = l10n.commonRequired;
         }
         continue;
       }
       final value = _textControllers[field.field]?.text.trim() ?? '';
       if (value.isEmpty) {
-        _fieldErrors[field.field] = 'Required';
+        _fieldErrors[field.field] = l10n.commonRequired;
       }
     }
     return _fieldErrors.isEmpty;
@@ -188,10 +191,11 @@ class _CartQuotationFormSheetBodyState
   }
 
   Future<void> _onDone() async {
+    final l10n = context.l10n;
     setState(() {
       _errorMessage = null;
     });
-    if (!_validate()) {
+    if (!_validate(l10n)) {
       setState(() {});
       return;
     }
@@ -203,8 +207,9 @@ class _CartQuotationFormSheetBodyState
   }
 
   Future<void> _onPreview() async {
+    final l10n = context.l10n;
     setState(() => _errorMessage = null);
-    if (!_validate()) {
+    if (!_validate(l10n)) {
       setState(() {});
       return;
     }
@@ -220,6 +225,7 @@ class _CartQuotationFormSheetBodyState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return DismissKeyboardOnTap(
       child: SingleChildScrollView(
@@ -262,7 +268,7 @@ class _CartQuotationFormSheetBodyState
                               color: Color(0xFFF4C77A),
                             ),
                           )
-                        : const Text('Submit'),
+                        : Text(l10n.commonSubmit),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -280,7 +286,7 @@ class _CartQuotationFormSheetBodyState
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Preview'),
+                        : Text(l10n.commonPreview),
                   ),
                 ),
               ],

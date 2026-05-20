@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/profile/api/customer_account_requests.dart';
 import 'package:george_pick_mate/features/profile/models/paginated_store_customers_state.dart';
 import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 const String _storeCustomerListCachePrefix =
     '${CustomerAccountRequests.customerListPath}?';
@@ -38,14 +39,14 @@ fetchStoreCustomersFirstPageService({
     if (page == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid customer list response',
+        error: appL10n.errorInvalidCustomerListResponse,
       );
     }
     return ApiSuccess(page);
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch customers failed',
+        e.message ?? appL10n.errorFetchCustomersFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -78,14 +79,14 @@ Future<ApiResult<PaginatedStoreCustomersState>> fetchStoreCustomersPageService({
     if (parsed == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid customer list response',
+        error: appL10n.errorInvalidCustomerListResponse,
       );
     }
     return ApiSuccess(parsed);
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch customers failed',
+        e.message ?? appL10n.errorFetchCustomersFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -114,12 +115,12 @@ Future<ApiResult<void>> createStoreCustomerService({
     }
     throw DioException(
       requestOptions: response.requestOptions,
-      message: _messageFromBody(response.data) ?? 'Create customer failed',
+      message: _messageFromBody(response.data) ?? appL10n.errorCreateCustomerFailed,
     );
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Create customer failed',
+        e.message ?? appL10n.errorCreateCustomerFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -150,12 +151,12 @@ Future<ApiResult<void>> updateStoreCustomerService({
     }
     throw DioException(
       requestOptions: response.requestOptions,
-      message: _messageFromBody(response.data) ?? 'Update customer failed',
+      message: _messageFromBody(response.data) ?? appL10n.errorUpdateCustomerFailed,
     );
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Update customer failed',
+        e.message ?? appL10n.errorUpdateCustomerFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -176,12 +177,12 @@ Future<ApiResult<void>> resetStoreCustomerCommonPasswordService({
     throw DioException(
       requestOptions: response.requestOptions,
       message:
-          _messageFromBody(response.data) ?? 'Reset common password failed',
+          _messageFromBody(response.data) ?? appL10n.errorResetCommonPasswordFailed,
     );
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Reset common password failed',
+        e.message ?? appL10n.errorResetCommonPasswordFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -200,12 +201,12 @@ Future<ApiResult<void>> deleteStoreCustomerService({required int id}) async {
     }
     throw DioException(
       requestOptions: response.requestOptions,
-      message: _messageFromBody(response.data) ?? 'Delete customer failed',
+      message: _messageFromBody(response.data) ?? appL10n.errorDeleteCustomerFailed,
     );
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Delete customer failed',
+        e.message ?? appL10n.errorDeleteCustomerFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -224,14 +225,14 @@ Future<ApiResult<UserInfoBase>> loginStoreCustomerService({
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid customer login response',
+        error: appL10n.errorInvalidCustomerLoginResponse,
       );
     }
     return ApiSuccess(UserInfoBase.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Customer login failed',
+        e.message ?? appL10n.errorCustomerLoginFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

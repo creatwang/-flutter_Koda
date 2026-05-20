@@ -1,3 +1,5 @@
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+
 bool profileSettingsHasAnyPasswordInput({
   required String oldPassword,
   required String newPassword,
@@ -9,6 +11,7 @@ bool profileSettingsHasAnyPasswordInput({
 }
 
 String? profileSettingsConfirmPasswordError({
+  required AppLocalizations l10n,
   required bool showValidation,
   required bool isPasswordGroupRequired,
   required String newPassword,
@@ -16,27 +19,30 @@ String? profileSettingsConfirmPasswordError({
 }) {
   if (!showValidation) return null;
   if (isPasswordGroupRequired && confirmPassword.trim().isEmpty) {
-    return 'Required';
+    return l10n.commonRequired;
   }
   if (confirmPassword.trim().isNotEmpty &&
       confirmPassword.trim().length < 6) {
-    return 'Min 6 chars';
+    return l10n.commonMinSixCharsShort;
   }
   if (newPassword.trim().isNotEmpty &&
       newPassword.trim() != confirmPassword.trim()) {
-    return 'Not match';
+    return l10n.commonNotMatch;
   }
   return null;
 }
 
 String? profileSettingsPasswordFieldError({
+  required AppLocalizations l10n,
   required bool showValidation,
   required bool isPasswordGroupRequired,
   required String value,
 }) {
   if (!showValidation) return null;
   final input = value.trim();
-  if (isPasswordGroupRequired && input.isEmpty) return 'Required';
-  if (input.isNotEmpty && input.length < 6) return 'Min 6 chars';
+  if (isPasswordGroupRequired && input.isEmpty) return l10n.commonRequired;
+  if (input.isNotEmpty && input.length < 6) {
+    return l10n.commonMinSixCharsShort;
+  }
   return null;
 }

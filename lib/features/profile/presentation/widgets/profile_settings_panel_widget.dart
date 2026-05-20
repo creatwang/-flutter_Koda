@@ -67,17 +67,20 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
       confirmPassword: confirmPasswordController.text,
     );
     final confirmPasswordError = profileSettingsConfirmPasswordError(
+      l10n: l10n,
       showValidation: showValidation,
       isPasswordGroupRequired: isPasswordGroupRequired,
       newPassword: newPasswordController.text,
       confirmPassword: confirmPasswordController.text,
     );
     final oldPasswordError = profileSettingsPasswordFieldError(
+      l10n: l10n,
       showValidation: showValidation,
       isPasswordGroupRequired: isPasswordGroupRequired,
       value: oldPasswordController.text,
     );
     final newPasswordError = profileSettingsPasswordFieldError(
+      l10n: l10n,
       showValidation: showValidation,
       isPasswordGroupRequired: isPasswordGroupRequired,
       value: newPasswordController.text,
@@ -92,9 +95,9 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Account Settings',
-                  style: TextStyle(
+                Text(
+                  l10n.profileAccountSettings,
+                  style: const TextStyle(
                     color: ProMaxTokens.iconPrimary,
                     fontSize: 12,
                     letterSpacing: 1.2,
@@ -117,9 +120,9 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                             size: 20,
                           ),
                           const SizedBox(width: 4),
-                          const Text(
-                            'Personal Information',
-                            style: TextStyle(
+                          Text(
+                            l10n.profilePersonalInformation,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               letterSpacing: 0.6,
@@ -133,21 +136,21 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             child: ProMaxInputFieldWidget(
-                              label: 'FULL NAME',
+                              label: l10n.profileFullNameLabel,
                               controller: fullNameController,
                               obscureText: false,
                               onTap: () => _ensureFieldVisible(context),
                               errorText:
                               showValidation &&
                                   fullNameController.text.trim().isEmpty
-                                  ? 'Required'
+                                  ? l10n.commonRequired
                                   : null,
                             ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: ProMaxInputFieldWidget(
-                              label: 'OLD PASSWORD',
+                              label: l10n.profileOldPasswordLabel,
                               controller: oldPasswordController,
                               obscureText: true,
                               onTap: () => _ensureFieldVisible(context),
@@ -161,7 +164,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             child: ProMaxInputFieldWidget(
-                              label: 'NEW PASSWORD',
+                              label: l10n.profileNewPasswordLabel,
                               controller: newPasswordController,
                               obscureText: true,
                               onTap: () => _ensureFieldVisible(context),
@@ -171,7 +174,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                           const SizedBox(width: 14),
                           Expanded(
                             child: ProMaxInputFieldWidget(
-                              label: 'CONFIRM PASSWORD',
+                              label: l10n.profileConfirmPasswordLabel,
                               controller: confirmPasswordController,
                               obscureText: true,
                               onTap: () => _ensureFieldVisible(context),
@@ -254,7 +257,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                                  : const Text('Save Changes'),
+                                  : Text(l10n.profileSaveChanges),
                             ),
                           ],
                         ),
@@ -271,10 +274,10 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Another  Settings',
-                              style: TextStyle(
+                              l10n.profileOtherSettings,
+                              style: const TextStyle(
                                 color: ProMaxTokens.iconPrimary,
                                 fontSize: 12,
                                 letterSpacing: 1.2,
@@ -284,7 +287,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                           ),
                           if (showSwitchSiteEntry)
                             Tooltip(
-                              message: 'Switch site',
+                              message: l10n.profileSwitchSiteTooltip,
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
@@ -354,7 +357,7 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Manage your active session and sign-in account.',
+                        l10n.profileSessionHint,
                         style: TextStyle(
                           color: ProMaxTokens.textSecondary.withValues(
                             alpha: 0.92,
@@ -369,8 +372,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                             Expanded(
                               child: ProfileSettingsAccountActionButtonWidget(
                                 icon: Icons.switch_account_rounded,
-                                title: 'Switch Account',
-                                subtitle: 'Switch back to original account',
+                                title: l10n.profileSwitchAccount,
+                                subtitle: l10n.profileSwitchAccountSubtitle,
                                 onTap: onSwitchAccount,
                                 isLoading: isSwitchingAccount,
                                 isEnabled: !isSigningOut,
@@ -380,8 +383,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                             Expanded(
                               child: ProfileSettingsAccountActionButtonWidget(
                                 icon: Icons.logout_rounded,
-                                title: 'Sign Out',
-                                subtitle: 'Exit current account',
+                                title: l10n.profileSignOut,
+                                subtitle: l10n.profileSignOutSubtitle,
                                 isDanger: true,
                                 onTap: onSignOut,
                                 isLoading: isSigningOut,
@@ -396,8 +399,8 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                             Expanded(
                               child: ProfileSettingsAccountActionButtonWidget(
                                 icon: Icons.logout_rounded,
-                                title: 'Sign Out',
-                                subtitle: 'Exit current account',
+                                title: l10n.profileSignOut,
+                                subtitle: l10n.profileSignOutSubtitle,
                                 isDanger: true,
                                 onTap: onSignOut,
                                 isLoading: isSigningOut,

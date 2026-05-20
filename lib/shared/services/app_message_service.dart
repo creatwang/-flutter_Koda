@@ -4,6 +4,7 @@ import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/shared/base_widget/toast/yn_toast_widget.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_session_expired_dialog.dart';
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
@@ -196,14 +197,13 @@ Future<void> showCartUnorderedItemsConfirmDialog(String message) async {
     return;
   }
   final trimmed = message.trim();
+  final l10n = AppLocalizations.of(rootContext)!;
   final result = await showGeorgeConfirmDialog(
     context: rootContext,
-    title: 'Notice',
-    message: trimmed.isEmpty
-        ? 'There are still unordered items in the shopping cart.'
-        : trimmed,
-    cancelLabel: 'Cancel',
-    confirmLabel: 'Go to Cart',
+    title: l10n.cartUnorderedNoticeTitle,
+    message: trimmed.isEmpty ? l10n.cartUnorderedItemsDefault : trimmed,
+    cancelLabel: l10n.commonCancel,
+    confirmLabel: l10n.cartGoToCart,
     icon: Icons.shopping_cart_outlined,
     accentColor: const Color(0xFFFF8B6A),
   );
@@ -222,14 +222,15 @@ Future<void> showSessionExpiredDialog(String message) async {
     _sessionExpiredDialogShowing = false;
     return;
   }
+  final l10n = AppLocalizations.of(rootContext)!;
   await showGeorgeSessionExpiredDialog(
     context: rootContext,
     useRootNavigator: true,
-    title: 'Session ended',
+    title: l10n.sessionEndedTitle,
     message: message.trim().isEmpty
-        ? 'Please sign in again to continue shopping.'
+        ? l10n.sessionEndedMessage
         : message.trim(),
-    actionLabel: 'Sign in again',
+    actionLabel: l10n.sessionEndedSignIn,
     onAction: () async {
       await _sessionExpiredHandler?.call();
       if (rootContext.mounted) {

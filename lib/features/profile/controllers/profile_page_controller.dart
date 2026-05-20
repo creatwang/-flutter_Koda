@@ -3,18 +3,20 @@ import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_settings_form_validators.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 
 /// 个人中心页：设置校验与会话相关编排（无 Widget）。
 abstract final class ProfilePageController {
   /// 合法返回 `null`，否则返回可直接展示的错误文案。
   static String? validateSettingsForm({
+    required AppLocalizations l10n,
     required String fullName,
     required String oldPassword,
     required String newPassword,
     required String confirmPassword,
   }) {
     if (fullName.trim().isEmpty) {
-      return 'Name is required.';
+      return l10n.profileSettingsNameRequired;
     }
 
     final old = oldPassword.trim();
@@ -29,17 +31,17 @@ abstract final class ProfilePageController {
     if (hasAny) {
       final hasMissing = old.isEmpty || next.isEmpty || confirm.isEmpty;
       if (hasMissing) {
-        return 'Please complete all password fields.';
+        return l10n.profileSettingsPasswordFieldsRequired;
       }
       final hasShort =
           old.length < 6 || next.length < 6 || confirm.length < 6;
       if (hasShort) {
-        return 'Password must be at least 6 characters.';
+        return l10n.profileSettingsPasswordMinLength;
       }
     }
 
     if (next != confirm) {
-      return 'New Password and Confirm Password must match.';
+      return l10n.profileSettingsPasswordMismatch;
     }
     return null;
   }

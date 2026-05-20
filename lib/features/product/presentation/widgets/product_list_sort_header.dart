@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_checkbox_button.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class SortOption {
   const SortOption({
@@ -21,17 +23,33 @@ class SortQuery {
   final int orderBy;
 }
 
-const List<SortOption> sortByOptions = <SortOption>[
-  SortOption(text: 'Default', value: 0),
-  SortOption(text: 'Price(Low > High)', value: 1),
-  SortOption(text: 'Price(Low < High)', value: 2),
-  SortOption(text: 'Rating(Highest)', value: 3),
-  SortOption(text: 'Rating(Lowest)', value: 4),
-  SortOption(text: 'Model(A - Z)', value: 5),
-  SortOption(text: 'Model(Z - A)', value: 6),
-  SortOption(text: 'Date Added(Old >New)', value: 7),
-  SortOption(text: 'Date Added(New >Old)', value: 8),
-];
+String sortLabelForValue(AppLocalizations l10n, int value) {
+  return switch (value) {
+    1 => l10n.productSortPriceLowHigh,
+    2 => l10n.productSortPriceHighLow,
+    3 => l10n.productSortRatingHighest,
+    4 => l10n.productSortRatingLowest,
+    5 => l10n.productSortModelAz,
+    6 => l10n.productSortModelZa,
+    7 => l10n.productSortDateOldNew,
+    8 => l10n.productSortDateNewOld,
+    _ => l10n.productSortDefault,
+  };
+}
+
+List<SortOption> buildSortByOptions(AppLocalizations l10n) {
+  return <SortOption>[
+    SortOption(text: l10n.productSortDefault, value: 0),
+    SortOption(text: l10n.productSortPriceLowHigh, value: 1),
+    SortOption(text: l10n.productSortPriceHighLow, value: 2),
+    SortOption(text: l10n.productSortRatingHighest, value: 3),
+    SortOption(text: l10n.productSortRatingLowest, value: 4),
+    SortOption(text: l10n.productSortModelAz, value: 5),
+    SortOption(text: l10n.productSortModelZa, value: 6),
+    SortOption(text: l10n.productSortDateOldNew, value: 7),
+    SortOption(text: l10n.productSortDateNewOld, value: 8),
+  ];
+}
 
 const Map<int, SortQuery> sortByQueryMap = <int, SortQuery>{
   0: SortQuery(sort: null, orderBy: 0),
@@ -76,9 +94,10 @@ class ProductSortHeader extends StatelessWidget {
   final TextEditingController? searchKeywordController;
   final VoidCallback? onSearchPressed;
 
-  Widget _buildExpandSidebarButton() {
+  Widget _buildExpandSidebarButton(BuildContext context) {
+    final l10n = context.l10n;
     return Tooltip(
-      message: '展开筛选侧边栏',
+      message: l10n.productExpandFilterSidebar,
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onToggleSidebar,
@@ -100,9 +119,12 @@ class ProductSortHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildSortControl({
+  Widget _buildSortControl(
+    BuildContext context, {
     required bool compact,
   }) {
+    final l10n = context.l10n;
+    final sortOptions = buildSortByOptions(l10n);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
@@ -119,7 +141,7 @@ class ProductSortHeader extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           color: const Color(0xFF2B2F34),
           onSelected: onSortChanged,
-          itemBuilder: (context) => sortByOptions
+          itemBuilder: (context) => sortOptions
               .map(
                 (e) => PopupMenuItem<int>(
                   value: e.value,
@@ -143,7 +165,9 @@ class ProductSortHeader extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    compact ? selectedSortLabel : 'Sort by: $selectedSortLabel',
+                    compact
+                        ? selectedSortLabel
+                        : l10n.productSortBy(selectedSortLabel),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -163,7 +187,11 @@ class ProductSortHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildInShowroomToggle({required bool compact}) {
+  Widget _buildInShowroomToggle(
+    BuildContext context, {
+    required bool compact,
+  }) {
+    final l10n = context.l10n;
     final onChanged = onInShowroomChanged;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -174,7 +202,7 @@ class ProductSortHeader extends StatelessWidget {
           borderColor: Colors.white54,
           checkedFillColor: Colors.white.withValues(alpha: 0.35),
           checkColor: Colors.white,
-          semanticLabel: 'In Showroom',
+          semanticLabel: l10n.productInShowroom,
           onChanged: onChanged,
         ),
         GestureDetector(
@@ -185,7 +213,7 @@ class ProductSortHeader extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
             child: Text(
-              'In Showroom',
+              l10n.productInShowroom,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
                 fontSize: compact ? 11 : 12,
@@ -198,11 +226,13 @@ class ProductSortHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildKeywordSearch({
+  Widget _buildKeywordSearch(
+    BuildContext context, {
     required bool compact,
     required TextEditingController controller,
     required VoidCallback onSearchSubmitted,
   }) {
+    final l10n = context.l10n;
     final hintSize = compact ? 11.0 : 12.0;
     final iconSize = compact ? 14.0 : 15.0;
     return Container(
@@ -230,7 +260,7 @@ class ProductSortHeader extends StatelessWidget {
               cursorColor: Colors.white70,
               decoration: InputDecoration(
                 isDense: true,
-                hintText: 'Please',
+                hintText: l10n.productSearchHint,
                 hintStyle: TextStyle(
                   color: Colors.white.withValues(alpha: 0.45),
                   fontSize: hintSize,
@@ -259,7 +289,7 @@ class ProductSortHeader extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                   child: Tooltip(
-                    message: 'Clear search',
+                    message: l10n.productClearSearch,
                     child: InkWell(
                       onTap: () {
                         controller.clear();
@@ -287,6 +317,7 @@ class ProductSortHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 1180;
@@ -295,12 +326,12 @@ class ProductSortHeader extends StatelessWidget {
         return Row(
           children: [
             if (isSidebarCollapsed && onToggleSidebar != null) ...[
-              _buildExpandSidebarButton(),
+              _buildExpandSidebarButton(context),
               const SizedBox(width: 8),
             ],
             Container(
               child: Text(
-                'Product Library',
+                l10n.productLibrary,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -323,23 +354,24 @@ class ProductSortHeader extends StatelessWidget {
                         compact
                             ? IconButton(
                                 onPressed: onOpenFilters,
-                                tooltip: 'Filters',
+                                tooltip: l10n.productFilters,
                                 icon: const Icon(Icons.tune),
                               )
                             : OutlinedButton.icon(
                                 onPressed: onOpenFilters,
                                 icon: const Icon(Icons.tune),
-                                label: const Text('Filters'),
+                                label: Text(l10n.productFilters),
                               ),
                         const SizedBox(width: 8),
                       ],
                       if (onInShowroomChanged != null) ...[
-                        _buildInShowroomToggle(compact: compact),
+                        _buildInShowroomToggle(context, compact: compact),
                         const SizedBox(width: 8),
                       ],
                       if (searchController != null &&
                           searchAction != null) ...[
                         _buildKeywordSearch(
+                          context,
                           compact: compact,
                           controller: searchController,
                           onSearchSubmitted: searchAction,
@@ -351,7 +383,7 @@ class ProductSortHeader extends StatelessWidget {
                           minWidth: compact ? 140 : 220,
                           maxWidth: compact ? 220 : 320,
                         ),
-                        child: _buildSortControl(compact: compact),
+                        child: _buildSortControl(context, compact: compact),
                       ),
                     ],
                   ),

@@ -100,7 +100,7 @@ class ProductDetailInfoPanel extends StatelessWidget {
               )
             else
               Text(
-                'no product',
+                l10n.commonNoProduct,
                 style: TextStyle(
                   color: Colors.red.shade200,
                   fontSize: 22,
@@ -121,9 +121,9 @@ class ProductDetailInfoPanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'PRODUCT:',
-                        style: TextStyle(
+                      Text(
+                        '${l10n.commonProduct}:',
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

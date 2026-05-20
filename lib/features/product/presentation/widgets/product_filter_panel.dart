@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/app_error_view.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
@@ -32,7 +33,7 @@ class ProductFilterPanel extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Product Categories',
+                context.l10n.productCategories,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: ProMaxTokens.textPrimary,
@@ -77,7 +78,10 @@ class ProductFilterPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryList(List<ProductCategoryTreeDto> categories) {
+  Widget _buildCategoryList(
+    AppLocalizations l10n,
+    List<ProductCategoryTreeDto> categories,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: categories.isEmpty
@@ -96,7 +100,7 @@ class ProductFilterPanel extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'No categories',
+                  l10n.productNoCategories,
                   style: TextStyle(
                     color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
                     fontSize: 12,
@@ -177,7 +181,7 @@ class ProductFilterPanel extends StatelessWidget {
         ),
       ),
       data: (categories) {
-        final treeContent = _buildCategoryList(categories);
+        final treeContent = _buildCategoryList(context.l10n, categories);
         return ProMaxGlassCardWidget(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
           child: Column(

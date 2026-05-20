@@ -4,6 +4,7 @@ import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/profile/api/profile_requests.dart';
 import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 /// 个人中心：用户信息、订单列表等业务封装与响应适配。
 Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
@@ -13,14 +14,14 @@ Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid user info response format',
+        error: appL10n.errorInvalidUserInfoResponseFormat,
       );
     }
     return ApiSuccess(UserInfoBase.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch user info failed',
+        e.message ?? appL10n.errorFetchUserInfoFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -30,9 +31,6 @@ Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
 }
 
 /// 更新用户资料（含可选改密字段）。
-///
-/// [name]：姓名；[oldPassword] / [newPassword] / [conPassword]：改密三栏，
-/// 可传空串表示不改密。
 Future<ApiResult<void>> updateUserInfoService({
   required String name,
   required String oldPassword,
@@ -54,13 +52,13 @@ Future<ApiResult<void>> updateUserInfoService({
         data is Map<String, dynamic> ? data['message']?.toString() : null;
     throw DioException(
       requestOptions: response.requestOptions,
-      error: failureMessage ?? 'Update user info failed',
-      message: failureMessage ?? 'Update user info failed',
+      error: failureMessage ?? appL10n.errorUpdateUserInfoFailed,
+      message: failureMessage ?? appL10n.errorUpdateUserInfoFailed,
     );
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Update user info failed',
+        e.message ?? appL10n.errorUpdateUserInfoFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -69,8 +67,6 @@ Future<ApiResult<void>> updateUserInfoService({
   }
 }
 
-/// 我的订单第一页及分页加载（内部与 [fetchProfileCustomerOrderListService]
-/// 共用解析逻辑）。
 Future<ApiResult<ProductOrderListDto>> fetchProfileOrderListService({
   required int page,
   required int pageSize,
@@ -80,7 +76,6 @@ Future<ApiResult<ProductOrderListDto>> fetchProfileOrderListService({
   );
 }
 
-/// 客户订单分页（业务员）。
 Future<ApiResult<ProductOrderListDto>> fetchProfileCustomerOrderListService({
   required int page,
   required int pageSize,
@@ -91,7 +86,6 @@ Future<ApiResult<ProductOrderListDto>> fetchProfileCustomerOrderListService({
   );
 }
 
-/// 指定客户 `user_id` 的订单分页（与 Order Center Customer 同源接口）。
 Future<ApiResult<ProductOrderListDto>>
 fetchProfileCustomerOrderListForUserService({
   required int userId,
@@ -116,14 +110,14 @@ Future<ApiResult<ProductOrderListDto>> _fetchOrderListPage({
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid order list response format',
+        error: appL10n.errorInvalidOrderListResponseFormat,
       );
     }
     return ApiSuccess(ProductOrderListDto.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch order list failed',
+        e.message ?? appL10n.errorFetchOrderListFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

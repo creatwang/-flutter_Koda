@@ -1,5 +1,6 @@
 import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_list_sort_header.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 
 /// 商品列表页纯 UI 状态：侧栏分类、排序、侧栏折叠（无网络逻辑）。
 class ProductListController {
@@ -11,22 +12,18 @@ class ProductListController {
   /// 「In Showroom」：仅筛选展厅有样板。
   bool inShowroomOnly = false;
 
-  SortOption get currentSortOption {
-    return sortByOptions.firstWhere(
-      (e) => e.value == selectedSortValue,
-      orElse: () => sortByOptions.first,
-    );
-  }
+  String currentSortLabel(AppLocalizations l10n) =>
+      sortLabelForValue(l10n, selectedSortValue);
 
   SortQuery get currentSortQuery {
     return sortByQueryMap[selectedSortValue] ??
         const SortQuery(sort: null, orderBy: 0);
   }
 
-  void setSortValue(int value) {
-    final option = sortByOptions.firstWhere(
+  void setSortValue(int value, AppLocalizations l10n) {
+    final option = buildSortByOptions(l10n).firstWhere(
       (e) => e.value == value,
-      orElse: () => sortByOptions.first,
+      orElse: () => buildSortByOptions(l10n).first,
     );
     selectedSortValue = option.value;
   }

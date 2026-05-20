@@ -18,6 +18,7 @@ import 'package:george_pick_mate/features/product/controllers/product_providers.
 import 'package:george_pick_mate/features/profile/controllers/profile_providers.dart';
 import 'package:george_pick_mate/features/profile/services/customer_account_services.dart';
 import 'package:george_pick_mate/features/profile/services/profile_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 import 'login_remember_providers.dart';
 import 'store_company_providers.dart';
@@ -139,7 +140,7 @@ class SessionController extends AsyncNotifier<Session> {
         final token = user.token?.toString();
         if (cid == null || token == null || token.isEmpty) {
           return ApiFailure<void>(
-            AppException('Invalid user payload after switch'),
+            AppException(appL10n.errorInvalidUserPayloadAfterSwitch),
           );
         }
         clearAllNetworkMemoryCaches();
@@ -201,7 +202,7 @@ class SessionController extends AsyncNotifier<Session> {
   }) async {
     final snapshot = await secureStorageService.readUserInfoBase();
     if (snapshot == null) {
-      return ApiFailure<void>(AppException('User info missing'));
+      return ApiFailure<void>(AppException(appL10n.errorUserInfoMissing));
     }
     // 仅业务员上下文写入主账号快照；已在代客态时勿用当前客户信息覆盖
     // `main_user_info`。
@@ -233,7 +234,7 @@ class SessionController extends AsyncNotifier<Session> {
       if (wroteMainThisCall) {
         await secureStorageService.clearMainUserInfo();
       }
-      return ApiFailure<void>(AppException('Invalid customer session'));
+      return ApiFailure<void>(AppException(appL10n.errorInvalidCustomerSession));
     }
     clearAllNetworkMemoryCaches();
     state = AsyncData(
@@ -248,7 +249,7 @@ class SessionController extends AsyncNotifier<Session> {
   Future<ApiResult<void>> switchBackToMainUser() async {
     final main = await secureStorageService.readMainUserInfo();
     if (main == null) {
-      return ApiFailure<void>(AppException('No main account to switch'));
+      return ApiFailure<void>(AppException(appL10n.errorNoMainAccountToSwitch));
     }
     try {
       await persistAuthenticatedUserSnapshot(main);
@@ -258,7 +259,9 @@ class SessionController extends AsyncNotifier<Session> {
     final cid = main.companyId?.toInt();
     final token = main.token?.toString();
     if (cid == null || token == null || token.isEmpty) {
-      return ApiFailure<void>(AppException('Invalid main account snapshot'));
+      return ApiFailure<void>(
+        AppException(appL10n.errorInvalidMainAccountSnapshot),
+      );
     }
     await secureStorageService.clearMainUserInfo();
     clearAllNetworkMemoryCaches();

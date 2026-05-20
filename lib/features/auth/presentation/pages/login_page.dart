@@ -203,18 +203,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),*/
                       const SizedBox(height: 12),
                       const SizedBox(height: 28),
-                      _fieldLabel('EMAIL ADDRESS'),
+                      _fieldLabel(l10n.authEmailLabel.toUpperCase()),
                       const SizedBox(height: 8),
                       _glassField(
                         controller: _usernameController,
-                        hint: 'name@firm.com',
+                        hint: l10n.authEmailHint,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          _fieldLabel('PASSWORD'),
+                          _fieldLabel(l10n.authPasswordLabel.toUpperCase()),
                           const Spacer(),
                           Text(
                             l10n.authForgotPassword,
@@ -388,7 +388,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final errorMessage = await runGlobalYnToastTask(
       context: context,
       mask: true,
-      successMessage: 'ok!',
+      successMessage: l10n.authLoginSuccess,
       successHold: const Duration(milliseconds: 280),
       task: () async {
         final error = await ref.read(sessionControllerProvider.notifier).signIn(

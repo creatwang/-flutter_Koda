@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_favorites_section_widget.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_my_customers_section_widget.dart';
@@ -68,6 +69,7 @@ class ProfileContentAreaWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isSettings = currentSection == ProfileContentSection.settings;
     final isOrderCenter = currentSection == ProfileContentSection.orderCenter;
     final viewInsetsBottom = MediaQuery.of(context).viewInsets.bottom;
@@ -161,7 +163,7 @@ class ProfileContentAreaWidget extends StatelessWidget {
                       currentTab: currentOrderTab,
                     ),
                   _ => AppEmptyView(
-                    message: '$title is empty',
+                    message: l10n.profileSectionEmpty(title),
                     width: 130,
                     height: 130,
                   ),

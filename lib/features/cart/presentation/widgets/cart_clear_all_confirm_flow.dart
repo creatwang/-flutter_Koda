@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 
@@ -11,6 +12,7 @@ Future<void> runCartClearAllConfirmFlow({
   required CartController cartNotifier,
   void Function(bool isBusy)? onBusy,
 }) async {
+  final l10n = context.l10n;
   final selectedIds = currentGroups
       .expand((group) => group.items)
       .expand((site) => site.cart.items)
@@ -24,13 +26,12 @@ Future<void> runCartClearAllConfirmFlow({
   final confirmed = await showGeorgeConfirmDialog(
     context: context,
     title: hasSelectedItems
-        ? 'Remove selected lines?'
-        : 'Clear entire shortlist?',
+        ? l10n.cartRemoveSelectedTitle
+        : l10n.cartClearShortlistTitle,
     message: hasSelectedItems
-        ? '${selectedIds.length} selected lines will be removed from '
-              'your shortlist.'
-        : 'This clears all cart lines currently loaded for your sites.',
-    confirmLabel: hasSelectedItems ? 'Remove' : 'Clear all',
+        ? l10n.cartRemoveSelectedMessage(selectedIds.length)
+        : l10n.cartClearShortlistMessage,
+    confirmLabel: hasSelectedItems ? l10n.commonRemove : l10n.commonClearAll,
     icon: hasSelectedItems
         ? Icons.delete_sweep_rounded
         : Icons.cleaning_services_rounded,
@@ -48,11 +49,15 @@ Future<void> runCartClearAllConfirmFlow({
     if (!context.mounted) return;
     if (ok) {
       showGlobalSnackBar(
-        hasSelectedItems ? '已删除选中商品' : '购物车已清空',
+        hasSelectedItems
+            ? l10n.cartSelectedLinesRemoved
+            : l10n.cartShortlistCleared,
       );
     } else {
       showGlobalErrorMessage(
-        hasSelectedItems ? '删除选中失败，请稍后再试' : '清空失败，请稍后再试',
+        hasSelectedItems
+            ? l10n.cartRemoveSelectedFailed
+            : l10n.cartClearFailed,
       );
     }
   } finally {

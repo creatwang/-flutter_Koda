@@ -9,6 +9,7 @@ import 'package:george_pick_mate/features/profile/controllers/profile_order_prov
 import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/profile_product_order_list_widget.dart';
 import 'package:george_pick_mate/features/profile/presentation/widgets/store_customer_form_bottom_sheet.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
@@ -79,7 +80,7 @@ class _ProfileMyCustomersSectionWidgetState
           // 先导航再提示：否则 SnackBar 绑在即将 dispose 的 subtree 上，
           // 动画回调会触发「deactivated widget's ancestor」断言。
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            showGlobalSnackBar('Logged in as customer.');
+            showGlobalSnackBar(context.l10n.profileLoggedInAsCustomer);
           });
         },
         failure: (e) {
@@ -99,7 +100,7 @@ class _ProfileMyCustomersSectionWidgetState
       builder: (_) => _DeleteStoreCustomerDialog(item: item),
     );
     if (deleted != true || !mounted) return;
-    showGlobalSnackBar('Deleted');
+    showGlobalSnackBar(context.l10n.profileCustomerDeleted);
   }
 
   void _onViewCustomerOrders(StoreCustomerItemDto item) {
@@ -139,6 +140,7 @@ class _ProfileMyCustomersSectionWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     ref.listen<int?>(
       myCustomerOrdersViewUserIdProvider,
       (int? previous, int? next) {
@@ -235,15 +237,15 @@ class _ProfileMyCustomersSectionWidgetState
                           const SizedBox(height: 12),
                           FilledButton(
                             onPressed: _refresh,
-                            child: const Text('Retry'),
+                            child: Text(l10n.commonRetry),
                           ),
                         ],
                       ),
                     ),
                     data: (data) {
                       if (data.items.isEmpty) {
-                        return const AppEmptyView(
-                          message: 'No customers',
+                        return AppEmptyView(
+                          message: l10n.profileNoCustomers,
                           width: 120,
                           height: 120,
                         );
@@ -381,6 +383,7 @@ class _MyCustomersTableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -393,24 +396,24 @@ class _MyCustomersTableHeader extends StatelessWidget {
                   width: _MyCustomersColumnLayout.nameLabelInset,
                 ),
                 Expanded(
-                  child: Text('CUSTOMER NAME', style: _style()),
+                  child: Text(l10n.profileCustomerName, style: _style()),
                 ),
               ],
             ),
           ),
           SizedBox(
             width: _MyCustomersColumnLayout.uid,
-            child: Center(child: Text('UID', style: _style())),
+            child: Center(child: Text(l10n.profileUidHeader, style: _style())),
           ),
           SizedBox(
             width: _MyCustomersColumnLayout.actions,
-            child: Center(child: Text('ACTIONS', style: _style())),
+            child: Center(child: Text(l10n.commonActions, style: _style())),
           ),
           SizedBox(
             width: _MyCustomersColumnLayout.login,
             child: Align(
               alignment: Alignment.centerRight,
-              child: Text('LOGIN', style: _style()),
+              child: Text(l10n.commonLogin, style: _style()),
             ),
           ),
         ],
@@ -576,7 +579,7 @@ class _CustomerRowCard extends StatelessWidget {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Edit'),
+                        child: Text(context.l10n.commonEditVerb),
                       ),
                       Text(
                         '|',
@@ -595,7 +598,7 @@ class _CustomerRowCard extends StatelessWidget {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Delete'),
+                        child: Text(context.l10n.commonDelete),
                       ),
                     ],
                   ),
@@ -621,7 +624,7 @@ class _CustomerRowCard extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Login'),
+                            : Text(context.l10n.commonLogin),
                       ),
                       Icon(
                         Icons.chevron_right_rounded,
@@ -709,6 +712,7 @@ class _DeleteStoreCustomerDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final item = widget.item;
     const Color accentDelete = Color(0xFFFF7B6B);
     return PopScope(
@@ -724,10 +728,13 @@ class _DeleteStoreCustomerDialogState
             constraints: const BoxConstraints(maxWidth: 400),
             child: GeorgeDialogSurface(
               child: GeorgeConfirmDialogPanel(
-                title: 'Delete customer',
-                message: 'Remove ${item.name} (${item.username})?',
-                cancelLabel: 'Cancel',
-                confirmLabel: 'Delete',
+                title: l10n.profileDeleteCustomer,
+                message: l10n.profileDeleteCustomerConfirm(
+                  item.name,
+                  item.username,
+                ),
+                cancelLabel: l10n.commonCancel,
+                confirmLabel: l10n.commonDelete,
                 icon: Icons.delete_forever_rounded,
                 accentColor: accentDelete,
                 onCancel: _isDeleting

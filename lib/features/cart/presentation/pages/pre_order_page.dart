@@ -20,6 +20,7 @@ import 'package:george_pick_mate/shared/base_widget/buttons/george_checkbox_butt
 import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_outlined_button.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
@@ -52,12 +53,13 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final pre = ref.watch(preOrderCartControllerProvider);
     final canExportQuotation =
         ref.watch(canExportQuotationProvider).asData?.value ?? false;
     final selectedCount = ref.watch(preOrderSelectedCountProvider);
     return AdaptiveScaffold(
-      title: 'Pre Order',
+      title: l10n.cartPreOrder,
       bottomBarVisibility: AdaptiveBottomBarVisibility.never,
       body: SafeArea(
         bottom: false,
@@ -67,7 +69,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
               child: pre.when(
                 loading: () => const AppLoadingView(),
                 error: (error, _) => AppErrorView(
-                  message: 'Pre order load failed: $error',
+                  message: l10n.preOrderLoadFailed(error),
                   onRetry: () => ref
                       .read(preOrderCartControllerProvider.notifier)
                       .refresh(),
@@ -78,7 +80,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                     (sum, g) => sum + g.items.length,
                   );
                   if (siteCount == 0) {
-                    return const AppEmptyView(message: 'No pre-order items');
+                    return AppEmptyView(message: l10n.preOrderEmpty);
                   }
                   return Column(
                     children: [
@@ -102,14 +104,14 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                 Text.rich(
                                   TextSpan(
                                     children: [
-                                      const TextSpan(text: 'Total: '),
+                                      TextSpan(text: l10n.preOrderTotalPrefix),
                                       TextSpan(
                                         text: '$selectedCount',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
-                                      const TextSpan(text: ' items'),
+                                      TextSpan(text: l10n.preOrderTotalSuffix),
                                     ],
                                   ),
                                   style: const TextStyle(color: Colors.white70),
@@ -129,7 +131,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                         ),
                                         isLoading: _isClearingAll,
                                         onPressed: _onClearAllPreOrder,
-                                        child: const Text('Clear'),
+                                        child: Text(l10n.commonClear),
                                       ),
                                       const SizedBox(width: 8),
                                       if (canExportQuotation)
@@ -148,7 +150,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                           onPressed: selectedCount <= 0
                                               ? null
                                               : _onExportQuotation,
-                                          child: const Text('Export'),
+                                          child: Text(l10n.commonExport),
                                         ),
                                       if (canExportQuotation)
                                         const SizedBox(width: 8),
@@ -167,7 +169,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
                                         onPressed: selectedCount <= 0
                                             ? null
                                             : _onCheckout,
-                                        child: const Text('Go To Checkout'),
+                                        child: Text(l10n.preOrderGoToCheckout),
                                       ),
                                     ],
                                   ),
@@ -200,7 +202,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
               left: 18,
               top: 12,
               child: GeorgeBackButton(
-                label: 'Back',
+                label: l10n.commonBack,
                 onPressed: () => context.pop(),
               ),
             ),
@@ -474,11 +476,12 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
   }
 
   Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
+    final l10n = context.l10n;
     final result = await showGeorgeConfirmDialog(
       context: context,
-      title: 'Remove this line?',
+      title: l10n.cartRemoveLineTitle,
       message: item.name,
-      confirmLabel: 'Remove',
+      confirmLabel: l10n.commonRemove,
       icon: Icons.delete_forever_rounded,
       accentColor: const Color(0xFFFF7B6B),
     );
@@ -505,7 +508,7 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     final config = (result as ApiSuccess<CartQuotationConfigDto>).data;
     if (config.formData.isEmpty) {
       setState(() {
-        _exportQuotationErrorMessage = 'Export form config is empty.';
+        _exportQuotationErrorMessage = context.l10n.preOrderExportConfigEmpty;
       });
       return;
     }
@@ -537,13 +540,16 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     final exportData =
         (exportResult as ApiSuccess<CartQuotationExportResultDto>).data;
     if (!mounted) return;
+    final l10n = context.l10n;
     await showGeorgeConfirmDialog(
       context: context,
-      title: 'Quotation exported',
-      message:
-          'File: ${exportData.fileName}\n\nSaved to:\n${exportData.filePath}',
+      title: l10n.preOrderQuotationExported,
+      message: l10n.preOrderExportSavedMessage(
+        exportData.fileName,
+        exportData.filePath,
+      ),
       showCancelButton: false,
-      confirmLabel: 'OK',
+      confirmLabel: l10n.commonOk,
       icon: Icons.folder_copy_outlined,
       barrierDismissible: true,
     );
@@ -581,13 +587,13 @@ class _PreOrderPageState extends ConsumerState<PreOrderPage> {
     if (!mounted) return;
     setState(() => _isCheckingOut = false);
     if (!ok) {
-      showGlobalErrorMessage('Checkout failed');
+      showGlobalErrorMessage(context.l10n.preOrderCheckoutFailed);
       return;
     }
     await ref.read(preOrderCartControllerProvider.notifier).refresh();
     ref.invalidate(cartControllerProvider);
     if (!mounted) return;
-    showGlobalSnackBar('Order created successfully');
+    showGlobalSnackBar(context.l10n.preOrderOrderCreated);
   }
 }
 
@@ -720,6 +726,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final selectedSalesRep = _selectedSalesRep;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -750,7 +757,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
                           widget.site.shopName.isEmpty
-                              ? 'Department'
+                              ? l10n.commonDepartment
                               : widget.site.shopName,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
@@ -780,7 +787,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '${widget.site.cart.totalNum} ITEMS',
+                                l10n.cartItemsCount(widget.site.cart.totalNum),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 11,
@@ -848,10 +855,11 @@ class _CartSalesRepPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hasReps = reps.isNotEmpty;
     final display = selected?.name.trim().isNotEmpty == true
         ? selected!.name
-        : (hasReps ? 'Select SM' : 'No SM');
+        : (hasReps ? l10n.cartSelectSm : l10n.cartNoSm);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -906,6 +914,7 @@ class _CartSalesRepPicker extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final sheetL10n = sheetContext.l10n;
         final keyboardBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
         var query = '';
         return AnimatedPadding(
@@ -955,11 +964,11 @@ class _CartSalesRepPicker extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            const Align(
+                            Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                'Select Sales Rep',
-                                style: TextStyle(
+                                sheetL10n.cartSelectSalesRep,
+                                style: const TextStyle(
                                   color: ProMaxTokens.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -970,7 +979,7 @@ class _CartSalesRepPicker extends StatelessWidget {
                             TextField(
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
-                                hintText: 'Search',
+                                hintText: sheetL10n.commonSearch,
                                 hintStyle: const TextStyle(
                                   color: Colors.white54,
                                 ),
@@ -995,19 +1004,19 @@ class _CartSalesRepPicker extends StatelessWidget {
                                   minHeight: 220,
                                 ),
                                 child: filtered.isEmpty
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.inbox_outlined,
                                               color: Colors.white54,
                                               size: 26,
                                             ),
-                                            SizedBox(height: 8),
+                                            const SizedBox(height: 8),
                                             Text(
-                                              'No matching sales rep',
-                                              style: TextStyle(
+                                              sheetL10n.cartNoMatchingSalesRep,
+                                              style: const TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
@@ -1150,7 +1159,9 @@ class _CartSpaceSection extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    space.name.isEmpty ? 'Space' : space.name,
+                    space.name.isEmpty
+                        ? context.l10n.commonSpace
+                        : space.name,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.95),
                       fontWeight: FontWeight.w600,
@@ -1303,6 +1314,7 @@ class _CartProductTileState extends State<_CartProductTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
@@ -1447,24 +1459,26 @@ class _CartProductTileState extends State<_CartProductTile> {
                                           color: Colors.white,
                                           fontSize: 12,
                                         ),
-                                        decoration: const InputDecoration(
+                                        decoration: InputDecoration(
                                           isDense: true,
-                                          prefixIcon: Icon(
+                                          prefixIcon: const Icon(
                                             Icons.edit_outlined,
                                             size: 14,
                                             color: Colors.white54,
                                           ),
-                                          prefixIconConstraints: BoxConstraints(
+                                          prefixIconConstraints:
+                                              const BoxConstraints(
                                             minWidth: 26,
                                             maxWidth: 26,
                                           ),
-                                          hintText: 'Please edit content',
-                                          hintStyle: TextStyle(
+                                          hintText: l10n.cartRemarkHint,
+                                          hintStyle: const TextStyle(
                                             color: Colors.white54,
                                             fontSize: 12,
                                           ),
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
                                             horizontal: 8,
                                             vertical: 7,
                                           ),
@@ -1499,9 +1513,9 @@ class _CartProductTileState extends State<_CartProductTile> {
                                       ),
                                     )
                                   : const Icon(Icons.delete_outline, size: 14),
-                              label: const Text(
-                                'REMOVE',
-                                style: TextStyle(
+                              label: Text(
+                                l10n.commonRemove.toUpperCase(),
+                                style: const TextStyle(
                                   fontSize: 10,
                                   letterSpacing: 0.4,
                                 ),
@@ -1531,9 +1545,9 @@ class _CartProductTileState extends State<_CartProductTile> {
                                       ),
                                     )
                                   : const Icon(Icons.tune, size: 14),
-                              label: const Text(
-                                'EDIT',
-                                style: TextStyle(
+                              label: Text(
+                                l10n.commonEdit.toUpperCase(),
+                                style: const TextStyle(
                                   fontSize: 10,
                                   letterSpacing: 0.4,
                                 ),
@@ -1629,26 +1643,27 @@ class _PreOrderQuotationPreviewPageState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quotation Preview'),
+        title: Text(l10n.preOrderQuotationPreview),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: _buildBody(),
+      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_controller == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: SelectableText.rich(
             TextSpan(
-              text: _loadError ?? 'Preview is not available on this device.',
+              text: _loadError ?? l10n.preOrderPreviewUnavailable,
               style: const TextStyle(
                 color: Color(0xFFFF6E76),
                 fontSize: 13,

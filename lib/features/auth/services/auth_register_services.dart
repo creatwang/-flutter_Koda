@@ -6,6 +6,7 @@ import 'package:george_pick_mate/core/storage/token_pair.dart';
 import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
 import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 /// 注册并落盘会话（与登录成功后的持久化一致）。
 typedef AuthRegisterService =
@@ -34,7 +35,7 @@ Future<ApiResult<TokenPair>> authRegisterService({
     if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid register response format',
+        error: appL10n.errorInvalidRegisterResponseFormat,
       );
     }
     final userInfoBase = UserInfoBase.fromJson(data);
@@ -42,7 +43,7 @@ Future<ApiResult<TokenPair>> authRegisterService({
     if (companyId == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid company_id in register response',
+        error: appL10n.errorInvalidCompanyIdInRegisterResponse,
       );
     }
     await persistAuthenticatedUserSnapshot(userInfoBase);
@@ -52,7 +53,7 @@ Future<ApiResult<TokenPair>> authRegisterService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Register request failed',
+        e.message ?? appL10n.errorRegisterRequestFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

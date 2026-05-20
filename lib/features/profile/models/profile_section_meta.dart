@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 
 /// 个人中心侧栏一项：分区、展示文案与图标。
 final class ProfileSectionMeta {
@@ -15,28 +16,29 @@ final class ProfileSectionMeta {
 }
 
 List<ProfileSectionMeta> buildProfileSidebarMenus({
+  required AppLocalizations l10n,
   required bool isSalesRep,
 }) {
   return <ProfileSectionMeta>[
-    const ProfileSectionMeta(
+    ProfileSectionMeta(
       section: ProfileContentSection.settings,
-      label: 'Settings',
+      label: l10n.profileMenuSettings,
       icon: Icons.settings_outlined,
     ),
     if (isSalesRep)
-      const ProfileSectionMeta(
+      ProfileSectionMeta(
         section: ProfileContentSection.myCustomers,
-        label: 'My Customers',
+        label: l10n.profileMenuMyCustomers,
         icon: Icons.groups_outlined,
       ),
-    const ProfileSectionMeta(
+    ProfileSectionMeta(
       section: ProfileContentSection.orderCenter,
-      label: 'Order Center',
+      label: l10n.profileMenuOrderCenter,
       icon: Icons.notifications_none_outlined,
     ),
-    const ProfileSectionMeta(
+    ProfileSectionMeta(
       section: ProfileContentSection.favorites,
-      label: 'Favorites',
+      label: l10n.profileMenuFavorites,
       icon: Icons.favorite_border,
     ),
   ];

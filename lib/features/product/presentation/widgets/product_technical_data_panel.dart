@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductTechnicalDataPanel extends StatelessWidget {
   const ProductTechnicalDataPanel({
@@ -13,6 +14,7 @@ class ProductTechnicalDataPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final validParams = params
         .where(
           (item) =>
@@ -40,10 +42,10 @@ class ProductTechnicalDataPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Technical Data',
-                  style: TextStyle(
+                  l10n.productTechnicalData,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -51,7 +53,7 @@ class ProductTechnicalDataPanel extends StatelessWidget {
                 ),
               ),
               Text(
-                'Ref. $referenceCode',
+                l10n.productRefCode(referenceCode),
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 14,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/auth/controllers/store_company_providers.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
@@ -82,6 +83,7 @@ class _SwitchSiteSheetScaffoldState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final async = ref.watch(storeCompanyListProvider);
     final currentCompanyId = ref
         .watch(sessionControllerProvider)
@@ -114,13 +116,13 @@ class _SwitchSiteSheetScaffoldState
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Switch site',
-                    style: TextStyle(
+                    l10n.profileSwitchSiteTitle,
+                    style: const TextStyle(
                       color: ProMaxTokens.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -132,10 +134,10 @@ class _SwitchSiteSheetScaffoldState
                 child: async.when(
                   data: (List<Map<String, dynamic>> items) {
                     if (items.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
-                          'No sites available.',
-                          style: TextStyle(color: Colors.white54),
+                          l10n.profileNoSites,
+                          style: const TextStyle(color: Colors.white54),
                         ),
                       );
                     }
@@ -177,7 +179,9 @@ class _SwitchSiteSheetScaffoldState
                             horizontal: 12,
                           ),
                           title: Text(
-                            title.isEmpty ? 'Site #$id' : title,
+                            title.isEmpty
+                                ? l10n.profileSiteFallbackTitle(id!)
+                                : title,
                             style: TextStyle(
                               color: titleColor.withValues(
                                 alpha: isDisabled ? 0.45 : 1,
@@ -189,8 +193,8 @@ class _SwitchSiteSheetScaffoldState
                               ? null
                               : Text(
                                   isSelected
-                                      ? 'Current site · ID: $id'
-                                      : 'ID: $id',
+                                      ? l10n.profileSiteCurrent(id)
+                                      : l10n.profileSiteIdLine(id),
                                   style: TextStyle(
                                     color:
                                         (isSelected

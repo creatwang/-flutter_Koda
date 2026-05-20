@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:george_pick_mate/features/profile/models/profile_content_section.dart';
 import 'package:george_pick_mate/features/profile/models/profile_section_meta.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_glass_card_widget.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
@@ -38,6 +39,7 @@ class ProfileSidebarWidget extends StatelessWidget {
         width: 230,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final l10n = context.l10n;
             return SingleChildScrollView(
               padding: const EdgeInsets.only(
                 top: 20,
@@ -144,7 +146,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'UID: ${profileId ?? '--'}',
+                          l10n.profileUid(profileId ?? '--'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.92),
                             letterSpacing: 1.4,
@@ -154,7 +156,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'SITEID: ${profileSiteId ?? '--'}',
+                          l10n.profileSiteId(profileSiteId ?? '--'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             letterSpacing: 1.2,
@@ -172,14 +174,14 @@ class ProfileSidebarWidget extends StatelessWidget {
                           Expanded(
                             child: ProfileStatTileWidget(
                               value: '$favoriteCount',
-                              label: 'FAV NUM',
+                              label: l10n.profileFavNum,
                             ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: ProfileStatTileWidget(
                               value: '$cartBadgeCount',
-                              label: 'CART NUM',
+                              label: l10n.profileCartNum,
                             ),
                           ),
                         ],
@@ -189,7 +191,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                     Align(
                       alignment: Alignment.center,
                       child: Text(
-                        'ACCOUNT & PREFERENCES',
+                        l10n.profileAccountPreferences,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.92),

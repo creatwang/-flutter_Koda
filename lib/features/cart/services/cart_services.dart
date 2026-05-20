@@ -10,6 +10,7 @@ import 'package:george_pick_mate/features/cart/api/cart_requests.dart';
 import 'package:george_pick_mate/features/cart/models/cart_list_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_config_dto.dart';
 import 'package:george_pick_mate/features/cart/models/cart_quotation_export_result_dto.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// 购物车网络结果解析与 [AppException] 映射（调用 `cart_requests`）。
@@ -22,7 +23,7 @@ Future<ApiResult<int>> fetchCartTotalNumService() async {
     if (data is! Map) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid cart num response format',
+        error: appL10n.errorInvalidCartNumResponseFormat,
       );
     }
     final map = Map<String, dynamic>.from(data);
@@ -30,20 +31,20 @@ Future<ApiResult<int>> fetchCartTotalNumService() async {
     if (code is num && code != 0) {
       throw DioException(
         requestOptions: response.requestOptions,
-        message: map['message']?.toString() ?? 'Cart num request failed',
+        message: map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
       );
     }
     if (code is String && code != '0' && code.trim() != '0') {
       throw DioException(
         requestOptions: response.requestOptions,
-        message: map['message']?.toString() ?? 'Cart num request failed',
+        message: map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
       );
     }
     final dynamic resultNode = map['result'];
     if (resultNode is! Map) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Missing result in cart num response',
+        error: appL10n.errorMissingCartNumResult,
       );
     }
     final resultMap = Map<String, dynamic>.from(resultNode);
@@ -55,7 +56,7 @@ Future<ApiResult<int>> fetchCartTotalNumService() async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch cart num failed',
+        e.message ?? appL10n.errorFetchCartNumFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -80,7 +81,7 @@ Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
     if (rawList == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid cart list response format',
+        error: appL10n.errorInvalidCartListResponseFormat,
       );
     }
     final cartList = rawList
@@ -91,7 +92,7 @@ Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch cart list failed',
+        e.message ?? appL10n.errorFetchCartListFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -113,7 +114,7 @@ Future<ApiResult<void>> updateCartSelectedService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Update cart selected failed',
+        e.message ?? appL10n.errorUpdateCartSelectedFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -135,7 +136,7 @@ Future<ApiResult<void>> updateCartRemarkService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Update remark failed',
+        e.message ?? appL10n.errorUpdateRemarkFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -157,7 +158,7 @@ Future<ApiResult<void>> changeCartQuantityService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Change cart quantity failed',
+        e.message ?? appL10n.errorChangeCartQuantityFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -176,7 +177,7 @@ Future<ApiResult<void>> removeCartItemsService({required List<int> ids}) async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Delete cart item failed',
+        e.message ?? appL10n.errorDeleteCartItemFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -198,7 +199,7 @@ Future<ApiResult<void>> createOrderBySitesService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Create order failed',
+        e.message ?? appL10n.errorCreateOrderFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -217,7 +218,7 @@ Future<ApiResult<void>> clearCartBySiteService({required int companyId}) async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Clear cart failed',
+        e.message ?? appL10n.errorClearCartFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -253,8 +254,8 @@ String? validateSmForPreSubmitOrder({
         final fromGroup = group.name.trim();
         final label = fromSite.isNotEmpty
             ? fromSite
-            : (fromGroup.isNotEmpty ? fromGroup : 'Department');
-        return 'Please select SM ($label)';
+            : (fromGroup.isNotEmpty ? fromGroup : appL10n.commonDepartment);
+        return appL10n.errorPleaseSelectSm(label);
       }
     }
   }
@@ -314,7 +315,7 @@ Future<ApiResult<void>> postCartSetSm({
 }) async {
   if (items.isEmpty) {
     return ApiFailure(
-      AppException('No sales rep selections to submit.'),
+      AppException(appL10n.errorNoSalesRepSelections),
     );
   }
   try {
@@ -323,7 +324,7 @@ Future<ApiResult<void>> postCartSetSm({
     if (payload is! Map) {
       return ApiFailure(
         AppException(
-          'Set SM failed',
+          appL10n.errorSetSmFailed,
           code: response.statusCode?.toString(),
         ),
       );
@@ -333,7 +334,7 @@ Future<ApiResult<void>> postCartSetSm({
     if (!isApiBusinessSuccessCode(code)) {
       return ApiFailure(
         AppException(
-          map['message']?.toString() ?? 'Set SM failed',
+          map['message']?.toString() ?? appL10n.errorSetSmFailed,
           code: code?.toString(),
         ),
       );
@@ -342,7 +343,7 @@ Future<ApiResult<void>> postCartSetSm({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Set SM failed',
+        e.message ?? appL10n.errorSetSmFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -357,7 +358,7 @@ Future<ApiResult<void>> setCartSmForShopDepartmentService({
   required int smId,
 }) async {
   if (shopDepartmentId <= 0 || smId <= 0) {
-    return ApiFailure(AppException('Invalid SM selection.'));
+    return ApiFailure(AppException(appL10n.errorInvalidSmSelection));
   }
   return postCartSetSm(
     items: <Map<String, dynamic>>[
@@ -405,7 +406,7 @@ Future<ApiResult<void>> createCartItemService({
     if (payload is! Map) {
       return ApiFailure(
         AppException(
-          'Add to cart failed',
+          appL10n.errorAddToCartFailed,
           code: response.statusCode?.toString(),
         ),
       );
@@ -416,7 +417,7 @@ Future<ApiResult<void>> createCartItemService({
       return ApiFailure(
         AppException(
           map['message']?.toString() ??
-              'There are still unordered items in the shopping cart',
+              appL10n.cartUnorderedItemsDefault,
           code: code.toString(),
         ),
       );
@@ -425,7 +426,7 @@ Future<ApiResult<void>> createCartItemService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Add to cart failed',
+        e.message ?? appL10n.errorAddToCartFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -456,7 +457,7 @@ Future<ApiResult<void>> changeCartItemSpecService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Change cart spec failed',
+        e.message ?? appL10n.errorChangeCartSpecFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -473,7 +474,7 @@ Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
     if (data is! Map) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid quotation config response format',
+        error: appL10n.errorInvalidQuotationConfigResponseFormat,
       );
     }
     final map = Map<String, dynamic>.from(data);
@@ -482,14 +483,16 @@ Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
       throw DioException(
         requestOptions: response.requestOptions,
         message:
-            map['message']?.toString() ?? 'Quotation config request failed',
+            map['message']?.toString() ??
+                appL10n.errorQuotationConfigRequestFailed,
       );
     }
     if (code is String && code != '0' && code.trim() != '0') {
       throw DioException(
         requestOptions: response.requestOptions,
         message:
-            map['message']?.toString() ?? 'Quotation config request failed',
+            map['message']?.toString() ??
+                appL10n.errorQuotationConfigRequestFailed,
       );
     }
     final dynamic resultNode = map['result'];
@@ -500,7 +503,7 @@ Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch quotation config failed',
+        e.message ?? appL10n.errorFetchQuotationConfigFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -519,7 +522,7 @@ Future<ApiResult<CartQuotationExportResultDto>> exportQuotationService({
     if (bytes == null || bytes.isEmpty) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Export quotation response is empty',
+        error: appL10n.errorExportQuotationResponseEmpty,
       );
     }
     final contentType = _extractContentType(response);
@@ -543,7 +546,7 @@ Future<ApiResult<CartQuotationExportResultDto>> exportQuotationService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Export quotation failed',
+        e.message ?? appL10n.errorExportQuotationFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -562,7 +565,7 @@ Future<ApiResult<String>> previewQuotationService({
     if (data is! Map) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid preview response format',
+        error: appL10n.errorInvalidPreviewResponseFormat,
       );
     }
     final map = Map<String, dynamic>.from(data);
@@ -583,7 +586,7 @@ Future<ApiResult<String>> previewQuotationService({
     if (rawResult.isEmpty) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Preview url is empty',
+        error: appL10n.errorPreviewUrlEmpty,
       );
     }
     final previewUrl = _buildOfficePreviewUrl(rawResult);
@@ -591,7 +594,7 @@ Future<ApiResult<String>> previewQuotationService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Preview quotation failed',
+        e.message ?? appL10n.errorPreviewQuotationFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -648,7 +651,7 @@ String _extractExportErrorMessage(Map<String, dynamic> jsonMap) {
   }
   final message = jsonMap['message']?.toString().trim() ?? '';
   if (message.isNotEmpty) return message;
-  return 'Export quotation failed';
+  return appL10n.errorExportQuotationFailed;
 }
 
 String _buildOfficePreviewUrl(String fileUrl) {

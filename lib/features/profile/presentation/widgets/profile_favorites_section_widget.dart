@@ -197,9 +197,9 @@ class _ProfileFavoritesSectionWidgetState
             onRefresh: _onRefreshFavorites,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              children: const [
-                SizedBox(height: 120),
-                AppEmptyView(message: 'Favorites is empty'),
+              children: [
+                const SizedBox(height: 120),
+                AppEmptyView(message: context.l10n.profileFavoritesEmpty),
               ],
             ),
           );

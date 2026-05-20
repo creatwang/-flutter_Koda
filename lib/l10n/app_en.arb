@@ -116,5 +116,373 @@
         "type": "int"
       }
     }
-  }
+  },
+  "commonOk": "OK",
+  "commonBack": "Back",
+  "commonSave": "Save",
+  "commonRemove": "Remove",
+  "commonClear": "Clear",
+  "commonClearAll": "Clear all",
+  "commonEdit": "EDIT",
+  "commonEditVerb": "Edit",
+  "commonDone": "Done",
+  "commonSubmit": "Submit",
+  "commonPreview": "Preview",
+  "commonExport": "Export",
+  "commonAdd": "Add",
+  "commonDelete": "Delete",
+  "commonSearch": "Search",
+  "commonRequired": "Required",
+  "commonMinSixChars": "Min 6 characters",
+  "commonMinSixCharsShort": "Min 6 chars",
+  "commonNotMatch": "Not match",
+  "commonDepartment": "Department",
+  "commonSpace": "Space",
+  "commonSpaceDefault": "default",
+  "commonUnknownDepartment": "Unknown Department",
+  "commonSuccess": "Success",
+  "commonActions": "ACTIONS",
+  "commonLogin": "LOGIN",
+  "commonPrice": "Price",
+  "commonUnit": "Unit",
+  "commonModel": "Model",
+  "commonHot": "HOT",
+  "commonProduct": "PRODUCT:",
+  "commonNoProduct": "no product",
+  "homeNavHome": "Home",
+  "homeNavProfile": "Profile",
+  "homeStartTitle": "Modern Furniture",
+  "homeStartSubtitle": "Turn your room with panto into a lot more minimalist with ease and speed",
+  "homeStartShopping": "Start Shopping",
+  "authEmailLabel": "EMAIL ADDRESS",
+  "authEmailHint": "name@firm.com",
+  "authPasswordLabel": "PASSWORD",
+  "authLoginSuccess": "Signed in successfully.",
+  "cartGoToPreOrder": "Go To Pre Order",
+  "cartShoppingCart": "Shopping Cart",
+  "cartSummaryTotalNum": "Total num {count} items",
+  "@cartSummaryTotalNum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartProjectSummary": "PROJECT SUMMARY",
+  "cartTotalItemsSelected": "Total items selected",
+  "cartEstimatedTotalAmount": "ESTIMATED TOTAL AMOUNT",
+  "cartPreSubmitOrder": "Pre Submit Order",
+  "cartPreOrder": "Pre Order",
+  "cartRemoveLineTitle": "Remove this line?",
+  "cartItemsCount": "{count} ITEMS",
+  "@cartItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartSelectSm": "Select SM",
+  "cartNoSm": "No SM",
+  "cartSelectSalesRep": "Select Sales Rep",
+  "cartNoMatchingSalesRep": "No matching sales rep",
+  "cartRemarkHint": "Please edit content",
+  "cartSpaceDialogSubtitle": "One short tag for this cart line — keeps picks organized.",
+  "cartRemoveSelectedTitle": "Remove selected lines?",
+  "cartClearShortlistTitle": "Clear entire shortlist?",
+  "cartRemoveSelectedMessage": "{count} selected lines will be removed from your shortlist.",
+  "@cartRemoveSelectedMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartClearShortlistMessage": "This clears all cart lines currently loaded for your sites.",
+  "cartSelectedLinesRemoved": "Selected lines removed",
+  "cartShortlistCleared": "Cart cleared",
+  "cartRemoveSelectedFailed": "Failed to remove selected lines. Please try again.",
+  "cartClearFailed": "Failed to clear cart. Please try again.",
+  "cartExportQuotation": "Export Quotation",
+  "preOrderLoadFailed": "Pre order load failed: {error}",
+  "@preOrderLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "preOrderEmpty": "No pre-order items",
+  "preOrderTotalPrefix": "Total: ",
+  "preOrderTotalSuffix": " items",
+  "preOrderGoToCheckout": "Go To Checkout",
+  "preOrderExportConfigEmpty": "Export form config is empty.",
+  "preOrderQuotationExported": "Quotation exported",
+  "preOrderExportSavedMessage": "File: {fileName}\n\nSaved to:\n{filePath}",
+  "@preOrderExportSavedMessage": {
+    "placeholders": {
+      "fileName": {},
+      "filePath": {}
+    }
+  },
+  "preOrderCheckoutFailed": "Checkout failed",
+  "preOrderOrderCreated": "Order created successfully",
+  "preOrderQuotationPreview": "Quotation Preview",
+  "preOrderPreviewUnavailable": "Preview is not available on this device.",
+  "productTechnicalData": "Technical Data",
+  "productRefCode": "Ref. {code}",
+  "@productRefCode": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "productSortDefault": "Default",
+  "productSortPriceLowHigh": "Price(Low > High)",
+  "productSortPriceHighLow": "Price(Low < High)",
+  "productSortRatingHighest": "Rating(Highest)",
+  "productSortRatingLowest": "Rating(Lowest)",
+  "productSortModelAz": "Model(A - Z)",
+  "productSortModelZa": "Model(Z - A)",
+  "productSortDateOldNew": "Date Added(Old >New)",
+  "productSortDateNewOld": "Date Added(New >Old)",
+  "productExpandFilterSidebar": "Expand filter sidebar",
+  "productSortBy": "Sort by: {label}",
+  "@productSortBy": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "productInShowroom": "In Showroom",
+  "productSearchHint": "Please",
+  "productClearSearch": "Clear search",
+  "productLibrary": "Product Library",
+  "productFilters": "Filters",
+  "productCategories": "Product Categories",
+  "productNoCategories": "No categories",
+  "profileSettingsUpdated": "Updated successfully.",
+  "profileSwitchedToMainAccount": "Switched to main account.",
+  "profileAccountSettings": "Account Settings",
+  "profilePersonalInformation": "Personal Information",
+  "profileFullNameLabel": "FULL NAME",
+  "profileOldPasswordLabel": "OLD PASSWORD",
+  "profileNewPasswordLabel": "NEW PASSWORD",
+  "profileConfirmPasswordLabel": "CONFIRM PASSWORD",
+  "profileSaveChanges": "Save Changes",
+  "profileOtherSettings": "Another Settings",
+  "profileSwitchSiteTooltip": "Switch site",
+  "profileSessionHint": "Manage your active session and sign-in account.",
+  "profileSwitchAccount": "Switch Account",
+  "profileSwitchAccountSubtitle": "Switch back to original account",
+  "profileSignOut": "Sign Out",
+  "profileSignOutSubtitle": "Exit current account",
+  "profileSettingsNameRequired": "Name is required.",
+  "profileSettingsPasswordFieldsRequired": "Please complete all password fields.",
+  "profileSettingsPasswordMinLength": "Password must be at least 6 characters.",
+  "profileSettingsPasswordMismatch": "New Password and Confirm Password must match.",
+  "profileSectionEmpty": "{title} is empty",
+  "@profileSectionEmpty": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "profileUid": "UID: {id}",
+  "@profileUid": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "profileSiteId": "SITEID: {id}",
+  "@profileSiteId": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "profileFavNum": "FAV NUM",
+  "profileCartNum": "CART NUM",
+  "profileAccountPreferences": "ACCOUNT & PREFERENCES",
+  "profileAddCustomer": "Add Customer",
+  "profileSetCommandPassword": "Set Command Password",
+  "profileBackToList": "Back to list",
+  "profileFavoritesEmpty": "Favorites is empty",
+  "profileLoggedInAsCustomer": "Logged in as customer.",
+  "profileCustomerDeleted": "Deleted",
+  "profileNoCustomers": "No customers",
+  "profileCustomerName": "CUSTOMER NAME",
+  "profileUidHeader": "UID",
+  "profileDeleteCustomer": "Delete customer",
+  "profileDeleteCustomerConfirm": "Remove {name} ({username})?",
+  "@profileDeleteCustomerConfirm": {
+    "placeholders": {
+      "name": {},
+      "username": {}
+    }
+  },
+  "profileOrderTabMy": "My",
+  "profileOrderTabCustomer": "Customer",
+  "profileNoOrders": "No orders yet",
+  "profileOrderStatusSuccessful": "Successful",
+  "profileOrderStatusFail": "Fail",
+  "profileOrderSendToErp": "Send to ERP",
+  "profileOrderNotSentToErp": "Not sent to ERP",
+  "profileOrderNoLabel": "OrderNo:",
+  "profileOrderTime": "Time: {time}",
+  "@profileOrderTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "profileMenuSettings": "Settings",
+  "profileMenuMyCustomers": "My Customers",
+  "profileMenuOrderCenter": "Order Center",
+  "profileMenuFavorites": "Favorites",
+  "profileCustomerNew": "New Customer",
+  "profileCustomerEdit": "Edit Customer",
+  "profileCustomerUsernameRequired": "Username or Email is required.",
+  "profileCustomerPasswordMinLength": "Password must be at least 6 characters.",
+  "profileCustomerUsernameLabel": "USERNAME OR EMAIL",
+  "profileCustomerPasswordLabel": "PASSWORD",
+  "profileCustomerNameLabel": "NAME",
+  "profileCustomerPhoneLabel": "PHONE",
+  "profileCustomerUsernameHint": "Login identifier for this customer account.",
+  "profileCustomerPasswordHint": "Required for create and update (min 6 characters).",
+  "profileCustomerNameHint": "Display name.",
+  "profileCustomerPhoneHint": "Contact telephone.",
+  "profileCommandPasswordTitle": "Set Command Password",
+  "profileCommandPasswordHint": "Applies as the shared customer account password for this store.",
+  "profileSwitchSiteTitle": "Switch site",
+  "profileNoSites": "No sites available.",
+  "profileSiteFallbackTitle": "Site #{id}",
+  "@profileSiteFallbackTitle": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSiteCurrent": "Current site · ID: {id}",
+  "@profileSiteCurrent": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSiteIdLine": "ID: {id}",
+  "@profileSiteIdLine": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionEndedTitle": "Session ended",
+  "sessionEndedMessage": "Please sign in again to continue shopping.",
+  "sessionEndedSignIn": "Sign in again",
+  "errorMissingCompanyId": "Missing company id",
+  "errorMissingToken": "Missing token",
+  "errorInvalidProductResponseFormat": "Invalid product response format",
+  "errorInvalidProductsListFormat": "Invalid products list format",
+  "errorInvalidFavoritesResponseFormat": "Invalid favorites response format",
+  "errorInvalidFavoritesListFormat": "Invalid favorites list format",
+  "errorInvalidCategoryTreeResponseFormat": "Invalid category tree response format",
+  "errorInvalidProductDetailResponseFormat": "Invalid product detail response format",
+  "errorInvalidCartNumResponseFormat": "Invalid cart num response format",
+  "errorCartNumRequestFailed": "Cart num request failed",
+  "errorMissingCartNumResult": "Missing result in cart num response",
+  "errorInvalidCartListResponseFormat": "Invalid cart list response format",
+  "errorUpdateCartSelectedFailed": "Update cart selected failed",
+  "errorUpdateRemarkFailed": "Update remark failed",
+  "errorChangeCartQuantityFailed": "Change cart quantity failed",
+  "errorDeleteCartItemFailed": "Delete cart item failed",
+  "errorCreateOrderFailed": "Create order failed",
+  "errorPleaseSelectSm": "Please select SM ({label})",
+  "@errorPleaseSelectSm": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "errorNoSalesRepSelections": "No sales rep selections to submit.",
+  "errorSetSmFailed": "Set SM failed",
+  "errorInvalidSmSelection": "Invalid SM selection.",
+  "errorAddToCartFailed": "Add to cart failed",
+  "errorInvalidQuotationConfigResponseFormat": "Invalid quotation config response format",
+  "errorExportQuotationResponseEmpty": "Export quotation response is empty",
+  "errorExportQuotationFailed": "Export quotation failed",
+  "errorInvalidPreviewResponseFormat": "Invalid preview response format",
+  "errorPreviewUrlEmpty": "Preview url is empty",
+  "errorInvalidUserInfoResponseFormat": "Invalid user info response format",
+  "errorUpdateUserInfoFailed": "Update user info failed",
+  "errorInvalidOrderListResponseFormat": "Invalid order list response format",
+  "errorInvalidCustomerListResponse": "Invalid customer list response",
+  "errorCreateCustomerFailed": "Create customer failed",
+  "errorUpdateCustomerFailed": "Update customer failed",
+  "errorResetCommonPasswordFailed": "Reset common password failed",
+  "errorDeleteCustomerFailed": "Delete customer failed",
+  "errorInvalidCustomerLoginResponse": "Invalid customer login response",
+  "errorInvalidCompanyListResponse": "Invalid company list response",
+  "errorMissingItemsInCompanyList": "Missing items in company list",
+  "errorInvalidSwitchShopResponse": "Invalid switch shop response",
+  "errorMissingCompanyIdInSwitchResponse": "Missing company_id in switch response",
+  "errorMissingTokenInSwitchResponse": "Missing token in switch response",
+  "errorLogoutFailed": "Logout failed",
+  "errorLogoutRequestFailed": "Logout request failed",
+  "errorInvalidLoginResponseFormat": "Invalid login response format",
+  "errorInvalidCompanyIdInLoginResponse": "Invalid company_id in login response",
+  "errorInvalidRegisterResponseFormat": "Invalid register response format",
+  "errorInvalidCompanyIdInRegisterResponse": "Invalid company_id in register response",
+  "errorRequestFailed": "Request failed",
+  "errorNetworkError": "Network error",
+  "errorSessionExpiredDefault": "Your session has expired. Please sign in again.",
+  "errorPleaseSignInFirst": "Please sign in first.",
+  "errorInvalidProductQuantity": "Invalid product quantity.",
+  "errorCreateFavoriteFailed": "Create favorite failed",
+  "errorDeleteFavoriteFailed": "Delete favorite failed",
+  "errorFetchSiteInfoFailed": "Fetch site info failed",
+  "errorInvalidUserPayloadAfterSwitch": "Invalid user payload after switch",
+  "errorUserInfoMissing": "User info missing",
+  "errorInvalidCustomerSession": "Invalid customer session",
+  "errorNoMainAccountToSwitch": "No main account to switch",
+  "errorInvalidMainAccountSnapshot": "Invalid main account snapshot",
+  "cartUnorderedNoticeTitle": "Notice",
+  "cartUnorderedItemsDefault": "There are still unordered items in the shopping cart.",
+  "cartGoToCart": "Go to Cart",
+  "toastSuccess": "Success!",
+  "toastInfo": "Info",
+  "toastWarning": "Warning",
+  "toastError": "Error",
+  "debugSecureStorageTitle": "Secure Storage Debug",
+  "debugRefresh": "Refresh",
+  "debugMaskValues": "Mask stored values",
+  "debugMaskValuesSubtitle": "Turn off to show full plaintext",
+  "debugClearAllKeys": "Clear all keys",
+  "debugNoStorageContent": "No stored content yet",
+  "debugDeleteKey": "Delete this key",
+  "debugLocalOnlyWarning": "For local debugging only. Do not ship this page entry in production.",
+  "debugLoadFailed": "Load failed: {error}",
+  "@debugLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "debugEmptyStringPlaceholder": "(empty string)",
+  "errorCustomerLoginFailed": "Customer login failed",
+  "errorFetchProductsFailed": "Fetch products failed",
+  "errorFetchFavoritesFailed": "Fetch favorites failed",
+  "errorFetchCategoryTreeFailed": "Fetch category tree failed",
+  "errorFetchProductDetailFailed": "Fetch product detail failed",
+  "errorFetchCartNumFailed": "Fetch cart num failed",
+  "errorFetchCartListFailed": "Fetch cart list failed",
+  "errorClearCartFailed": "Clear cart failed",
+  "errorChangeCartSpecFailed": "Change cart spec failed",
+  "errorQuotationConfigRequestFailed": "Quotation config request failed",
+  "errorFetchQuotationConfigFailed": "Fetch quotation config failed",
+  "errorPreviewQuotationFailed": "Preview quotation failed",
+  "errorFetchUserInfoFailed": "Fetch user info failed",
+  "errorFetchOrderListFailed": "Fetch order list failed",
+  "errorLoginRequestFailed": "Login request failed",
+  "errorCartNotReady": "Cart not ready.",
+  "errorFetchCustomersFailed": "Fetch customers failed",
+  "errorFetchCompanyListFailed": "Fetch company list failed",
+  "errorRegisterRequestFailed": "Register request failed",
+  "errorSwitchShopFailed": "Switch shop failed"
 }

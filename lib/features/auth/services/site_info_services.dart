@@ -6,6 +6,7 @@ import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/features/auth/api/auth_requests.dart';
 import 'package:george_pick_mate/features/auth/models/site_info_dto.dart';
 import 'package:george_pick_mate/shared/business_plugin/business_plugin_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _siteInfoStorageKey = 'site_info_v1';
@@ -23,7 +24,7 @@ Future<ApiResult<SiteInfoDto>> fetchSiteInfoService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch site info failed',
+        e.message ?? appL10n.errorFetchSiteInfoFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

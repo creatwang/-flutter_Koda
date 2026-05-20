@@ -74,7 +74,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                     ref.invalidate(preOrderCartControllerProvider);
                     context.push(AppRoutes.preOrder);
                   },
-                  child: const Text('Go To Pre Order'),
+                  child: Text(l10n.cartGoToPreOrder),
                 ),
               ],
             ),
@@ -163,6 +163,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     BuildContext context,
     List<CartListDto> groups,
   ) {
+    final l10n = context.l10n;
     final siteEntries = <({CartListDto group, CartSiteDto site})>[
       for (final g in groups)
         for (final s in g.items) (group: g, site: s),
@@ -183,7 +184,7 @@ class _CartPageState extends ConsumerState<CartPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Shopping Cart',
+              l10n.cartShoppingCart,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: ProMaxTokens.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -192,7 +193,7 @@ class _CartPageState extends ConsumerState<CartPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Total num $totalNum items',
+              l10n.cartSummaryTotalNum(totalNum),
               style: TextStyle(
                 color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                 letterSpacing: 1.1,
@@ -290,6 +291,7 @@ class _CartPageState extends ConsumerState<CartPage> {
     required double selectedAmount,
     required int totalCount,
   }) {
+    final l10n = context.l10n;
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -303,7 +305,7 @@ class _CartPageState extends ConsumerState<CartPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'PROJECT SUMMARY',
+                l10n.cartProjectSummary,
                 style: TextStyle(
                   color: ProMaxTokens.textPrimary.withValues(alpha: 0.95),
                   letterSpacing: 1.0,
@@ -312,15 +314,14 @@ class _CartPageState extends ConsumerState<CartPage> {
               ),
               const SizedBox(height: 14),
               _SummaryRow(
-                label: 'Total items selected',
-                // value: '$selectedCount / $totalCount',
-                value: '$selectedCount items',
+                label: l10n.cartTotalItemsSelected,
+                value: '$selectedCount${l10n.preOrderTotalSuffix}',
               ),
               const SizedBox(height: 20),
               Divider(color: Colors.white.withValues(alpha: 1), height: 2),
               const SizedBox(height: 20),
               Text(
-                'ESTIMATED TOTAL AMOUNT',
+                l10n.cartEstimatedTotalAmount,
                 style: TextStyle(
                   color: ProMaxTokens.textSecondary.withValues(alpha: 0.9),
                   letterSpacing: 0.9,
@@ -364,7 +365,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                         ),
                         const SizedBox(width: 10),
                       ],
-                      const Text('Pre Submit Order'),
+                      Text(l10n.cartPreSubmitOrder),
                     ],
                   ),
                 ),
@@ -376,7 +377,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.38)),
                 isLoading: _isClearingAll,
                 onPressed: _onClearAll,
-                child: const Text('Clear'),
+                child: Text(l10n.commonClear),
               ),
             ],
           ),
@@ -393,7 +394,7 @@ class _CartPageState extends ConsumerState<CartPage> {
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.28)),
                 ),
                 icon: const Icon(Icons.assignment_outlined, size: 16),
-                label: const Text('Pre Order'),
+                label: Text(l10n.cartPreOrder),
               ),
             ),
           ],
@@ -574,11 +575,12 @@ class _CartPageState extends ConsumerState<CartPage> {
   }
 
   Future<bool> _showDeleteItemConfirmDialog(CartProductDto item) async {
+    final l10n = context.l10n;
     final result = await showGeorgeConfirmDialog(
       context: context,
-      title: 'Remove this line?',
+      title: l10n.cartRemoveLineTitle,
       message: item.name,
-      confirmLabel: 'Remove',
+      confirmLabel: l10n.commonRemove,
       icon: Icons.delete_forever_rounded,
       accentColor: const Color(0xFFFF7B6B),
     );
@@ -698,6 +700,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final selectedSalesRep = _selectedSalesRep;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +731,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
                           widget.site.shopName.isEmpty
-                              ? 'Department'
+                              ? l10n.commonDepartment
                               : widget.site.shopName,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
@@ -758,7 +761,7 @@ class _CartSiteSectionState extends State<_CartSiteSection> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '${widget.site.cart.totalNum} ITEMS',
+                                l10n.cartItemsCount(widget.site.cart.totalNum),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 11,
@@ -821,10 +824,11 @@ class _CartSalesRepPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hasReps = reps.isNotEmpty;
     final display = selected?.name.trim().isNotEmpty == true
         ? selected!.name
-        : (hasReps ? 'Select SM' : 'No SM');
+        : (hasReps ? l10n.cartSelectSm : l10n.cartNoSm);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -879,6 +883,7 @@ class _CartSalesRepPicker extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final sheetL10n = sheetContext.l10n;
         final keyboardBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
         var query = '';
         return AnimatedPadding(
@@ -928,11 +933,11 @@ class _CartSalesRepPicker extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            const Align(
+                            Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                'Select Sales Rep',
-                                style: TextStyle(
+                                sheetL10n.cartSelectSalesRep,
+                                style: const TextStyle(
                                   color: ProMaxTokens.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -943,7 +948,7 @@ class _CartSalesRepPicker extends StatelessWidget {
                             TextField(
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
-                                hintText: 'Search',
+                                hintText: sheetL10n.commonSearch,
                                 hintStyle: const TextStyle(
                                   color: Colors.white54,
                                 ),
@@ -968,19 +973,19 @@ class _CartSalesRepPicker extends StatelessWidget {
                                   minHeight: 220,
                                 ),
                                 child: filtered.isEmpty
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.inbox_outlined,
                                               color: Colors.white54,
                                               size: 26,
                                             ),
-                                            SizedBox(height: 8),
+                                            const SizedBox(height: 8),
                                             Text(
-                                              'No matching sales rep',
-                                              style: TextStyle(
+                                              sheetL10n.cartNoMatchingSalesRep,
+                                              style: const TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
@@ -1107,6 +1112,7 @@ class _CartSpaceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.only(top: 8),
       child: Column(
@@ -1123,7 +1129,7 @@ class _CartSpaceSection extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    space.name.isEmpty ? 'Space' : space.name,
+                    space.name.isEmpty ? l10n.commonSpace : space.name,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.95),
                       fontWeight: FontWeight.w600,
@@ -1276,6 +1282,7 @@ class _CartProductTileState extends State<_CartProductTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
@@ -1420,24 +1427,26 @@ class _CartProductTileState extends State<_CartProductTile> {
                                     color: Colors.white,
                                     fontSize: 12,
                                   ),
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     isDense: true,
-                                    prefixIcon: Icon(
+                                    prefixIcon: const Icon(
                                       Icons.edit_outlined,
                                       size: 14,
                                       color: Colors.white54,
                                     ),
-                                    prefixIconConstraints: BoxConstraints(
+                                    prefixIconConstraints:
+                                        const BoxConstraints(
                                       minWidth: 26,
                                       maxWidth: 26,
                                     ),
-                                    hintText: 'Please edit content',
-                                    hintStyle: TextStyle(
+                                    hintText: l10n.cartRemarkHint,
+                                    hintStyle: const TextStyle(
                                       color: Colors.white54,
                                       fontSize: 12,
                                     ),
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 7,
                                     ),
@@ -1470,9 +1479,12 @@ class _CartProductTileState extends State<_CartProductTile> {
                                 ),
                               )
                             : const Icon(Icons.delete_outline, size: 14),
-                        label: const Text(
-                          'REMOVE',
-                          style: TextStyle(fontSize: 10, letterSpacing: 0.4),
+                        label: Text(
+                          l10n.commonRemove.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1498,7 +1510,7 @@ class _CartProductTileState extends State<_CartProductTile> {
                               )
                             : const Icon(Icons.tune, size: 14),
                         label: Text(
-                          'EDIT',
+                          l10n.commonEdit.toUpperCase(),
                           style: const TextStyle(
                             fontSize: 10,
                             letterSpacing: 0.4,

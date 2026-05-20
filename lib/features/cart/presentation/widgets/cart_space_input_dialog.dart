@@ -11,11 +11,8 @@ Future<String?> showCartSpaceInputDialog(BuildContext context) {
   return showGeorgeInputDialog(
     context: context,
     title: l10n.cartSpaceDialogTitle,
-    subtitle:
-        'One short tag for this cart line — keeps picks organized.',
+    subtitle: l10n.cartSpaceDialogSubtitle,
     hintText: l10n.cartSpaceDialogHint,
-    cancelLabel: 'Cancel',
-    confirmLabel: 'Add',
     barrierDismissible: false,
   );
 }

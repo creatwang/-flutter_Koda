@@ -181,7 +181,8 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                   children: [
                     ProductSortHeader(
                       selectedSortValue: _controller.selectedSortValue,
-                      selectedSortLabel: _controller.currentSortOption.text,
+                      selectedSortLabel:
+                          _controller.currentSortLabel(context.l10n),
                       onSortChanged: _onSortChanged,
                       isSidebarCollapsed: _controller.isFilterCollapsed,
                       onToggleSidebar: isTabletUp ? _onToggleSidebar : null,
@@ -219,8 +220,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
   void _onSortChanged(int value) {
     _cancelInFlightAddToCartFlow();
-    setState(() => _controller.setSortValue(value));
-    widget.onSortChanged?.call(_controller.currentSortOption.text);
+    final l10n = context.l10n;
+    setState(() => _controller.setSortValue(value, l10n));
+    widget.onSortChanged?.call(_controller.currentSortLabel(l10n));
     final query = _controller.currentSortQuery;
     ref
         .read(productsProvider.notifier)

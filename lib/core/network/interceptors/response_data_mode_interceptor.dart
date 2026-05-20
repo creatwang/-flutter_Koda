@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:george_pick_mate/core/network/api_business_code.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 enum ResponseDataMode { origin, simple }
@@ -25,7 +26,7 @@ class ResponseDataModeInterceptor extends Interceptor {
       if (_isSessionExpiredCode(code)) {
         final message = _extractBusinessMessage(data);
         showSessionExpiredDialog(
-          message.trim().isEmpty ? '您的登录已过期，请重新登录。' : message,
+          message.trim().isEmpty ? appL10n.errorSessionExpiredDefault : message,
         );
         handler.reject(
           DioException(
@@ -119,7 +120,7 @@ class ResponseDataModeInterceptor extends Interceptor {
   String _extractBusinessMessage(Map<String, dynamic> data) {
     final raw = data['message'] ?? data['msg'] ?? data['error'];
     if (raw is String && raw.trim().isNotEmpty) return raw;
-    return 'Request failed';
+    return appL10n.errorRequestFailed;
   }
 
   String _extractErrorMessage(DioException err) {
@@ -131,6 +132,6 @@ class ResponseDataModeInterceptor extends Interceptor {
     if (err.message != null && err.message!.trim().isNotEmpty) {
       return err.message!;
     }
-    return 'Network error';
+    return appL10n.errorNetworkError;
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/features/profile/controllers/customer_account_providers.dart';
 import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/shared/widgets/pro_max_input_field_widget.dart';
@@ -20,9 +22,10 @@ Future<void> showStoreCustomerFormBottomSheet({
   required StoreCustomerSheetMode mode,
   StoreCustomerItemDto? editing,
 }) {
+  final l10n = AppLocalizations.of(context)!;
   final title = mode == StoreCustomerSheetMode.create
-      ? 'New Customer'
-      : 'Edit Customer';
+      ? l10n.profileCustomerNew
+      : l10n.profileCustomerEdit;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -175,14 +178,15 @@ class _StoreCustomerFormSheetBodyState
   }
 
   bool _validate() {
+    final l10n = context.l10n;
     final u = _usernameController.text.trim();
     final p = _passwordController.text.trim();
     if (u.isEmpty) {
-      _errorMessage = 'Username or Email is required.';
+      _errorMessage = l10n.profileCustomerUsernameRequired;
       return false;
     }
     if (p.length < 6) {
-      _errorMessage = 'Password must be at least 6 characters.';
+      _errorMessage = l10n.profileCustomerPasswordMinLength;
       return false;
     }
     _errorMessage = null;
@@ -226,7 +230,7 @@ class _StoreCustomerFormSheetBodyState
     setState(() => _submitting = false);
     result.when(
       success: (_) {
-        showGlobalSnackBar('Success');
+        showGlobalSnackBar(context.l10n.commonSuccess);
         Navigator.of(context).pop();
       },
       failure: (exception) {
@@ -237,6 +241,7 @@ class _StoreCustomerFormSheetBodyState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return DismissKeyboardOnTap(
       child: SingleChildScrollView(
@@ -253,18 +258,18 @@ class _StoreCustomerFormSheetBodyState
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ProMaxInputFieldWidget(
-                    label: 'USERNAME OR EMAIL',
+                    label: l10n.profileCustomerUsernameLabel,
                     controller: _usernameController,
                     focusNode: _fieldFocusNodes[0],
                     obscureText: false,
                     errorText:
                         _showValidation &&
                             _usernameController.text.trim().isEmpty
-                        ? 'Required'
+                        ? l10n.commonRequired
                         : null,
                   ),
                   Text(
-                    'Login identifier for this customer account.',
+                    l10n.profileCustomerUsernameHint,
                     style: TextStyle(
                       color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                       fontSize: 11,
@@ -281,18 +286,18 @@ class _StoreCustomerFormSheetBodyState
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ProMaxInputFieldWidget(
-                    label: 'PASSWORD',
+                    label: l10n.profileCustomerPasswordLabel,
                     controller: _passwordController,
                     focusNode: _fieldFocusNodes[1],
                     obscureText: true,
                     errorText:
                         _showValidation &&
                             _passwordController.text.trim().length < 6
-                        ? 'Min 6 characters'
+                        ? l10n.commonMinSixChars
                         : null,
                   ),
                   Text(
-                    'Required for create and update (min 6 characters).',
+                    l10n.profileCustomerPasswordHint,
                     style: TextStyle(
                       color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                       fontSize: 11,
@@ -309,13 +314,13 @@ class _StoreCustomerFormSheetBodyState
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ProMaxInputFieldWidget(
-                    label: 'NAME',
+                    label: l10n.profileCustomerNameLabel,
                     controller: _nameController,
                     focusNode: _fieldFocusNodes[2],
                     obscureText: false,
                   ),
                   Text(
-                    'Display name.',
+                    l10n.profileCustomerNameHint,
                     style: TextStyle(
                       color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                       fontSize: 11,
@@ -332,13 +337,13 @@ class _StoreCustomerFormSheetBodyState
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ProMaxInputFieldWidget(
-                    label: 'PHONE',
+                    label: l10n.profileCustomerPhoneLabel,
                     controller: _phoneController,
                     focusNode: _fieldFocusNodes[3],
                     obscureText: false,
                   ),
                   Text(
-                    'Contact telephone.',
+                    l10n.profileCustomerPhoneHint,
                     style: TextStyle(
                       color: ProMaxTokens.textSecondary.withValues(alpha: 0.85),
                       fontSize: 11,
@@ -377,7 +382,7 @@ class _StoreCustomerFormSheetBodyState
                         color: Color(0xFFF4C77A),
                       ),
                     )
-                  : const Text('Done'),
+                  : Text(l10n.commonDone),
             ),
           ],
         ),

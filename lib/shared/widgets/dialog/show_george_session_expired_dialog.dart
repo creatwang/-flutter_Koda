@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-/// 登录失效等阻塞提示，单主按钮（英文）。
+/// 登录失效等阻塞提示，单主按钮。
 Future<void> showGeorgeSessionExpiredDialog({
   required BuildContext context,
-  String title = 'Session ended',
-  String message = 'Please sign in again to continue shopping.',
-  String actionLabel = 'Sign in again',
+  String? title,
+  String? message,
+  String? actionLabel,
   bool useRootNavigator = false,
   required Future<void> Function() onAction,
 }) {
@@ -18,6 +19,10 @@ Future<void> showGeorgeSessionExpiredDialog({
     barrierDismissible: false,
     barrierColor: const Color(0xB30A0E14),
     builder: (BuildContext dialogContext) {
+      final l10n = AppLocalizations.of(dialogContext)!;
+      final resolvedTitle = title ?? l10n.sessionEndedTitle;
+      final resolvedMessage = message ?? l10n.sessionEndedMessage;
+      final resolvedAction = actionLabel ?? l10n.sessionEndedSignIn;
       return PopScope(
         canPop: false,
         child: Dialog(
@@ -36,7 +41,7 @@ Future<void> showGeorgeSessionExpiredDialog({
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      title,
+                      resolvedTitle,
                       style: const TextStyle(
                         color: ProMaxTokens.textPrimary,
                         fontSize: 17,
@@ -46,7 +51,7 @@ Future<void> showGeorgeSessionExpiredDialog({
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      message,
+                      resolvedMessage,
                       style: TextStyle(
                         color: ProMaxTokens.textSecondary.withValues(
                           alpha: 0.95,
@@ -78,7 +83,7 @@ Future<void> showGeorgeSessionExpiredDialog({
                           ),
                         ),
                         child: Text(
-                          actionLabel,
+                          resolvedAction,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,

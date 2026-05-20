@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 
 class HomeStartPage extends StatefulWidget {
@@ -19,10 +20,9 @@ class HomeStartPage extends StatefulWidget {
 }
 
 class _HomeStartPageState extends State<HomeStartPage> {
-
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -49,9 +49,9 @@ class _HomeStartPageState extends State<HomeStartPage> {
                     ],
                   ).createShader(bounds);
                 },
-                child: const Text(
-                  'Modern Furniture',
-                  style: TextStyle(
+                child: Text(
+                  l10n.homeStartTitle,
+                  style: const TextStyle(
                     fontSize: 64,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -63,13 +63,12 @@ class _HomeStartPageState extends State<HomeStartPage> {
                 height: 12,
               ),
               ConstrainedBox(
-                // 关键：使用 maxWidth 限制最大宽度，超过这个宽度就会换行
                 constraints: const BoxConstraints(maxWidth: 340),
                 child: Text(
+                  l10n.homeStartSubtitle,
                   textAlign: TextAlign.center,
-                  'Turn your room with panto into a lot more minimalist with ease and speed',
-                  style: TextStyle(color: Colors.grey),
-                  softWrap: true, // 默认为 true，即允许换行
+                  style: const TextStyle(color: Colors.grey),
+                  softWrap: true,
                 ),
               ),
               const SizedBox(
@@ -83,8 +82,14 @@ class _HomeStartPageState extends State<HomeStartPage> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                child: const Text('Start Shopping', style: TextStyle(color: Colors.black,fontWeight: FontWeight.w400),),
-              )
+                child: Text(
+                  l10n.homeStartShopping,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -11,6 +11,7 @@ import 'package:george_pick_mate/features/auth/controllers/session_providers.dar
 import 'package:george_pick_mate/features/auth/models/session.dart';
 import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:george_pick_mate/shared/widgets/dismiss_keyboard_on_tap_widget.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/theme/app_theme.dart';
@@ -90,6 +91,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       supportedLocales: const [Locale('en'), Locale('zh')],
       routerConfig: _router,
       builder: (context, child) {
+        bindAppLocalizationsResolver(() => AppLocalizations.of(context)!);
         // iPad/桌面保持固定最大宽度，小屏按 1024 设计稿等比缩放。
         final content = ResponsiveBreakpoints.builder(
           child: Builder(

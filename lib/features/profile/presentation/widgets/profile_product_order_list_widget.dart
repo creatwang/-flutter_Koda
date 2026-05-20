@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
 import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
@@ -25,6 +26,7 @@ class ProfileProductOrderListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return asyncState.when(
       loading: () => const AppLoadingView(),
       error: (error, _) => _OrderErrorView(
@@ -33,8 +35,8 @@ class ProfileProductOrderListWidget extends StatelessWidget {
       ),
       data: (data) {
         if (data.items.isEmpty) {
-          return const AppEmptyView(
-            message: 'No orders yet',
+          return AppEmptyView(
+            message: l10n.profileNoOrders,
             width: 120,
             height: 120,
           );
@@ -92,12 +94,17 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isPiSuccess = item.piStatus == 1;
     final piColor = isPiSuccess ? const Color.fromRGBO(6, 255, 60, 1) : const Color(
       0xFFFF8C92,
     );
-    final piText = isPiSuccess ? 'Successful' : 'Fail';
-    final erpText = item.status == 1 ? 'Send to ERP' : 'Not sent to ERP';
+    final piText = isPiSuccess
+        ? l10n.profileOrderStatusSuccessful
+        : l10n.profileOrderStatusFail;
+    final erpText = item.status == 1
+        ? l10n.profileOrderSendToErp
+        : l10n.profileOrderNotSentToErp;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -125,7 +132,7 @@ class _OrderCard extends StatelessWidget {
                           ),
                           TextSpan(
                             children: [
-                              TextSpan(text: 'OrderNo:'),
+                              TextSpan(text: l10n.profileOrderNoLabel),
                               WidgetSpan(child: SizedBox(
                                 width: 4,
                               ),),
@@ -153,7 +160,7 @@ class _OrderCard extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Time: ${item.createdAt ?? '--'}',
+                      l10n.profileOrderTime(item.createdAt ?? '--'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 12
@@ -226,6 +233,7 @@ class _DepartmentBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2)
@@ -246,7 +254,7 @@ class _DepartmentBlock extends StatelessWidget {
               width: 4,
             ),
             Text(
-              department.name ?? 'Unknown Department',
+              department.name ?? l10n.commonUnknownDepartment,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -270,6 +278,7 @@ class _SpaceBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
@@ -300,7 +309,7 @@ class _SpaceBlock extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                space.name ?? 'default',
+                space.name ?? l10n.commonSpaceDefault,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontWeight: FontWeight.w600,
@@ -437,6 +446,7 @@ class _OrderErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -460,7 +470,7 @@ class _OrderErrorView extends StatelessWidget {
                 foregroundColor: Colors.white70,
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
-              child: const Text('Retry'),
+              child: Text(l10n.commonRetry),
             ),
           ],
         ),

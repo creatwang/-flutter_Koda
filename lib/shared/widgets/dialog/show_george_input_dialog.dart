@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_anim.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/george_dialog_surface.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
@@ -9,8 +10,8 @@ Future<String?> showGeorgeInputDialog({
   required String title,
   required String hintText,
   String? subtitle,
-  String cancelLabel = 'Cancel',
-  String confirmLabel = 'Add',
+  String? cancelLabel,
+  String? confirmLabel,
   bool barrierDismissible = false,
 }) {
   return showDialog<String>(
@@ -18,12 +19,13 @@ Future<String?> showGeorgeInputDialog({
     barrierDismissible: barrierDismissible,
     barrierColor: const Color(0xB30A0E14),
     builder: (BuildContext dialogContext) {
+      final l10n = AppLocalizations.of(dialogContext)!;
       return _GeorgeInputDialogBody(
         title: title,
         subtitle: subtitle,
         hintText: hintText,
-        cancelLabel: cancelLabel,
-        confirmLabel: confirmLabel,
+        cancelLabel: cancelLabel ?? l10n.commonCancel,
+        confirmLabel: confirmLabel ?? l10n.commonAdd,
       );
     },
   );

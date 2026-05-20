@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/product/models/product_item.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({
@@ -79,7 +80,7 @@ class ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'HOT',
+                            context.l10n.commonHot,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: Colors.black87,

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 import 'package:george_pick_mate/features/product/api/product_requests.dart';
 import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
@@ -37,7 +38,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
 }) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(const AppException('Missing company id'));
+    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
   }
   try {
     final response = await requestProductsPage(
@@ -54,14 +55,14 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
     if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid product response format',
+        error: appL10n.errorInvalidProductResponseFormat,
       );
     }
     final list = data['items'];
     if (list is! List) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid products list format',
+        error: appL10n.errorInvalidProductsListFormat,
       );
     }
     final dtos = list
@@ -72,7 +73,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch products failed',
+        e.message ?? appL10n.errorFetchProductsFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -90,7 +91,7 @@ Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
 }) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(const AppException('Missing company id'));
+    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
   }
   try {
     final response = await requestFavorPageList(
@@ -102,14 +103,14 @@ Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
     if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid favorites response format',
+        error: appL10n.errorInvalidFavoritesResponseFormat,
       );
     }
     final list = data['items'];
     if (list is! List) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid favorites list format',
+        error: appL10n.errorInvalidFavoritesListFormat,
       );
     }
     final dtos = list
@@ -125,7 +126,7 @@ Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch favorites failed',
+        e.message ?? appL10n.errorFetchFavoritesFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -147,7 +148,7 @@ Future<ApiResult<List<ProductCategoryTreeDto>>>
 fetchCategoryTreeService() async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(const AppException('Missing company id'));
+    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
   }
   try {
     final response = await requestCategoryTree(companyId: companyId);
@@ -166,7 +167,7 @@ fetchCategoryTreeService() async {
     if (rawList == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid category tree response format',
+        error: appL10n.errorInvalidCategoryTreeResponseFormat,
       );
     }
 
@@ -180,7 +181,7 @@ fetchCategoryTreeService() async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch category tree failed',
+        e.message ?? appL10n.errorFetchCategoryTreeFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -197,14 +198,14 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
     if (data is! Map<String, dynamic>) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid product detail response format',
+        error: appL10n.errorInvalidProductDetailResponseFormat,
       );
     }
     return ApiSuccess(ProductDto.fromJson(data).toModel());
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch product detail failed',
+        e.message ?? appL10n.errorFetchProductDetailFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -230,14 +231,14 @@ Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: 'Invalid product detail response format',
+        error: appL10n.errorInvalidProductDetailResponseFormat,
       );
     }
     return ApiSuccess(ProductDetailDto.fromJson(payload));
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Fetch product detail failed',
+        e.message ?? appL10n.errorFetchProductDetailFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -252,7 +253,7 @@ Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
 Future<ApiResult<void>> createFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(const AppException('Missing company id'));
+    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
   }
   try {
     await createFavorRequest(
@@ -263,7 +264,7 @@ Future<ApiResult<void>> createFavorService({required int productId}) async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Create favorite failed',
+        e.message ?? appL10n.errorCreateFavoriteFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );
@@ -278,7 +279,7 @@ Future<ApiResult<void>> createFavorService({required int productId}) async {
 Future<ApiResult<void>> deleteFavorService({required int productId}) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
-    return ApiFailure(const AppException('Missing company id'));
+    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
   }
   try {
     await deleteFavorRequest(
@@ -289,7 +290,7 @@ Future<ApiResult<void>> deleteFavorService({required int productId}) async {
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
-        e.message ?? 'Delete favorite failed',
+        e.message ?? appL10n.errorDeleteFavoriteFailed,
         code: e.response?.statusCode?.toString(),
       ),
     );

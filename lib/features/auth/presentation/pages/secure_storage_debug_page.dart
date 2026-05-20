@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 class SecureStorageDebugPage extends StatefulWidget {
   const SecureStorageDebugPage({super.key});
@@ -35,7 +38,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
         values.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
       );
     } catch (error) {
-      loadErrorMessage = '读取失败: $error';
+      loadErrorMessage = appL10n.debugLoadFailed(error.toString());
     }
     if (!mounted) return;
     setState(() {
@@ -59,7 +62,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
 
   String _displayValue(String value) {
     if (!_isMaskEnabled) return value;
-    if (value.isEmpty) return '(空字符串)';
+    if (value.isEmpty) return appL10n.debugEmptyStringPlaceholder;
     if (value.length <= 4) return '*' * value.length;
     final prefix = value.substring(0, 2);
     final suffix = value.substring(value.length - 2);
@@ -68,12 +71,13 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Secure Storage Debug'),
+        title: Text(l10n.debugSecureStorageTitle),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: l10n.debugRefresh,
             onPressed: _isLoading ? null : _loadItems,
             icon: const Icon(Icons.refresh),
           ),
@@ -85,13 +89,11 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
             width: double.infinity,
             color: Colors.amber.shade100,
             padding: const EdgeInsets.all(12),
-            child: const Text(
-              '仅用于本地调试，请勿在生产环境保留该页面入口。',
-            ),
+            child: Text(l10n.debugLocalOnlyWarning),
           ),
           SwitchListTile(
-            title: const Text('值脱敏显示'),
-            subtitle: const Text('关闭后将展示完整明文'),
+            title: Text(l10n.debugMaskValues),
+            subtitle: Text(l10n.debugMaskValuesSubtitle),
             value: _isMaskEnabled,
             onChanged: (value) {
               setState(() {
@@ -113,7 +115,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
               ),
             ),
           Expanded(
-            child: _buildListContent(),
+            child: _buildListContent(l10n),
           ),
           SafeArea(
             top: false,
@@ -123,7 +125,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
                 width: double.infinity,
                 child: FilledButton.tonal(
                   onPressed: _items.isEmpty ? null : _deleteAll,
-                  child: const Text('清空全部键值'),
+                  child: Text(l10n.debugClearAllKeys),
                 ),
               ),
             ),
@@ -133,13 +135,13 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
     );
   }
 
-  Widget _buildListContent() {
+  Widget _buildListContent(AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_items.isEmpty) {
-      return const Center(
-        child: Text('当前没有存储内容'),
+      return Center(
+        child: Text(l10n.debugNoStorageContent),
       );
     }
     final entries = _items.entries.toList();
@@ -156,7 +158,7 @@ class _SecureStorageDebugPageState extends State<SecureStorageDebugPage> {
             ),
             subtitle: SelectableText(value),
             trailing: IconButton(
-              tooltip: '删除该键',
+              tooltip: l10n.debugDeleteKey,
               onPressed: () => _deleteByKey(entry.key),
               icon: const Icon(Icons.delete_outline),
             ),

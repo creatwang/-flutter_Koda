@@ -3,6 +3,7 @@
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/auth/services/site_info_services.dart';
+import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 /// 写入用户信息、当前 [companyId]、[tokenMap] 并同步站点缓存。
 ///
@@ -11,10 +12,10 @@ Future<void> persistAuthenticatedUserSnapshot(UserInfoBase user) async {
   final companyId = user.companyId?.toInt();
   final token = user.token?.toString();
   if (companyId == null) {
-    throw StateError('Missing company_id');
+    throw StateError(appL10n.errorMissingCompanyId);
   }
   if (token == null || token.isEmpty) {
-    throw StateError('Missing token');
+    throw StateError(appL10n.errorMissingToken);
   }
   await secureStorageService.saveUserInfoBase(user);
   await secureStorageService.saveCompanyId(companyId);

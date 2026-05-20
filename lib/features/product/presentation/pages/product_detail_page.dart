@@ -221,7 +221,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           left: contentPadding.left,
           top: 12,
           child: GeorgeBackButton(
-            label: 'Back',
+            label: context.l10n.commonBack,
             onPressed: () => context.pop(),
           ),
         ),

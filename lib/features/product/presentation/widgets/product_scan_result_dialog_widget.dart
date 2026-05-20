@@ -142,15 +142,15 @@ class _ProductScanResultDialogWidgetState
     final detailRows = <({String label, String value})>[...skuRows];
     if (unitPrice > 0) {
       detailRows.add((
-        label: 'Price',
+        label: context.l10n.commonPrice,
         value: '\$${unitPrice.toStringAsFixed(2)}',
       ));
     }
     if (unit.isNotEmpty) {
-      detailRows.add((label: 'Unit', value: unit));
+      detailRows.add((label: context.l10n.commonUnit, value: unit));
     }
     if (model.isNotEmpty) {
-      detailRows.add((label: 'Model', value: model));
+      detailRows.add((label: context.l10n.commonModel, value: model));
     }
 
     final mq = MediaQuery.sizeOf(context);

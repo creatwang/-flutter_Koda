@@ -18,6 +18,7 @@ import 'package:george_pick_mate/features/profile/presentation/widgets/store_cus
 import 'package:george_pick_mate/features/profile/presentation/widgets/switch_site_bottom_sheet.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
+import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 
@@ -35,7 +36,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   ProfileContentSection _currentSection = ProfileContentSection.settings;
   ProfileOrderTab _currentOrderTab = ProfileOrderTab.my;
   final TextEditingController _fullNameController = TextEditingController(
-    text: 'Molin Chen',
+    text: '',
   );
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
@@ -58,8 +59,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _onSaveSettings() async {
+    final l10n = context.l10n;
     setState(() => _showSettingsValidation = true);
     final validationError = ProfilePageController.validateSettingsForm(
+      l10n: l10n,
       fullName: _fullNameController.text,
       oldPassword: _oldPasswordController.text,
       newPassword: _newPasswordController.text,
@@ -88,7 +91,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _oldPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
-        showGlobalSnackBar('Updated successfully.');
+        showGlobalSnackBar(l10n.profileSettingsUpdated);
       },
       failure: (exception) => _settingsErrorMessage = exception.message,
     );
@@ -130,7 +133,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (!mounted) return;
       result.when(
         success: (_) {
-          showGlobalSnackBar('Switched to main account.');
+          showGlobalSnackBar(context.l10n.profileSwitchedToMainAccount);
           context.go(AppRoutes.home);
         },
         failure: (exception) {
@@ -148,6 +151,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final userInfoState = ref.watch(profileUserInfoProvider);
     final favoriteState = ref.watch(favoriteProductsProvider);
     final favoriteData = favoriteState.asData?.value;
@@ -167,6 +171,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final canViewCustomerOrders =
         userInfoState.asData?.value.isAuthAccount == true;
     final visibleMenus = buildProfileSidebarMenus(
+      l10n: l10n,
       isSalesRep: canViewCustomerOrders,
     );
     final contentSection = resolveProfileVisibleSection(

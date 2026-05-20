@@ -103,7 +103,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       extendBody: section == HomeSection.start,
       actions: [
         HeaderMenuButton(
-          label: 'Home',
+          label: l10n.homeNavHome,
           icon: Icons.storefront,
           selected: section == HomeSection.start,
           onTap: () => goSection(HomeSection.start),
@@ -125,7 +125,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           onPointerUp: (_) => _cancelProfileSwitchSiteHold(),
           onPointerCancel: (_) => _cancelProfileSwitchSiteHold(),
           child: HeaderMenuButton(
-            label: 'Profile',
+            label: l10n.homeNavProfile,
             icon: Icons.person_outline,
             selected: section == HomeSection.profile,
             onTap: () => goSection(HomeSection.profile),
@@ -161,7 +161,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       floatingActionButton: kDebugMode
           ? FloatingActionButton.small(
               heroTag: 'home_secure_storage_debug_fab',
-              tooltip: 'Secure Storage Debug',
+              tooltip: l10n.debugSecureStorageTitle,
               onPressed: () => context.push(AppRoutes.secureStorageDebug),
               child: const Icon(Icons.bug_report_outlined),
             )
@@ -182,7 +182,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         items: [
           FrostedBottomMenuItem(
             icon: Icons.home_outlined,
-            label: 'Home',
+            label: l10n.homeNavHome,
             selected: section == HomeSection.start,
             onTap: () => goSection(HomeSection.start),
           ),
@@ -200,7 +200,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           FrostedBottomMenuItem(
             icon: Icons.person_outline,
-            label: 'Profile',
+            label: l10n.homeNavProfile,
             selected: section == HomeSection.profile,
             onTap: () => goSection(HomeSection.profile),
             onPointerDown: (_) => _beginProfileSwitchSiteHold(),

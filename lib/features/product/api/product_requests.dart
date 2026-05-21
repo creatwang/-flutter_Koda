@@ -52,7 +52,7 @@ Future<Response<dynamic>> requestProductDetail({
 ///
 /// [page] / [pageSize]：分页；[companyId]：站点；
 /// [shopCateGoryId]：店铺分类；[sort] / [orderBy]：排序；
-/// [onlyShowroomSample]：仅展厅有样板（传后端约定参数）；
+/// [onlyShowroomSample]：仅展厅有样板（传后端约定参数）；现在只是固定的
 /// [keyword]：搜索关键词（非空时传 `keyword`）。
 Future<Response<dynamic>> requestProductsPage({
   required int page,

@@ -105,166 +105,208 @@ class ProfileSettingsPanelWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Expanded(child: ProMaxGlassCardWidget(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.person,
-                            color: Colors.white.withValues(alpha: 0.72),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.profilePersonalInformation,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              letterSpacing: 0.6,
-                              fontWeight: FontWeight.w700,
+                Expanded(
+                  child: ProMaxGlassCardWidget(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                    child: LayoutBuilder(
+                      builder: (context, cardConstraints) {
+                        return SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: cardConstraints.maxHeight,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ProMaxInputFieldWidget(
-                              label: l10n.profileFullNameLabel,
-                              controller: fullNameController,
-                              obscureText: false,
-                              onTap: () => _ensureFieldVisible(context),
-                              errorText:
-                              showValidation &&
-                                  fullNameController.text.trim().isEmpty
-                                  ? l10n.commonRequired
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: ProMaxInputFieldWidget(
-                              label: l10n.profileOldPasswordLabel,
-                              controller: oldPasswordController,
-                              obscureText: true,
-                              onTap: () => _ensureFieldVisible(context),
-                              errorText: oldPasswordError,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ProMaxInputFieldWidget(
-                              label: l10n.profileNewPasswordLabel,
-                              controller: newPasswordController,
-                              obscureText: true,
-                              onTap: () => _ensureFieldVisible(context),
-                              errorText: newPasswordError,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: ProMaxInputFieldWidget(
-                              label: l10n.profileConfirmPasswordLabel,
-                              controller: confirmPasswordController,
-                              obscureText: true,
-                              onTap: () => _ensureFieldVisible(context),
-                              errorText: confirmPasswordError,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      const SizedBox(height: 2),
-                      SizedBox(
-                        height: 44,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 44,
-                                child: validationMessage == null
-                                    ? const SizedBox.shrink()
-                                    : DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0x26FF6E76),
-                                    borderRadius: BorderRadius.circular(
-                                      6,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                      size: 20,
                                     ),
-                                    border: Border.all(
-                                      color: const Color(0x55FF7F86),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      l10n.profilePersonalInformation,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        letterSpacing: 0.6,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: l10n.profileFullNameLabel,
+                                        controller: fullNameController,
+                                        obscureText: false,
+                                        onTap: () =>
+                                            _ensureFieldVisible(context),
+                                        errorText:
+                                            showValidation &&
+                                                fullNameController.text
+                                                    .trim()
+                                                    .isEmpty
+                                            ? l10n.commonRequired
+                                            : null,
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.error_outline_rounded,
-                                          size: 14,
-                                          color: Color(0xFFFFA9AD),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: l10n.profileOldPasswordLabel,
+                                        controller: oldPasswordController,
+                                        obscureText: true,
+                                        onTap: () =>
+                                            _ensureFieldVisible(context),
+                                        errorText: oldPasswordError,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: l10n.profileNewPasswordLabel,
+                                        controller: newPasswordController,
+                                        obscureText: true,
+                                        onTap: () =>
+                                            _ensureFieldVisible(context),
+                                        errorText: newPasswordError,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: ProMaxInputFieldWidget(
+                                        label: l10n.profileConfirmPasswordLabel,
+                                        controller: confirmPasswordController,
+                                        obscureText: true,
+                                        onTap: () =>
+                                            _ensureFieldVisible(context),
+                                        errorText: confirmPasswordError,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                const SizedBox(height: 2),
+                                SizedBox(
+                                  height: 44,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: 44,
+                                          child: validationMessage == null
+                                              ? const SizedBox.shrink()
+                                              : DecoratedBox(
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0x26FF6E76,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: const Color(
+                                                        0x55FF7F86,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons
+                                                              .error_outline_rounded,
+                                                          size: 14,
+                                                          color: Color(
+                                                            0xFFFFA9AD,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 6,
+                                                        ),
+                                                        Expanded(
+                                                          child: SelectableText.rich(
+                                                            TextSpan(
+                                                              text:
+                                                                  validationMessage!,
+                                                              style: const TextStyle(
+                                                                color: Color(
+                                                                  0xFFFFC8CB,
+                                                                ),
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                            maxLines: 1,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: SelectableText.rich(
-                                            TextSpan(
-                                              text: validationMessage!,
-                                              style: const TextStyle(
-                                                color: Color(0xFFFFC8CB),
-                                                fontSize: 12,
-                                                fontWeight:
-                                                FontWeight.w600,
-                                              ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      FilledButton(
+                                        onPressed:
+                                            isSavingSettings || isSigningOut
+                                            ? null
+                                            : () => onSaveSettings(),
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          minimumSize: const Size(120, 44),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              6,
                                             ),
-                                            maxLines: 1,
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                        child: isSavingSettings
+                                            ? const SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : Text(l10n.profileSaveChanges),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
-                            FilledButton(
-                              onPressed: isSavingSettings || isSigningOut
-                                  ? null
-                                  : () => onSaveSettings(),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(120, 44),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ),
-                              child: isSavingSettings
-                                  ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                                  : Text(l10n.profileSaveChanges),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                )),
+                ),
                 const SizedBox(height: 18),
                 ProMaxGlassCardWidget(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),

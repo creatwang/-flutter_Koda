@@ -11,6 +11,7 @@ class ProfileSettingsAccountActionButtonWidget extends StatelessWidget {
     this.isDanger = false,
     this.isLoading = false,
     this.isEnabled = true,
+    this.compact = false,
   });
 
   final IconData icon;
@@ -20,6 +21,7 @@ class ProfileSettingsAccountActionButtonWidget extends StatelessWidget {
   final bool isDanger;
   final bool isLoading;
   final bool isEnabled;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +57,13 @@ class ProfileSettingsAccountActionButtonWidget extends StatelessWidget {
               border: Border.all(
                 color: isDanger
                     ? const Color(0x66FF6E76)
-                    : ProMaxTokens.inputBorderFocused.withValues(
-                        alpha: 0.70,
-                      ),
+                    : ProMaxTokens.inputBorderFocused.withValues(alpha: 0.70),
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 10 : 12,
+              vertical: compact ? 10 : 12,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -80,28 +83,26 @@ class ProfileSettingsAccountActionButtonWidget extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: compact ? 4 : 6),
                 Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: titleColor,
-                    fontSize: 13,
+                    fontSize: compact ? 12 : 13,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: compact ? 1 : 2),
                 Text(
                   subtitle,
-                  maxLines: 2,
+                  maxLines: compact ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: ProMaxTokens.textSecondary.withValues(
-                      alpha: 0.92,
-                    ),
-                    fontSize: 11,
+                    color: ProMaxTokens.textSecondary.withValues(alpha: 0.92),
+                    fontSize: compact ? 10 : 11,
                     height: 1.25,
                   ),
                 ),

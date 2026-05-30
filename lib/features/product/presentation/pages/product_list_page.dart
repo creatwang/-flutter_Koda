@@ -137,84 +137,83 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
 
     return HomeMainContentSlot(
       child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isLandscape ? 34 : 0,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (isTabletUp)
-                  AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeInOutCubic,
-                  width: _controller.isFilterCollapsed ? 0 : 225,
-                  child: ClipRect(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 180),
-                      opacity: _controller.isFilterCollapsed ? 0 : 1,
-                      child: IgnorePointer(
-                        ignoring: _controller.isFilterCollapsed,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: ProductFilterPanel(
-                                categoryTree: categoryTreeState,
-                                onCategoryTreeRetry: () =>
-                                    ref.refresh(categoryTreeProvider),
-                                selectedCategoryId:
-                                    _controller.selectedCategoryId,
-                                onCategoryTap: _onCategoryTap,
-                                onCollapseTap: _onCollapseSidebar,
-                                pinApplyButtonToBottom: true,
-                              ),
+        padding: EdgeInsets.symmetric(horizontal: isLandscape ? 34 : 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (isTabletUp)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeInOutCubic,
+                width: _controller.isFilterCollapsed ? 0 : 225,
+                child: ClipRect(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: _controller.isFilterCollapsed ? 0 : 1,
+                    child: IgnorePointer(
+                      ignoring: _controller.isFilterCollapsed,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: ProductFilterPanel(
+                              categoryTree: categoryTreeState,
+                              onCategoryTreeRetry: () =>
+                                  ref.refresh(categoryTreeProvider),
+                              selectedCategoryId:
+                                  _controller.selectedCategoryId,
+                              onCategoryTap: _onCategoryTap,
+                              onCollapseTap: _onCollapseSidebar,
+                              pinApplyButtonToBottom: true,
                             ),
-                            const SizedBox(width: 14),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 14),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  children: [
-                    ProductSortHeader(
-                      selectedSortValue: _controller.selectedSortValue,
-                      selectedSortLabel:
-                          _controller.currentSortLabel(context.l10n),
-                      onSortChanged: _onSortChanged,
-                      isSidebarCollapsed: _controller.isFilterCollapsed,
-                      onToggleSidebar: isTabletUp ? _onToggleSidebar : null,
-                      onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
-                      inShowroomSelected: _controller.inShowroomOnly,
-                      onInShowroomChanged: _onInShowroomChanged,
-                      searchKeywordController: _searchKeywordController,
-                      onSearchPressed: _onSearchKeywordSubmitted,
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: ProductGridSection(
-                        productsState: productsState,
-                        columns: columns,
-                        scrollController: _scrollController,
-                        collectOverrides: _collectOverrides,
-                        collectSubmitting: _collectSubmitting,
-                        addToCartSubmitting: _addToCartSubmitting,
-                        onCollectTap: _onCollectTapped,
-                        onAddToCartTap: _onAddToCartTapped,
-                        onBeforeNavigateToDetail: _cancelInFlightAddToCartFlow,
-                        onRetry: _onProductGridRefresh,
-                        onRefresh: _onProductGridRefresh,
-                        onEnsureLoadMore: _ensureScrollableAndLoadMoreIfNeeded,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ],
-          ),
-          ),
+            Expanded(
+              child: Column(
+                children: [
+                  ProductSortHeader(
+                    selectedSortValue: _controller.selectedSortValue,
+                    selectedSortLabel: _controller.currentSortLabel(
+                      context.l10n,
+                    ),
+                    onSortChanged: _onSortChanged,
+                    isSidebarCollapsed: _controller.isFilterCollapsed,
+                    onToggleSidebar: isTabletUp ? _onToggleSidebar : null,
+                    onOpenFilters: isTabletUp ? null : _openMobileFilterSheet,
+                    inShowroomSelected: _controller.inShowroomOnly,
+                    onInShowroomChanged: _onInShowroomChanged,
+                    searchKeywordController: _searchKeywordController,
+                    onSearchPressed: _onSearchKeywordSubmitted,
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ProductGridSection(
+                      productsState: productsState,
+                      columns: columns,
+                      scrollController: _scrollController,
+                      collectOverrides: _collectOverrides,
+                      collectSubmitting: _collectSubmitting,
+                      addToCartSubmitting: _addToCartSubmitting,
+                      onCollectTap: _onCollectTapped,
+                      onAddToCartTap: _onAddToCartTapped,
+                      onBeforeNavigateToDetail: _cancelInFlightAddToCartFlow,
+                      onRetry: _onProductGridRefresh,
+                      onRefresh: _onProductGridRefresh,
+                      onEnsureLoadMore: _ensureScrollableAndLoadMoreIfNeeded,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -232,9 +231,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
   void _onInShowroomChanged(bool selected) {
     _cancelInFlightAddToCartFlow();
     setState(() => _controller.setInShowroomOnly(selected));
-    ref
-        .read(productsProvider.notifier)
-        .applyShowroomSampleFilter(selected);
+    ref.read(productsProvider.notifier).applyShowroomSampleFilter(selected);
   }
 
   void _onSearchKeywordSubmitted() {
@@ -318,6 +315,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       }
       setState(() => _addToCartSubmitting.remove(productId));
 
+      int? submittedSmId;
       final added = await presentProductSkuCartSideSheet(
         context: context,
         detail: detail,
@@ -336,13 +334,20 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                 space: space,
                 subName: payload.subName,
               );
-          return resolveCreateCartItemSubmitSuccess(result);
+          submittedSmId = await resolveCreateCartItemSubmitSuccess(result);
+          return submittedSmId != null;
         },
       );
       if (!mounted) return;
       if (epoch != _addToCartFlowEpoch) return;
-      if (added) {
-        showGlobalSnackBar(context.l10n.productAddedToCart(product.name));
+      if (added && submittedSmId != null) {
+        showGlobalSnackBar(
+          buildAddToCartSuccessMessage(
+            l10n: context.l10n,
+            productTitle: product.name,
+            smId: submittedSmId!,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

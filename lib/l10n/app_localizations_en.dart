@@ -153,6 +153,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productScanTitle => 'Scan QR Code';
 
   @override
+  String productScanInvalidQrWithContent(Object code) {
+    return 'Invalid QR code\\nScanned content: $code';
+  }
+
+  @override
   String get commonCancel => 'Cancel';
 
   @override
@@ -198,6 +203,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String productAddedToCart(Object title) {
     return 'Added to cart: $title';
+  }
+
+  @override
+  String productAddedToCartSuccess(Object title) {
+    return 'Added to cart! $title';
+  }
+
+  @override
+  String productAddedToPreOrder(Object title) {
+    return 'Added to pre-order! $title';
   }
 
   @override

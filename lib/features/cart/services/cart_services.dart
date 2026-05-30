@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -31,13 +32,15 @@ Future<ApiResult<int>> fetchCartTotalNumService() async {
     if (code is num && code != 0) {
       throw DioException(
         requestOptions: response.requestOptions,
-        message: map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
+        message:
+            map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
       );
     }
     if (code is String && code != '0' && code.trim() != '0') {
       throw DioException(
         requestOptions: response.requestOptions,
-        message: map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
+        message:
+            map['message']?.toString() ?? appL10n.errorCartNumRequestFailed,
       );
     }
     final dynamic resultNode = map['result'];
@@ -69,9 +72,7 @@ Future<ApiResult<List<CartListDto>>> fetchCartListBySiteService({
   int? smStatus = 0,
 }) async {
   try {
-    final response = await requestCartListBySite(
-      smStatus: smStatus,
-    );
+    final response = await requestCartListBySite(smStatus: smStatus);
     final data = response.data;
     final rawList = switch (data) {
       List() => data,
@@ -235,29 +236,30 @@ String? validateSmForPreSubmitOrder({
   required List<CartListDto> groups,
   required Map<int, int> reportedSmIdByCompanyId,
 }) {
+  final missingSiteLabels = <String>[];
   for (final group in groups) {
     for (final site in group.items) {
       final hasSelected = site.cart.items
           .expand((sp) => sp.list)
           .any((p) => p.isSelected);
       if (!hasSelected) continue;
-      final repList = site.smItems.isNotEmpty
-          ? site.smItems
-          : group.smItems;
+      final repList = site.smItems.isNotEmpty ? site.smItems : group.smItems;
       if (repList.isEmpty) continue;
-      final fallbackSmId =
-          site.smId > 0 ? site.smId : group.smId;
-      final smId =
-          reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
+      final fallbackSmId = site.smId > 0 ? site.smId : group.smId;
+      final smId = reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
       if (smId <= 0) {
-        final fromSite = site.shopName.trim();
-        final fromGroup = group.name.trim();
-        final label = fromSite.isNotEmpty
-            ? fromSite
-            : (fromGroup.isNotEmpty ? fromGroup : appL10n.commonDepartment);
-        return appL10n.errorPleaseSelectSm(label);
+        final siteName = site.shopName.trim();
+        missingSiteLabels.add(
+          siteName.isNotEmpty
+              ? siteName
+              : '${appL10n.commonDepartment}#${site.companyId}',
+        );
       }
     }
+  }
+  if (missingSiteLabels.isNotEmpty) {
+    final uniqueLabels = missingSiteLabels.toSet().toList(growable: false);
+    return appL10n.errorPleaseSelectSm(uniqueLabels.join('、'));
   }
   return null;
 }
@@ -270,43 +272,60 @@ List<Map<String, dynamic>> buildSetSmRequestItems({
   required List<CartListDto> groups,
   required Map<int, int> reportedSmIdByCompanyId,
 }) {
-  final departmentToSm = <int, int>{};
-  final departmentToCartIds = <int, Set<int>>{};
+  final items = <Map<String, dynamic>>[];
   for (final group in groups) {
-    for (final site in group.items) {
-      final selectedItems = site.cart.items
-          .expand((sp) => sp.list)
-          .where((p) => p.isSelected)
-          .toList(growable: false);
-      final hasSelected = selectedItems.isNotEmpty;
-      if (!hasSelected) continue;
-      final repList = site.smItems.isNotEmpty
-          ? site.smItems
-          : group.smItems;
-      if (repList.isEmpty) continue;
-      final fallbackSmId =
-          site.smId > 0 ? site.smId : group.smId;
-      final smId =
-          reportedSmIdByCompanyId[site.companyId] ?? fallbackSmId;
-      if (smId <= 0) continue;
-      departmentToSm[group.id] = smId;
-      final cartIds = departmentToCartIds.putIfAbsent(
-        group.id,
-        () => <int>{},
+    final selectedSites = group.items
+        .where(
+          (site) =>
+              site.cart.items.expand((sp) => sp.list).any((p) => p.isSelected),
+        )
+        .toList(growable: false);
+    if (selectedSites.isEmpty) continue;
+
+    final requiresSm = selectedSites.any(
+      (site) =>
+          (site.smItems.isNotEmpty ? site.smItems : group.smItems).isNotEmpty,
+    );
+    if (!requiresSm) continue;
+
+    final smId = _resolveDepartmentSmId(
+      group: group,
+      selectedSites: selectedSites,
+      reportedSmIdByCompanyId: reportedSmIdByCompanyId,
+    );
+    if (smId <= 0) continue;
+
+    final cartIds = <int>{};
+    for (final site in selectedSites) {
+      cartIds.addAll(
+        site.cart.items
+            .expand((sp) => sp.list)
+            .where((p) => p.isSelected)
+            .map((item) => item.id),
       );
-      cartIds.addAll(selectedItems.map((item) => item.id));
     }
+    items.add(<String, dynamic>{
+      'shop_department_id': group.id,
+      'sm_id': smId,
+      'cart_ids': cartIds.toList(growable: false),
+    });
   }
-  return departmentToSm.entries
-      .map(
-        (e) => <String, dynamic>{
-          'shop_department_id': e.key,
-          'sm_id': e.value,
-          'cart_ids': (departmentToCartIds[e.key] ?? const <int>{})
-              .toList(growable: false),
-        },
-      )
-      .toList(growable: false);
+  return items;
+}
+
+int _resolveDepartmentSmId({
+  required CartListDto group,
+  required List<CartSiteDto> selectedSites,
+  required Map<int, int> reportedSmIdByCompanyId,
+}) {
+  for (final site in selectedSites) {
+    final reported = reportedSmIdByCompanyId[site.companyId] ?? 0;
+    if (reported > 0) return reported;
+  }
+  for (final site in selectedSites) {
+    if (site.smId > 0) return site.smId;
+  }
+  return group.smId > 0 ? group.smId : 0;
 }
 
 /// 调用 [requestCartSetSm] 写入 `data`（与预提交、预订单即时保存共用）。
@@ -314,9 +333,7 @@ Future<ApiResult<void>> postCartSetSm({
   required List<Map<String, dynamic>> items,
 }) async {
   if (items.isEmpty) {
-    return ApiFailure(
-      AppException(appL10n.errorNoSalesRepSelections),
-    );
+    return ApiFailure(AppException(appL10n.errorNoSalesRepSelections));
   }
   try {
     final response = await requestCartSetSm(data: items);
@@ -362,10 +379,7 @@ Future<ApiResult<void>> setCartSmForShopDepartmentService({
   }
   return postCartSetSm(
     items: <Map<String, dynamic>>[
-      <String, dynamic>{
-        'shop_department_id': shopDepartmentId,
-        'sm_id': smId,
-      },
+      <String, dynamic>{'shop_department_id': shopDepartmentId, 'sm_id': smId},
     ],
   );
 }
@@ -385,7 +399,7 @@ Future<ApiResult<void>> setCartSmForPreSubmitService({
 /// 加购。
 ///
 /// 字段与后端 `create` 接口一致。
-Future<ApiResult<void>> createCartItemService({
+Future<ApiResult<int>> createCartItemService({
   required int productId,
   required String subIndex,
   required String sIndex,
@@ -413,16 +427,30 @@ Future<ApiResult<void>> createCartItemService({
     }
     final map = Map<String, dynamic>.from(payload);
     final code = map['code'];
-    if (code is num && code == cartUnorderedItemsBusinessCode) {
+    if (isCartUnorderedItemsBusinessCode(code?.toString())) {
       return ApiFailure(
         AppException(
-          map['message']?.toString() ??
-              appL10n.cartUnorderedItemsDefault,
+          map['message']?.toString() ?? appL10n.cartUnorderedItemsDefault,
           code: code.toString(),
         ),
       );
     }
-    return const ApiSuccess(null);
+    if (!isApiBusinessSuccessCode(code)) {
+      final message =
+          map['message']?.toString() ??
+          map['msg']?.toString() ??
+          map['error']?.toString() ??
+          appL10n.errorAddToCartFailed;
+      return ApiFailure(AppException(message, code: code?.toString()));
+    }
+    final smId = _resolveCreateCartSmId(map);
+    if (kDebugMode) {
+      log(
+        'create cart success: productId=$productId, smId=$smId, code=${code?.toString() ?? 'null'}',
+        name: 'cart.create',
+      );
+    }
+    return ApiSuccess(smId);
   } on DioException catch (e) {
     return ApiFailure(
       AppException(
@@ -433,6 +461,22 @@ Future<ApiResult<void>> createCartItemService({
   } catch (e) {
     return ApiFailure(AppException(e.toString()));
   }
+}
+
+int _resolveCreateCartSmId(Map<String, dynamic> payload) {
+  final topLevel = _asInt(payload['sm_id']);
+  final resultNode = payload['result'];
+  if (resultNode is Map) {
+    final resultMap = Map<String, dynamic>.from(resultNode);
+    return _asInt(resultMap['sm_id']) ?? topLevel ?? 0;
+  }
+  return topLevel ?? 0;
+}
+
+int? _asInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString().trim() ?? '');
 }
 
 /// 购物车行改规格。
@@ -484,7 +528,7 @@ Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
         requestOptions: response.requestOptions,
         message:
             map['message']?.toString() ??
-                appL10n.errorQuotationConfigRequestFailed,
+            appL10n.errorQuotationConfigRequestFailed,
       );
     }
     if (code is String && code != '0' && code.trim() != '0') {
@@ -492,7 +536,7 @@ Future<ApiResult<CartQuotationConfigDto>> fetchQuotationConfigService() async {
         requestOptions: response.requestOptions,
         message:
             map['message']?.toString() ??
-                appL10n.errorQuotationConfigRequestFailed,
+            appL10n.errorQuotationConfigRequestFailed,
       );
     }
     final dynamic resultNode = map['result'];

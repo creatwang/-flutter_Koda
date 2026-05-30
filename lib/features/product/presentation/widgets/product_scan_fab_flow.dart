@@ -9,11 +9,12 @@ import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_i
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/presentation/pages/qr_scan_page.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_scan_result_dialog_widget.dart';
+import 'package:george_pick_mate/features/product/services/product_scan_services.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
-/// 商品扫码入口的完整流程（会话检查、扫码页、解析、结果弹窗、加购）。
+/// 商品扫码入口流程（会话检查、扫码页、解析 id、跳转详情）。
 Future<void> runProductQrScanFlow({
   required WidgetRef ref,
   required BuildContext context,
@@ -35,6 +36,31 @@ Future<void> runProductQrScanFlow({
     MaterialPageRoute<String>(builder: (_) => const QrScanPage()),
   );
   if (!context.mounted || code == null || code.trim().isEmpty) return;
+
+  final scanned = code.trim();
+  final productId = ProductScanServices.resolveProductIdFromScan(scanned);
+  if (productId == null) {
+    showGlobalWarningMessage(
+      context.l10n.productScanInvalidQrWithContent(scanned),
+      context: context,
+    );
+    return;
+  }
+  context.push(AppRoutes.productDetail(productId));
+}
+
+// Legacy note:
+// 保留旧版“扫码后自动解析 SKU 并弹窗加购”实现，当前版本先切换为
+// “扫码直达商品详情页”。后续版本如需恢复旧流程，可重新接入此方法。
+//
+// ignore: unused_element
+Future<void> _runLegacyProductQrScanFlow({
+  required WidgetRef ref,
+  required BuildContext context,
+  required String code,
+}) async {
+  final navigatorState = appNavigatorKey.currentState;
+  if (navigatorState == null) return;
 
   await WidgetsBinding.instance.endOfFrame;
   if (!context.mounted) return;
@@ -115,9 +141,7 @@ Future<void> runProductQrScanFlow({
 
   if (!context.mounted) return;
   if (loadError != null) {
-    showGlobalErrorMessage(
-      context.l10n.productDetailLoadFailed('$loadError'),
-    );
+    showGlobalErrorMessage(context.l10n.productDetailLoadFailed('$loadError'));
     return;
   }
   if (scanResult == null) {
@@ -126,6 +150,7 @@ Future<void> runProductQrScanFlow({
   }
   final resultDialogContext = appNavigatorKey.currentContext;
   if (resultDialogContext == null) return;
+  int? submittedSmId;
   final added = await showProductScanResultDialog(
     // ignore: use_build_context_synchronously
     context: resultDialogContext,
@@ -133,31 +158,43 @@ Future<void> runProductQrScanFlow({
     selected: scanResult.selected,
     selectedSub: scanResult.selectedSub,
     skuRowSelection: scanResult.skuRowSelection,
-    onAddToCart: (dialogContext) =>
-        _addScannedSkuToCart(ref, dialogContext, scanResult!),
+    onAddToCart: (dialogContext) async {
+      submittedSmId = await _addScannedSkuToCart(
+        ref,
+        dialogContext,
+        scanResult!,
+      );
+      return submittedSmId != null;
+    },
   );
-  if (!context.mounted || !added) return;
+  if (!context.mounted || !added || submittedSmId == null) return;
   final title = scanResult.selected.name ?? scanResult.detail.name ?? '--';
-  showGlobalSnackBar(context.l10n.productAddedToCart(title));
+  showGlobalSnackBar(
+    buildAddToCartSuccessMessage(
+      l10n: context.l10n,
+      productTitle: title,
+      smId: submittedSmId!,
+    ),
+  );
 }
 
-Future<bool> _addScannedSkuToCart(
+Future<int?> _addScannedSkuToCart(
   WidgetRef ref,
   BuildContext dialogContext,
   ProductDetailScanResult scanResult,
 ) async {
   final sub = scanResult.selectedSub;
   final productId = sub.pid;
-  if (productId == null) return false;
+  if (productId == null) return null;
   final subIndex = ProductSkuCartHelpers.subIndexForApi(sub);
-  if (subIndex.isEmpty) return false;
+  if (subIndex.isEmpty) return null;
   final sIndex = ProductSkuCartHelpers.sIndexForApi(sub);
   final subName = ProductSkuCartHelpers.buildCartSubName(
     sub: sub,
     skuRowSelection: scanResult.skuRowSelection,
   );
   final space = await resolveSpaceForCartAdd(dialogContext);
-  if (space == null) return false;
+  if (space == null) return null;
   final result = await ref
       .read(cartControllerProvider.notifier)
       .createCartItem(

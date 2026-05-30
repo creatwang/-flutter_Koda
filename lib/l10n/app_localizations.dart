@@ -368,6 +368,12 @@ abstract class AppLocalizations {
   /// **'Scan QR Code'**
   String get productScanTitle;
 
+  /// No description provided for @productScanInvalidQrWithContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid QR code\\nScanned content: {code}'**
+  String productScanInvalidQrWithContent(Object code);
+
   /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:
@@ -457,6 +463,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to cart: {title}'**
   String productAddedToCart(Object title);
+
+  /// No description provided for @productAddedToCartSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to cart! {title}'**
+  String productAddedToCartSuccess(Object title);
+
+  /// No description provided for @productAddedToPreOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to pre-order! {title}'**
+  String productAddedToPreOrder(Object title);
 
   /// No description provided for @cartLoadFailed.
   ///

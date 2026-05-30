@@ -5,6 +5,7 @@ import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/create_cart_item_result.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
+import 'package:george_pick_mate/features/cart/services/cart_create_flow_services.dart';
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
@@ -253,9 +254,15 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
       );
       if (!mounted) return;
       switch (result) {
-        case CreateCartItemSuccess():
+        case CreateCartItemSuccess(:final smId):
           final title = resolved.selected.name ?? detail.name ?? '';
-          showGlobalSnackBar(context.l10n.productAddedToCart(title));
+          showGlobalSnackBar(
+            buildAddToCartSuccessMessage(
+              l10n: context.l10n,
+              productTitle: title,
+              smId: smId,
+            ),
+          );
           if (isBuyNow) {
             context.go(AppRoutes.homeWithTab('cart'));
           }
@@ -339,7 +346,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         .read(cartControllerProvider.notifier)
         .createCartItem(
           productId: sub.pid!,
-          subIndex: subIndex ?? '',
+          subIndex: subIndex,
           sIndex: sIndex,
           productNum: qty,
           space: space,

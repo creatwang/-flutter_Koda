@@ -26,10 +26,9 @@ final cartControllerProvider =
 /// 预订单列表与操作（`sm_status=1`），与 [CartController] 共用接口实现。
 ///
 /// `autoDispose`：离开预订单页后释放，再次进入会重新执行 [build] 拉列表。
-final preOrderCartControllerProvider =
-    AsyncNotifierProvider.autoDispose(
-      PreOrderCartController.new,
-    );
+final preOrderCartControllerProvider = AsyncNotifierProvider.autoDispose(
+  PreOrderCartController.new,
+);
 
 bool _isAuthenticatedBySession(Session? session) {
   return session?.isAuthenticated == true;
@@ -138,9 +137,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       state = const AsyncData(<CartListDto>[]);
       return;
     }
-    final result = await fetchCartListBySiteService(
-      smStatus: listSmStatus,
-    );
+    final result = await fetchCartListBySiteService(smStatus: listSmStatus);
     result.when(
       success: (data) {
         state = AsyncData(data);
@@ -181,16 +178,14 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       subName: subName,
     );
     switch (result) {
-      case ApiSuccess():
+      case ApiSuccess(:final data):
         await refresh();
-        return const CreateCartItemSuccess();
+        return CreateCartItemSuccess(smId: data);
       case ApiFailure(:final exception):
         if (isCartUnorderedItemsBusinessCode(exception.code)) {
           return CreateCartItemUnordered(exception.message);
         }
-        Future<void>.microtask(
-          () => showGlobalErrorMessage(exception.message),
-        );
+        Future<void>.microtask(() => showGlobalErrorMessage(exception.message));
         return const CreateCartItemFailure();
     }
   }

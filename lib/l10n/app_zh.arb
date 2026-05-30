@@ -67,6 +67,12 @@
     }
   },
   "productScanTitle": "扫描二维码",
+  "productScanInvalidQrWithContent": "无效的二维码\\n扫码内容：{code}",
+  "@productScanInvalidQrWithContent": {
+    "placeholders": {
+      "code": {}
+    }
+  },
   "commonCancel": "取消",
   "commonConfirm": "确定",
   "cartSpaceDialogTitle": "请输入 Space",
@@ -83,6 +89,18 @@
   "addToCart": "加入购物车",
   "productAddedToCart": "已加入购物车: {title}",
   "@productAddedToCart": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "productAddedToCartSuccess": "已加入购物车！{title}",
+  "@productAddedToCartSuccess": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "productAddedToPreOrder": "已加入预订单！{title}",
+  "@productAddedToPreOrder": {
     "placeholders": {
       "title": {}
     }

@@ -67,6 +67,12 @@
     }
   },
   "productScanTitle": "Scan QR Code",
+  "productScanInvalidQrWithContent": "Invalid QR code\\nScanned content: {code}",
+  "@productScanInvalidQrWithContent": {
+    "placeholders": {
+      "code": {}
+    }
+  },
   "commonCancel": "Cancel",
   "commonConfirm": "Confirm",
   "cartSpaceDialogTitle": "Enter Space",
@@ -83,6 +89,18 @@
   "addToCart": "Add to cart",
   "productAddedToCart": "Added to cart: {title}",
   "@productAddedToCart": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "productAddedToCartSuccess": "Added to cart! {title}",
+  "@productAddedToCartSuccess": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "productAddedToPreOrder": "Added to pre-order! {title}",
+  "@productAddedToPreOrder": {
     "placeholders": {
       "title": {}
     }

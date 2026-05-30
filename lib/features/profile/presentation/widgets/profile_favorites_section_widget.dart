@@ -133,6 +133,7 @@ class _ProfileFavoritesSectionWidgetState
       }
       setState(() => _addToCartSubmitting.remove(productId));
 
+      int? submittedSmId;
       final added = await presentProductSkuCartSideSheet(
         context: context,
         detail: detail,
@@ -151,13 +152,20 @@ class _ProfileFavoritesSectionWidgetState
                 space: space,
                 subName: payload.subName,
               );
-          return resolveCreateCartItemSubmitSuccess(result);
+          submittedSmId = await resolveCreateCartItemSubmitSuccess(result);
+          return submittedSmId != null;
         },
       );
       if (!mounted) return;
       if (epoch != _addToCartFlowEpoch) return;
-      if (added) {
-        showGlobalSnackBar(context.l10n.productAddedToCart(product.name));
+      if (added && submittedSmId != null) {
+        showGlobalSnackBar(
+          buildAddToCartSuccessMessage(
+            l10n: context.l10n,
+            productTitle: product.name,
+            smId: submittedSmId!,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

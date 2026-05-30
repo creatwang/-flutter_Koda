@@ -152,6 +152,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get productScanTitle => '扫描二维码';
 
   @override
+  String productScanInvalidQrWithContent(Object code) {
+    return '无效的二维码\\n扫码内容：$code';
+  }
+
+  @override
   String get commonCancel => '取消';
 
   @override
@@ -196,6 +201,16 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String productAddedToCart(Object title) {
     return '已加入购物车: $title';
+  }
+
+  @override
+  String productAddedToCartSuccess(Object title) {
+    return '已加入购物车！$title';
+  }
+
+  @override
+  String productAddedToPreOrder(Object title) {
+    return '已加入预订单！$title';
   }
 
   @override

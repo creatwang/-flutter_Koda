@@ -3,6 +3,19 @@
         android:label="选品助手"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- API 34+：横屏 App 打开相机时，系统默认「相机兼容」可能强制转屏；以下三项设为 false 以关闭 -->
+        <!-- 禁止打开相机时强制旋转 Activity（如平板模拟器提示 Rotate for a better view） -->
+        <property
+            android:name="android.window.PROPERTY_CAMERA_COMPAT_ALLOW_FORCE_ROTATION"
+            android:value="false" />
+        <!-- 禁止模拟为竖屏 requestedOrientation（避免 letterbox 竖条视口） -->
+        <property
+            android:name="android.window.PROPERTY_CAMERA_COMPAT_ALLOW_SIMULATE_REQUESTED_ORIENTATION"
+            android:value="false" />
+        <!-- 禁止相机启停时刷新 Activity 方向 -->
+        <property
+            android:name="android.window.PROPERTY_CAMERA_COMPAT_ALLOW_REFRESH"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

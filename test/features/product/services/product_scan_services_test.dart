@@ -21,13 +21,13 @@ void main() {
       expect(id, 12345);
     });
 
-    test('returns null when prefix is not url comma', () {
+    test('parses bare https url without url comma prefix', () {
       const code =
-          'https://demo.gbuilderchina.com/m/#/pages/goods-detail/goods-detail?id=64522';
+          'https://demo.gbuilderchina.com/m/#/pages/goods-detail/goods-detail?id=64521';
 
       final id = ProductScanServices.resolveProductIdFromScan(code);
 
-      expect(id, isNull);
+      expect(id, 64521);
     });
 
     test('returns null when id is missing', () {

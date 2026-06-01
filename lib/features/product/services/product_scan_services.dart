@@ -7,7 +7,8 @@ abstract final class ProductScanServices {
   /// 解析扫码字符串中的商品 id。
   ///
   /// 支持格式示例：
-  /// `url,https://demo.gbuilderchina.com/m/#/pages/goods-detail/goods-detail?id=64522`
+  /// - `url,https://.../goods-detail?id=64522`
+  /// - `https://.../goods-detail?id=64522`（无 `url,` 前缀的裸链接）
   static int? resolveProductIdFromScan(String rawCode) {
     final normalized = rawCode.trim();
     if (normalized.isEmpty) return null;
@@ -34,10 +35,18 @@ abstract final class ProductScanServices {
   }
 
   static String? _extractUrlPayload(String value) {
-    final lower = value.toLowerCase();
-    if (!lower.startsWith(_prefix)) return null;
-    final payload = value.substring(_prefix.length).trim();
-    return payload.isEmpty ? null : payload;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+
+    final lower = trimmed.toLowerCase();
+    if (lower.startsWith(_prefix)) {
+      final payload = trimmed.substring(_prefix.length).trim();
+      return payload.isEmpty ? null : payload;
+    }
+    if (lower.startsWith('http://') || lower.startsWith('https://')) {
+      return trimmed;
+    }
+    return null;
   }
 
   static bool _looksLikeGoodsDetail(Uri uri) {

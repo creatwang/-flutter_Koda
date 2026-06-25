@@ -158,6 +158,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get productScanUniqidsListTitle => 'Scanned products';
+
+  @override
   String get commonCancel => 'Cancel';
 
   @override

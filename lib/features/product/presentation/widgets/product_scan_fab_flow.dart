@@ -38,15 +38,18 @@ Future<void> runProductQrScanFlow({
   if (!context.mounted || code == null || code.trim().isEmpty) return;
 
   final scanned = code.trim();
-  final productId = ProductScanServices.resolveProductIdFromScan(scanned);
-  if (productId == null) {
-    showGlobalWarningMessage(
-      context.l10n.productScanInvalidQrWithContent(scanned),
-      context: context,
-    );
-    return;
+  final resolved = ProductScanServices.resolveFromScan(scanned);
+  switch (resolved) {
+    case ProductScanResolveUniqids(:final uniqids):
+      context.push(AppRoutes.productScanUniqidsList(uniqids));
+    case ProductScanResolveProductId(:final productId):
+      context.push(AppRoutes.productDetail(productId));
+    case null:
+      showGlobalWarningMessage(
+        context.l10n.productScanInvalidQrWithContent(scanned),
+        context: context,
+      );
   }
-  context.push(AppRoutes.productDetail(productId));
 }
 
 // Legacy note:

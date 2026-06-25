@@ -26,7 +26,8 @@ class FavoriteProductsPageResult {
 ///
 /// [page] / [pageSize]：分页；[shopCateGoryId]：店铺分类；
 /// [sort] / [orderBy]：排序参数；
-/// [onlyShowroomSample]：仅展厅有样板；[keyword]：搜索关键词。
+/// [onlyShowroomSample]：仅展厅有样板；[keyword]：搜索关键词；
+/// [uniqids]：按 uniqid 批量筛选。
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
@@ -35,6 +36,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   int orderBy = 0,
   bool onlyShowroomSample = false,
   String? keyword,
+  List<String>? uniqids,
 }) async {
   final companyId = await secureStorageService.getCompanyId();
   if (companyId == null) {
@@ -50,7 +52,23 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
       orderBy: orderBy,
       onlyShowroomSample: onlyShowroomSample,
       keyword: keyword,
+      uniqids: uniqids,
     );
+    return _parseProductsPageResponse(response);
+  } on DioException catch (e) {
+    return ApiFailure(
+      AppException(
+        e.message ?? appL10n.errorFetchProductsFailed,
+        code: e.response?.statusCode?.toString(),
+      ),
+    );
+  } catch (e) {
+    return ApiFailure(AppException(e.toString()));
+  }
+}
+
+ApiResult<List<ProductItem>> _parseProductsPageResponse(Response<dynamic> response) {
+  try {
     final data = response.data;
     if (data is! Map<String, dynamic>) {
       throw DioException(

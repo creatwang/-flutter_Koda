@@ -48,4 +48,57 @@ void main() {
       expect(id, isNull);
     });
   });
+
+  group('ProductScanServices.resolveUniqidsFromScan', () {
+    test('parses uniqids from ceramics scan url', () {
+      const code =
+          'https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+
+      final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
+
+      expect(uniqids, ['GM-NT673-FF', 'GM-FQ019F-FF']);
+    });
+
+    test('parses uniqids with url comma prefix', () {
+      const code =
+          'url,https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+
+      final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
+
+      expect(uniqids, ['GM-NT673-FF', 'GM-FQ019F-FF']);
+    });
+
+    test('returns null when last path segment is not uniqids', () {
+      const code = 'https://ceramics.georgebuilder.com/products/list';
+
+      final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
+
+      expect(uniqids, isNull);
+    });
+  });
+
+  group('ProductScanServices.resolveFromScan', () {
+    test('prefers uniqids over goods-detail id', () {
+      const code =
+          'https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+
+      final resolved = ProductScanServices.resolveFromScan(code);
+
+      expect(resolved, isA<ProductScanResolveUniqids>());
+      expect(
+        (resolved as ProductScanResolveUniqids).uniqids,
+        ['GM-NT673-FF', 'GM-FQ019F-FF'],
+      );
+    });
+
+    test('falls back to product id for goods-detail url', () {
+      const code =
+          'https://demo.gbuilderchina.com/pages/goods-detail/goods-detail?id=12345';
+
+      final resolved = ProductScanServices.resolveFromScan(code);
+
+      expect(resolved, isA<ProductScanResolveProductId>());
+      expect((resolved as ProductScanResolveProductId).productId, 12345);
+    });
+  });
 }

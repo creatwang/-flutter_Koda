@@ -8,6 +8,7 @@ import 'package:george_pick_mate/features/auth/presentation/pages/splash_page.da
 import 'package:george_pick_mate/features/cart/presentation/pages/pre_order_page.dart';
 import 'package:george_pick_mate/features/home/presentation/pages/home_page.dart';
 import 'package:george_pick_mate/features/product/presentation/pages/product_detail_page.dart';
+import 'package:george_pick_mate/features/product/presentation/pages/product_scan_uniqids_list_page.dart';
 
 GoRouter buildAppRouter({
   required bool Function() isLoading,
@@ -30,6 +31,15 @@ GoRouter buildAppRouter({
         builder: (_, state) => ProductDetailPage(
           productId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.productScanUniqidsListPath,
+        builder: (_, state) {
+          final uniqids =
+              state.uri.queryParametersAll['uniqids'] ??
+              const <String>[];
+          return ProductScanUniqidsListPage(uniqids: uniqids);
+        },
       ),
       GoRoute(
         path: AppRoutes.preOrder,

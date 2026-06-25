@@ -157,6 +157,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get productScanUniqidsListTitle => '扫码商品';
+
+  @override
   String get commonCancel => '取消';
 
   @override

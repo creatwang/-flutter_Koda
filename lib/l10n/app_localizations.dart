@@ -374,6 +374,12 @@ abstract class AppLocalizations {
   /// **'Invalid QR code\\nScanned content: {code}'**
   String productScanInvalidQrWithContent(Object code);
 
+  /// No description provided for @productScanUniqidsListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned products'**
+  String get productScanUniqidsListTitle;
+
   /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:

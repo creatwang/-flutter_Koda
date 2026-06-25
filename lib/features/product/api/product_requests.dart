@@ -53,7 +53,8 @@ Future<Response<dynamic>> requestProductDetail({
 /// [page] / [pageSize]：分页；[companyId]：站点；
 /// [shopCateGoryId]：店铺分类；[sort] / [orderBy]：排序；
 /// [onlyShowroomSample]：仅展厅有样板（传后端约定参数）；现在只是固定的
-/// [keyword]：搜索关键词（非空时传 `keyword`）。
+/// [keyword]：搜索关键词（非空时传 `keyword`）；
+/// [uniqids]：按 uniqid 批量筛选（扫码组合链接场景）。
 Future<Response<dynamic>> requestProductsPage({
   required int page,
   required int pageSize,
@@ -63,6 +64,7 @@ Future<Response<dynamic>> requestProductsPage({
   int orderBy = 0,
   bool onlyShowroomSample = false,
   String? keyword,
+  List<String>? uniqids,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).get(
@@ -77,6 +79,7 @@ Future<Response<dynamic>> requestProductsPage({
       if (onlyShowroomSample)
         ProductRequests.showroomSampleFilterQueryKey: '是',
       if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+      if (uniqids != null && uniqids.isNotEmpty) 'uniqids': uniqids,
     },
   );
 }

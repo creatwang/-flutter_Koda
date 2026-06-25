@@ -73,6 +73,7 @@
       "code": {}
     }
   },
+  "productScanUniqidsListTitle": "扫码商品",
   "commonCancel": "取消",
   "commonConfirm": "确定",
   "cartSpaceDialogTitle": "请输入 Space",

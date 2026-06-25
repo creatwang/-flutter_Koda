@@ -73,6 +73,7 @@
       "code": {}
     }
   },
+  "productScanUniqidsListTitle": "Scanned products",
   "commonCancel": "Cancel",
   "commonConfirm": "Confirm",
   "cartSpaceDialogTitle": "Enter Space",

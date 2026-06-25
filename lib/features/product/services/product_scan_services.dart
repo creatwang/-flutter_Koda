@@ -22,7 +22,7 @@ final class ProductScanResolveUniqids extends ProductScanResolveResult {
 /// 商品扫码解析（仅解析，不做 UI/网络）。
 abstract final class ProductScanServices {
   static const String _prefix = 'url,';
-  static const String _uniqidsSegmentPrefix = 'uniqids=';
+  static const String _searchPathSegment = 'search';
 
   /// 解析扫码字符串，优先识别 uniqids 组合链接，其次识别商品详情 id。
   static ProductScanResolveResult? resolveFromScan(String rawCode) {
@@ -40,8 +40,8 @@ abstract final class ProductScanServices {
   /// 解析 uniqids 组合链接。
   ///
   /// 支持格式示例：
-  /// - `https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF`
-  /// - `url,https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF`
+  /// - `https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01`
+  /// - `url,https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01`
   static List<String>? resolveUniqidsFromScan(String rawCode) {
     final normalized = rawCode.trim();
     if (normalized.isEmpty) return null;
@@ -58,20 +58,45 @@ abstract final class ProductScanServices {
     final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
     if (segments.isEmpty) return null;
 
-    final lastSegment = segments.last;
-    if (!lastSegment.toLowerCase().startsWith(_uniqidsSegmentPrefix)) {
-      return null;
+    final lastSegment = segments.last.toLowerCase();
+    if (lastSegment != _searchPathSegment) return null;
+
+    final uniqids = _extractUniqidsFromUri(uri);
+    return uniqids.isEmpty ? null : uniqids;
+  }
+
+  static List<String> _extractUniqidsFromUri(Uri uri) {
+    final fromQuery = uri.queryParametersAll['uniqids'] ?? const <String>[];
+    if (fromQuery.isNotEmpty) {
+      return fromQuery
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(growable: false);
     }
 
-    final valuesPart = lastSegment.substring(_uniqidsSegmentPrefix.length);
-    if (valuesPart.isEmpty) return null;
+    final fromFragment = _uniqidsFromFragmentQuery(uri.fragment);
+    if (fromFragment.isNotEmpty) return fromFragment;
 
-    final uniqids = valuesPart
-        .split('&')
+    return const <String>[];
+  }
+
+  static List<String> _uniqidsFromFragmentQuery(String fragment) {
+    final normalized = fragment.trim();
+    if (normalized.isEmpty) return const <String>[];
+
+    final queryStart = normalized.indexOf('?');
+    if (queryStart == -1 || queryStart >= normalized.length - 1) {
+      return const <String>[];
+    }
+
+    final queryText = normalized.substring(queryStart + 1);
+    final synthetic = Uri.tryParse('https://local.invalid/?$queryText');
+    if (synthetic == null) return const <String>[];
+
+    return (synthetic.queryParametersAll['uniqids'] ?? const <String>[])
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList(growable: false);
-    return uniqids.isEmpty ? null : uniqids;
   }
 
   /// 解析扫码字符串中的商品 id。

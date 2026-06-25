@@ -50,26 +50,34 @@ void main() {
   });
 
   group('ProductScanServices.resolveUniqidsFromScan', () {
-    test('parses uniqids from ceramics scan url', () {
+    test('parses uniqids from search query params', () {
       const code =
-          'https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+          'https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01';
 
       final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
 
-      expect(uniqids, ['GM-NT673-FF', 'GM-FQ019F-FF']);
+      expect(uniqids, ['ECO-FSL-243-01', 'ECO-FSL-197-01']);
     });
 
     test('parses uniqids with url comma prefix', () {
       const code =
-          'url,https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+          'url,https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01';
 
       final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
 
-      expect(uniqids, ['GM-NT673-FF', 'GM-FQ019F-FF']);
+      expect(uniqids, ['ECO-FSL-243-01', 'ECO-FSL-197-01']);
     });
 
-    test('returns null when last path segment is not uniqids', () {
+    test('returns null when last path segment is not search', () {
       const code = 'https://ceramics.georgebuilder.com/products/list';
+
+      final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
+
+      expect(uniqids, isNull);
+    });
+
+    test('returns null when search page has no uniqids query', () {
+      const code = 'https://ceramics.georgebuilder.com/search?keyword=foo';
 
       final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
 
@@ -80,14 +88,14 @@ void main() {
   group('ProductScanServices.resolveFromScan', () {
     test('prefers uniqids over goods-detail id', () {
       const code =
-          'https://ceramics.georgebuilder.com/uniqids=GM-NT673-FF&GM-FQ019F-FF';
+          'https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01';
 
       final resolved = ProductScanServices.resolveFromScan(code);
 
       expect(resolved, isA<ProductScanResolveUniqids>());
       expect(
         (resolved as ProductScanResolveUniqids).uniqids,
-        ['GM-NT673-FF', 'GM-FQ019F-FF'],
+        ['ECO-FSL-243-01', 'ECO-FSL-197-01'],
       );
     });
 

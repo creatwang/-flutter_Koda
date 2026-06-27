@@ -68,6 +68,15 @@ void main() {
       expect(uniqids, ['ECO-FSL-243-01', 'ECO-FSL-197-01']);
     });
 
+    test('parses uniqids from hash-route search page', () {
+      const code =
+          'https://www.georgemetalglass.com/m/#/pages/search/search?uniqids=AAW7029&uniqids=AAW7028';
+
+      final uniqids = ProductScanServices.resolveUniqidsFromScan(code);
+
+      expect(uniqids, ['AAW7029', 'AAW7028']);
+    });
+
     test('returns null when last path segment is not search', () {
       const code = 'https://ceramics.georgebuilder.com/products/list';
 
@@ -107,6 +116,19 @@ void main() {
 
       expect(resolved, isA<ProductScanResolveProductId>());
       expect((resolved as ProductScanResolveProductId).productId, 12345);
+    });
+
+    test('resolves hash-route search uniqids url', () {
+      const code =
+          'https://www.georgemetalglass.com/m/#/pages/search/search?uniqids=AAW7029&uniqids=AAW7028';
+
+      final resolved = ProductScanServices.resolveFromScan(code);
+
+      expect(resolved, isA<ProductScanResolveUniqids>());
+      expect(
+        (resolved as ProductScanResolveUniqids).uniqids,
+        ['AAW7029', 'AAW7028'],
+      );
     });
   });
 }

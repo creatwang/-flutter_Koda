@@ -42,6 +42,7 @@ abstract final class ProductScanServices {
   /// 支持格式示例：
   /// - `https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01`
   /// - `url,https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01`
+  /// - `https://www.georgemetalglass.com/m/#/pages/search/search?uniqids=AAW7029`
   static List<String>? resolveUniqidsFromScan(String rawCode) {
     final normalized = rawCode.trim();
     if (normalized.isEmpty) return null;
@@ -55,11 +56,7 @@ abstract final class ProductScanServices {
     final isHttp = uri.scheme == 'http' || uri.scheme == 'https';
     if (!isHttp) return null;
 
-    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
-    if (segments.isEmpty) return null;
-
-    final lastSegment = segments.last.toLowerCase();
-    if (lastSegment != _searchPathSegment) return null;
+    if (!_looksLikeSearch(uri)) return null;
 
     final uniqids = _extractUniqidsFromUri(uri);
     return uniqids.isEmpty ? null : uniqids;
@@ -147,6 +144,33 @@ abstract final class ProductScanServices {
   static bool _looksLikeGoodsDetail(Uri uri) {
     final aggregate = '${uri.path}?${uri.query}#${uri.fragment}'.toLowerCase();
     return aggregate.contains('goods-detail');
+  }
+
+  static bool _looksLikeSearch(Uri uri) {
+    if (_pathEndsWithSearch(uri.path)) return true;
+
+    final fragment = uri.fragment.trim();
+    if (fragment.isEmpty) return false;
+
+    final fragmentPath = fragment.split('?').first;
+    return _pathEndsWithSearch(fragmentPath);
+  }
+
+  static bool _pathEndsWithSearch(String path) {
+    final segments = _nonEmptyPathSegments(path);
+    if (segments.isEmpty) return false;
+    return segments.last.toLowerCase() == _searchPathSegment;
+  }
+
+  static List<String> _nonEmptyPathSegments(String path) {
+    final normalized = path.trim();
+    if (normalized.isEmpty) return const [];
+
+    final withSlash = normalized.startsWith('/') ? normalized : '/$normalized';
+    return Uri.parse('https://local.invalid$withSlash')
+        .pathSegments
+        .where((segment) => segment.isNotEmpty)
+        .toList(growable: false);
   }
 
   static int? _idFromFragmentQuery(String fragment) {

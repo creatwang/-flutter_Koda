@@ -67,20 +67,25 @@ Future<Response<dynamic>> requestProductsPage({
   List<String>? uniqids,
   DioClient? client,
 }) {
+  final queryParameters = <String, dynamic>{
+    'shop_category_id': shopCateGoryId,
+    'order_by': orderBy,
+    if (sort != null) 'sort': sort,
+    'page_size': pageSize,
+    'company_id': companyId,
+    'page': page,
+    if (onlyShowroomSample)
+      ProductRequests.showroomSampleFilterQueryKey: '是',
+    if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+    if (uniqids != null && uniqids.isNotEmpty) 'uniqids': uniqids,
+  };
+
   return (client ?? protectedDioClient).get(
     ProductRequests.productsPath,
-    queryParameters: <String, dynamic>{
-      'shop_category_id': shopCateGoryId,
-      'order_by': orderBy,
-      if (sort != null) 'sort': sort,
-      'page_size': pageSize,
-      'company_id': companyId,
-      'page': page,
-      if (onlyShowroomSample)
-        ProductRequests.showroomSampleFilterQueryKey: '是',
-      if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-      if (uniqids != null && uniqids.isNotEmpty) 'uniqids': uniqids,
-    },
+    queryParameters: queryParameters,
+    options: uniqids != null && uniqids.isNotEmpty
+        ? Options(listFormat: ListFormat.multiCompatible)
+        : null,
   );
 }
 

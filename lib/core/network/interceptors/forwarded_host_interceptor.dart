@@ -3,7 +3,7 @@ import 'package:george_pick_mate/core/network/request_extras.dart';
 import 'package:george_pick_mate/core/network/store_host_controller.dart';
 import 'package:george_pick_mate/core/network/store_host_routing.dart';
 
-/// 写入 `x-forwarded-host`：扫码 extra 优先；Web 会话站点次之。
+/// 写入 `x-forwarded-host`：仅扫码等请求在 extra 中显式传入时注入。
 class ForwardedHostInterceptor extends Interceptor {
   ForwardedHostInterceptor(this._hostController);
 

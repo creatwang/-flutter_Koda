@@ -37,7 +37,7 @@ class RequestTraceInterceptor extends Interceptor {
     // 记录请求起始时间，用于计算总耗时。
     options.extra[_startAtKey] = DateTime.now().millisecondsSinceEpoch;
     _log(
-      '[NET][TRACE][$requestId][REQ] ${options.method} ${options.path}'
+      '[NET][TRACE][$requestId][REQ] ${options.method} ${options.uri}'
       ' headers=${_safeHeaders(options.headers)}'
       ' query=${options.queryParameters}',
     );

@@ -38,7 +38,11 @@ class SessionController extends AsyncNotifier<Session> {
   @override
   FutureOr<Session> build() async {
     await storeHostController.restoreFromStorage();
-    return _toSession();
+    final session = await _toSession();
+    if (session.isAuthenticated) {
+      await _syncRuntimeStoreHost(session.storeHost);
+    }
+    return session;
   }
 
   Future<String?> signIn({
@@ -65,6 +69,7 @@ class SessionController extends AsyncNotifier<Session> {
           storeHost: pair.storeHost,
         ),
       );
+      await _syncRuntimeStoreHost(pair.storeHost);
       _invalidateAfterStoreContextChanged();
       return null;
     }
@@ -99,6 +104,7 @@ class SessionController extends AsyncNotifier<Session> {
           storeHost: pair.storeHost,
         ),
       );
+      await _syncRuntimeStoreHost(pair.storeHost);
       _invalidateAfterStoreContextChanged();
       return true;
     }
@@ -265,9 +271,10 @@ class SessionController extends AsyncNotifier<Session> {
   FutureOr<Session> _toSession() async {
     final user = await secureStorageService.readUserInfoBase();
     final token = user?.token?.trim();
-    final storeHost =
-        storeHostController.host ?? user?.domain?.trim();
-    if (token == null || token.isEmpty || storeHost == null || storeHost.isEmpty) {
+    final storeHost = normalizeStoreHost(
+      storeHostController.host ?? user?.domain ?? '',
+    );
+    if (token == null || token.isEmpty || storeHost.isEmpty) {
       return const Session(isAuthenticated: false);
     }
     return Session(
@@ -275,6 +282,17 @@ class SessionController extends AsyncNotifier<Session> {
       storeHost: storeHost,
       token: token,
     );
+  }
+
+  /// 保证内存中的 [StoreHostController] 与当前会话站点一致（影响 baseUrl）。
+  Future<void> _syncRuntimeStoreHost(String? storeHost) async {
+    final normalized = normalizeStoreHost(storeHost ?? '');
+    if (normalized.isEmpty) return;
+    final current = storeHostController.host;
+    if (current != null && normalizeStoreHost(current) == normalized) {
+      return;
+    }
+    await storeHostController.applyDomain(normalized, persist: false);
   }
 }
 

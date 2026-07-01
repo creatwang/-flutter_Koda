@@ -108,9 +108,9 @@ flutter run
 flutter build apk --release --dart-define=BASE_URL=https://store.gbuilderchina.com/api
 ```
 
-**Flutter Web 调试**：浏览器跨域限制下，Web 端固定请求 `BASE_URL` 网关，通过
-`x-forwarded-host` 传递登录/切站后的 `domain`（与 Pad 直连店铺域名不同）。
-请确认网关 CORS 已放行 `x-forwarded-host`。
+**Flutter Web 调试**：Web 与 Pad 相同，登录/切站后直接请求
+`https://{store_domain}{apiPathPrefix}`。各站点 API 需配置 CORS 允许 Web 来源
+（如 `localhost`）。扫码跨站时仍通过 `x-forwarded-host` 传递目标 host。
 
 关闭 Debug 下的网络追踪日志（仍受 `kDebugMode` 限制，Release 默认无控制台输出）：
 

@@ -20,7 +20,9 @@ Future<ApiResult<List<Map<String, dynamic>>>> fetchStoreCompanyItemsService({
       );
     }
     final map = Map<String, dynamic>.from(body);
-    final dynamic itemsRaw = map['items'];
+    final dynamic result = map['result'];
+    final dynamic payload = result is Map ? Map<String, dynamic>.from(result) : map;
+    final dynamic itemsRaw = payload['items'];
     if (itemsRaw is! List) {
       return ApiFailure(AppException(appL10n.errorMissingItemsInCompanyList));
     }

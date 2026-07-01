@@ -56,7 +56,9 @@ class _SwitchSiteSheetScaffoldState
   }) {
     if (currentHost == null || currentHost.isEmpty) return false;
     final domain = _domainFromItem(item);
-    if (domain != null) return domain == currentHost;
+    if (domain != null) {
+      return domain.toLowerCase() == currentHost.toLowerCase();
+    }
     final dynamic selectedRaw = item['selected'] ?? item['is_selected'];
     if (selectedRaw is bool) return selectedRaw;
     return '$selectedRaw' == '1' || '$selectedRaw'.toLowerCase() == 'true';

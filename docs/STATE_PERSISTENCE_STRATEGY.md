@@ -117,27 +117,20 @@
 
 扫码从 QR URL 解析 `forwardedHost`，经路由 query `scanHost` 传递到详情/列表/加购。
 
-- 请求仍打当前登录域名的 `baseUrl`（Pad）；Web 见下节
+- 请求打当前登录域名的 `baseUrl`
 - 扫码相关请求在 Dio `extra.forwardedHost` 存在时，由 `ForwardedHostInterceptor`
-  写入请求头 `x-forwarded-host`（优先于 Web 会话站点头）
-- 正常商品列表/收藏/分类等**不**携带该头（Pad）；Web 会话切站见下节
+  写入请求头 `x-forwarded-host`
+- 正常商品列表/收藏/分类等**不**携带该头
 
-## Web 跨域与站点路由
+## Web 与站点路由
 
-浏览器不允许 `localhost` 随意跨域访问多个店铺域名，因此 **Web 与 Pad 分流**：
+各平台（含 Web）统一：`https://{store_domain}{Env.apiPathPrefix}`，登录/切站后
+由 `StoreHostInterceptor` 切换 baseUrl。
 
-| 平台 | API 地址 | 站点如何告诉后端 |
-| --- | --- | --- |
-| Pad / 原生 | `https://{store_domain}{Env.apiPathPrefix}` | 直接换 host |
-| Web | 固定 `Env.baseUrl` 网关 | `x-forwarded-host: {store_domain}`（与网关 host 不同时） |
-
-- 登录/切站仍持久化 `store_domain`；Pad 上 `StoreHostInterceptor` 切换 baseUrl
-- Web 上 baseUrl **不变**，`ForwardedHostInterceptor` 将会话 domain 写入
-  `x-forwarded-host`（登录返回的 domain 与网关 host 不同时）
-- 扫码在 Web 上仍用 `extra.forwardedHost`，**覆盖**会话站点头
+- 登录/切站持久化 `store_domain`，并同步内存 `StoreHostController`
+- 扫码跨站时在请求 extra 中传 `forwardedHost`，写入 `x-forwarded-host`
 - Web 不发送 `X-Request-Id` 头，避免 CORS 预检失败
-- **后端需**在网关 CORS 的 `Access-Control-Allow-Headers` 中放行
-  `x-forwarded-host`（及 `authorization` 等），并由网关按该头路由到目标站点
+- **Web 部署需**各店铺域名 API 的 CORS 放行 Web 来源及 `authorization` 等头
 
 ## 前台回归同步策略
 

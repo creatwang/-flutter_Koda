@@ -82,7 +82,7 @@ String normalizeStoreHost(String raw) {
     value = value.substring(0, slashIndex);
   }
 
-  return value.trim();
+  return value.trim().toLowerCase();
 }
 
 /// 从扫码 URL 提取 host，供 `x-forwarded-host` 使用。

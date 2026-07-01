@@ -3,13 +3,14 @@
 ## 文档
 
 - [Dio 请求选项（extra、simpleResponse、noCache、noRetry）](docs/DIO_OPTIONS.md)
+- [状态持久化与站点域名策略](docs/STATE_PERSISTENCE_STRATEGY.md)
 - [Android 非商店自动升级方案](docs/ANDROID_NON_STORE_UPGRADE_PLAN.md)
 
 ---
 
 ## 业务约定
 
-- **站点维度**：仅**商品**与**首页装修**相关接口会按 `company_id` 区分站点；其它模块不按站点拆分（以实际接口为准）。
+- **站点维度**：以请求域名（`store_domain` / `StoreHostController.apiBaseUrl`）区分站点；扫码链路可额外携带 `x-forwarded-host`。购物车里的 `company_id` 为业务分组字段，与 session 站点识别无关。
 
 ---
 
@@ -92,11 +93,24 @@ flutter pub get
 flutter build apk --release
 ```
 
-需要切换后端地址时，可使用（示例）：
+需要切换后端地址时，通过 `BASE_URL` 区分**测试**与**正式**路径前缀（登录/切站后只换 host，路径跟包走）：
+
+| 环境 | `BASE_URL` 示例 | 切站后实际请求 |
+| --- | --- | --- |
+| 测试（默认） | `https://store.gbuilderchina.com/testapi` | `https://{domain}/testapi` |
+| 正式 | `https://store.gbuilderchina.com/api` | `https://{domain}/api` |
 
 ```bash
-flutter build apk --release --dart-define=BASE_URL=https://your-api.example.com/api
+# 测试（默认，可不传 dart-define）
+flutter run
+
+# 正式包
+flutter build apk --release --dart-define=BASE_URL=https://store.gbuilderchina.com/api
 ```
+
+**Flutter Web 调试**：浏览器跨域限制下，Web 端固定请求 `BASE_URL` 网关，通过
+`x-forwarded-host` 传递登录/切站后的 `domain`（与 Pad 直连店铺域名不同）。
+请确认网关 CORS 已放行 `x-forwarded-host`。
 
 关闭 Debug 下的网络追踪日志（仍受 `kDebugMode` 限制，Release 默认无控制台输出）：
 

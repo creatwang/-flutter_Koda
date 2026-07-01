@@ -1256,6 +1256,12 @@ abstract class AppLocalizations {
   /// **'SITEID: {id}'**
   String profileSiteId(Object id);
 
+  /// No description provided for @profileSiteHost.
+  ///
+  /// In en, this message translates to:
+  /// **'SITE: {host}'**
+  String profileSiteHost(Object host);
+
   /// No description provided for @profileFavNum.
   ///
   /// In en, this message translates to:
@@ -1520,6 +1526,12 @@ abstract class AppLocalizations {
   /// **'Site #{id}'**
   String profileSiteFallbackTitle(int id);
 
+  /// No description provided for @profileSiteCurrentDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Current site · {host}'**
+  String profileSiteCurrentDomain(Object host);
+
   /// No description provided for @profileSiteCurrent.
   ///
   /// In en, this message translates to:
@@ -1555,6 +1567,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Missing company id'**
   String get errorMissingCompanyId;
+
+  /// No description provided for @errorMissingStoreDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing store domain'**
+  String get errorMissingStoreDomain;
+
+  /// No description provided for @errorInvalidSiteDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid site domain'**
+  String get errorInvalidSiteDomain;
 
   /// No description provided for @errorMissingToken.
   ///
@@ -1820,6 +1844,12 @@ abstract class AppLocalizations {
   /// **'Invalid company_id in login response'**
   String get errorInvalidCompanyIdInLoginResponse;
 
+  /// No description provided for @errorInvalidDomainInLoginResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid domain in login response'**
+  String get errorInvalidDomainInLoginResponse;
+
   /// No description provided for @errorInvalidRegisterResponseFormat.
   ///
   /// In en, this message translates to:
@@ -1831,6 +1861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid company_id in register response'**
   String get errorInvalidCompanyIdInRegisterResponse;
+
+  /// No description provided for @errorInvalidDomainInRegisterResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid domain in register response'**
+  String get errorInvalidDomainInRegisterResponse;
 
   /// No description provided for @errorRequestFailed.
   ///

@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
@@ -10,9 +9,7 @@ import 'package:george_pick_mate/features/product/models/product_dto.dart';
 import 'package:george_pick_mate/features/product/models/product_fav_dto.dart';
 import 'package:george_pick_mate/features/product/models/product_item.dart';
 
-/// 商品列表、收藏、分类、详情等业务封装（依赖当前站点 `companyId`）。
 class FavoriteProductsPageResult {
-  /// [items]：本页商品；[total]：服务端总数（用于分页）。
   const FavoriteProductsPageResult({
     required this.items,
     required this.total,
@@ -22,12 +19,6 @@ class FavoriteProductsPageResult {
   final int total;
 }
 
-/// 商品分页列表（当前站点）。
-///
-/// [page] / [pageSize]：分页；[shopCateGoryId]：店铺分类；
-/// [sort] / [orderBy]：排序参数；
-/// [onlyShowroomSample]：仅展厅有样板；[keyword]：搜索关键词；
-/// [uniqids]：按 uniqid 批量筛选。
 Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   required int page,
   required int pageSize,
@@ -37,22 +28,19 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   bool onlyShowroomSample = false,
   String? keyword,
   List<String>? uniqids,
+  String? forwardedHost,
 }) async {
-  final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null) {
-    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
-  }
   try {
     final response = await requestProductsPage(
       page: page,
       pageSize: pageSize,
-      companyId: companyId,
       shopCateGoryId: shopCateGoryId,
       sort: sort,
       orderBy: orderBy,
       onlyShowroomSample: onlyShowroomSample,
       keyword: keyword,
       uniqids: uniqids,
+      forwardedHost: forwardedHost,
     );
     return _parseProductsPageResponse(response);
   } on DioException catch (e) {
@@ -67,7 +55,9 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   }
 }
 
-ApiResult<List<ProductItem>> _parseProductsPageResponse(Response<dynamic> response) {
+ApiResult<List<ProductItem>> _parseProductsPageResponse(
+  Response<dynamic> response,
+) {
   try {
     final data = response.data;
     if (data is! Map<String, dynamic>) {
@@ -100,22 +90,14 @@ ApiResult<List<ProductItem>> _parseProductsPageResponse(Response<dynamic> respon
   }
 }
 
-/// 收藏商品分页。
-///
-/// [page] / [pageSize]：分页（站点取自本地 `companyId`）。
 Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
   required int page,
   required int pageSize,
 }) async {
-  final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null) {
-    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
-  }
   try {
     final response = await requestFavorPageList(
       page: page,
       pageSize: pageSize,
-      companyId: companyId,
     );
     final data = response.data;
     if (data is! Map<String, dynamic>) {
@@ -135,10 +117,11 @@ Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
         .whereType<Map>()
         .map((e) => ProductFavDto.fromJson(Map<String, dynamic>.from(e)))
         .toList(growable: false);
+    final total = _readInt(data['total'], fallback: dtos.length);
     return ApiSuccess(
       FavoriteProductsPageResult(
         items: dtos.map((e) => e.toModel()).toList(growable: false),
-        total: _parseTotalCount(data, fallback: dtos.length),
+        total: total,
       ),
     );
   } on DioException catch (e) {
@@ -153,23 +136,16 @@ Future<ApiResult<FavoriteProductsPageResult>> fetchFavorProductsPageService({
   }
 }
 
-int _parseTotalCount(Map<String, dynamic> data, {required int fallback}) {
-  final raw = data['total'] ?? data['count'] ?? data['total_count'];
+int _readInt(dynamic raw, {required int fallback}) {
   if (raw is int) return raw;
   if (raw is num) return raw.toInt();
   if (raw is String) return int.tryParse(raw) ?? fallback;
   return fallback;
 }
 
-/// 当前站点下的商品分类树。
-Future<ApiResult<List<ProductCategoryTreeDto>>>
-fetchCategoryTreeService() async {
-  final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null) {
-    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
-  }
+Future<ApiResult<List<ProductCategoryTreeDto>>> fetchCategoryTreeService() async {
   try {
-    final response = await requestCategoryTree(companyId: companyId);
+    final response = await requestCategoryTree();
     final data = response.data;
 
     List<dynamic>? rawList;
@@ -208,7 +184,6 @@ fetchCategoryTreeService() async {
   }
 }
 
-/// 列表接口形态的单商品（REST 子路径），映射为 [ProductItem]。
 Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   try {
     final response = await requestProductById(id);
@@ -232,10 +207,15 @@ Future<ApiResult<ProductItem>> fetchProductByIdService(int id) async {
   }
 }
 
-/// 商品详情页数据（开放详情接口 + `result` 解包兼容）。
-Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
+Future<ApiResult<ProductDetailDto>> fetchProductDetailService(
+  int id, {
+  String? forwardedHost,
+}) async {
   try {
-    final response = await requestProductDetail(id: id);
+    final response = await requestProductDetail(
+      id: id,
+      forwardedHost: forwardedHost,
+    );
     final data = response.data;
     Map<String, dynamic>? payload;
     if (data is Map<String, dynamic>) {
@@ -265,19 +245,9 @@ Future<ApiResult<ProductDetailDto>> fetchProductDetailService(int id) async {
   }
 }
 
-/// 添加收藏（当前站点）。
-///
-/// [productId]：商品 id。
 Future<ApiResult<void>> createFavorService({required int productId}) async {
-  final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null) {
-    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
-  }
   try {
-    await createFavorRequest(
-      productId: productId.toString(),
-      companyId: companyId,
-    );
+    await createFavorRequest(productId: productId.toString());
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(
@@ -291,19 +261,9 @@ Future<ApiResult<void>> createFavorService({required int productId}) async {
   }
 }
 
-/// 取消收藏（当前站点）。
-///
-/// [productId]：商品 id。
 Future<ApiResult<void>> deleteFavorService({required int productId}) async {
-  final companyId = await secureStorageService.getCompanyId();
-  if (companyId == null) {
-    return ApiFailure(AppException(appL10n.errorMissingCompanyId));
-  }
   try {
-    await deleteFavorRequest(
-      productId: productId.toString(),
-      companyId: companyId,
-    );
+    await deleteFavorRequest(productId: productId.toString());
     return const ApiSuccess(null);
   } on DioException catch (e) {
     return ApiFailure(

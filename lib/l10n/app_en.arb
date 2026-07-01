@@ -314,6 +314,12 @@
       "id": {}
     }
   },
+  "profileSiteHost": "SITE: {host}",
+  "@profileSiteHost": {
+    "placeholders": {
+      "host": {}
+    }
+  },
   "profileFavNum": "FAV NUM",
   "profileCartNum": "CART NUM",
   "profileAccountPreferences": "ACCOUNT & PREFERENCES",
@@ -376,6 +382,12 @@
       }
     }
   },
+  "profileSiteCurrentDomain": "Current site · {host}",
+  "@profileSiteCurrentDomain": {
+    "placeholders": {
+      "host": {}
+    }
+  },
   "profileSiteCurrent": "Current site · ID: {id}",
   "@profileSiteCurrent": {
     "placeholders": {
@@ -396,6 +408,8 @@
   "sessionEndedMessage": "Please sign in again to continue shopping.",
   "sessionEndedSignIn": "Sign in again",
   "errorMissingCompanyId": "Missing company id",
+  "errorMissingStoreDomain": "Missing store domain",
+  "errorInvalidSiteDomain": "Invalid site domain",
   "errorMissingToken": "Missing token",
   "errorInvalidProductResponseFormat": "Invalid product response format",
   "errorInvalidProductsListFormat": "Invalid products list format",
@@ -445,8 +459,10 @@
   "errorLogoutRequestFailed": "Logout request failed",
   "errorInvalidLoginResponseFormat": "Invalid login response format",
   "errorInvalidCompanyIdInLoginResponse": "Invalid company_id in login response",
+  "errorInvalidDomainInLoginResponse": "Invalid domain in login response",
   "errorInvalidRegisterResponseFormat": "Invalid register response format",
   "errorInvalidCompanyIdInRegisterResponse": "Invalid company_id in register response",
+  "errorInvalidDomainInRegisterResponse": "Invalid domain in register response",
   "errorRequestFailed": "Request failed",
   "errorNetworkError": "Network error",
   "errorSessionExpiredDefault": "Your session has expired. Please sign in again.",

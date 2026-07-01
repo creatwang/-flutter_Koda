@@ -11,8 +11,7 @@ class SecureStorageService {
   static const _refreshTokenKey = 'refresh_token';
   static const _userInfoBase = 'user_info_base';
   static const _mainUserInfo = 'main_user_info';
-  static const _tokenMap = 'token_map';
-  static const _companyId = 'company_id';
+  static const _storeDomain = 'store_domain';
   static const _rememberedLoginUsername = 'remembered_login_username';
   static const _rememberedLoginPassword = 'remembered_login_password';
 
@@ -41,36 +40,34 @@ class SecureStorageService {
   Future<String?> readRefreshToken() async =>
       _storage.read(key: _refreshTokenKey);
 
-  /// 保存用户信息。
   Future<void> saveUserInfoBase(UserInfoBase userInfoBase) async {
-    String jsonString = jsonEncode(userInfoBase.toJson());
+    final jsonString = jsonEncode(userInfoBase.toJson());
     await _storage.write(key: _userInfoBase, value: jsonString);
   }
 
-  /// 合并并保存用户信息：仅用新值覆盖非空字段，缺失字段保留旧值。
   Future<UserInfoBase> mergeAndSaveUserInfoBase(
     UserInfoBase latest, {
-    int? fallbackCompanyId,
     String? fallbackToken,
+    String? fallbackDomain,
   }) async {
     final cached = await readUserInfoBase();
-    final storedCompanyId = await getCompanyId();
-    final resolvedCompanyId =
-        latest.companyId ??
-        cached?.companyId ??
-        fallbackCompanyId ??
-        storedCompanyId;
+    final storedDomain = await getStoreDomain();
+    final resolvedDomain =
+        _nonEmpty(latest.domain) ??
+        _nonEmpty(cached?.domain) ??
+        _nonEmpty(fallbackDomain) ??
+        _nonEmpty(storedDomain);
     final resolvedToken =
         _nonEmpty(latest.token) ??
         _nonEmpty(cached?.token) ??
-        _nonEmpty(fallbackToken) ??
-        await _readTokenFromMapByCompanyId(resolvedCompanyId);
+        _nonEmpty(fallbackToken);
     final merged = UserInfoBase(
       id: latest.id ?? cached?.id,
       accountId: latest.accountId ?? cached?.accountId,
       name: latest.name ?? cached?.name,
       username: latest.username ?? cached?.username,
-      companyId: resolvedCompanyId,
+      companyId: latest.companyId ?? cached?.companyId,
+      domain: resolvedDomain,
       avatar: latest.avatar ?? cached?.avatar,
       telephone: latest.telephone ?? cached?.telephone,
       description: latest.description ?? cached?.description,
@@ -96,26 +93,24 @@ class SecureStorageService {
     return merged;
   }
 
-  /// 获取用户信息。
   Future<UserInfoBase?> readUserInfoBase() async {
-    String? jsonString = await _storage.read(key: _userInfoBase);
+    final jsonString = await _storage.read(key: _userInfoBase);
     if (jsonString == null) return null;
-    final userInfoBase = UserInfoBase.fromJson(jsonDecode(jsonString));
-    return userInfoBase;
+    return UserInfoBase.fromJson(jsonDecode(jsonString));
   }
 
-  /// 业务员「代客登录」前缓存的主账号信息，供 [Switch Account] 切回。
   Future<void> saveMainUserInfo(UserInfoBase user) async {
     final jsonString = jsonEncode(user.toJson());
     await _storage.write(key: _mainUserInfo, value: jsonString);
   }
 
-  /// 读取主账号缓存；无则返回 `null`。
   Future<UserInfoBase?> readMainUserInfo() async {
     final jsonString = await _storage.read(key: _mainUserInfo);
     if (jsonString == null || jsonString.isEmpty) return null;
     try {
-      return UserInfoBase.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+      return UserInfoBase.fromJson(
+        jsonDecode(jsonString) as Map<String, dynamic>,
+      );
     } catch (_) {
       return null;
     }
@@ -125,32 +120,18 @@ class SecureStorageService {
     await _storage.delete(key: _mainUserInfo);
   }
 
-  /// 保存 token。
-  Future<void> saveTokenMap(int companyId, String token) async {
-    final previousMap = await _readTokenMap();
-    previousMap[companyId.toString()] = token;
-    String jsonString = jsonEncode(previousMap);
-    await _storage.write(key: _tokenMap, value: jsonString);
+  Future<void> saveStoreDomain(String host) async {
+    await _storage.write(key: _storeDomain, value: host);
   }
 
-  /// 根据站点 id 获取 token。
-  Future<String?> getTokenByCompanyId(int companyId) async {
-    final tokenMap = await _readTokenMap();
-    final key = companyId.toString();
-    if (!tokenMap.containsKey(key)) return null;
-    return tokenMap[key]?.toString();
+  Future<String?> getStoreDomain() async {
+    final value = await _storage.read(key: _storeDomain);
+    if (value == null || value.trim().isEmpty) return null;
+    return value.trim();
   }
 
-  /// 保存站点 id。
-  Future<void> saveCompanyId(int companyId) async {
-    await _storage.write(key: _companyId, value: companyId.toString());
-  }
-
-  /// 获取站点 id。
-  Future<int?> getCompanyId() async {
-    String? companyId = await _storage.read(key: _companyId);
-    if (companyId == null || companyId.isEmpty) return null;
-    return int.tryParse(companyId);
+  Future<void> deleteStoreDomain() async {
+    await _storage.delete(key: _storeDomain);
   }
 
   Future<void> clear() async {
@@ -158,9 +139,7 @@ class SecureStorageService {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userInfoBase);
     await _storage.delete(key: _mainUserInfo);
-    await _storage.delete(key: _tokenMap);
-    await _storage.delete(key: _companyId);
-    // 登出不清「记住的登录表单」，便于再次登录。
+    await _storage.delete(key: _storeDomain);
   }
 
   Future<void> saveRememberedLoginUsername(String username) async {
@@ -181,30 +160,9 @@ class SecureStorageService {
     await _storage.delete(key: _rememberedLoginPassword);
   }
 
-  Future<Map<String, dynamic>> _readTokenMap() async {
-    String? jsonString = await _storage.read(key: _tokenMap);
-    if (jsonString == null || jsonString.isEmpty) {
-      return <String, dynamic>{};
-    }
-    try {
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map<String, dynamic>) {
-        return <String, dynamic>{};
-      }
-      return decoded;
-    } catch (_) {
-      return <String, dynamic>{};
-    }
-  }
-
   String? _nonEmpty(String? value) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) return null;
     return trimmed;
-  }
-
-  Future<String?> _readTokenFromMapByCompanyId(num? companyId) async {
-    if (companyId == null) return null;
-    return _nonEmpty(await getTokenByCompanyId(companyId.toInt()));
   }
 }

@@ -5,32 +5,50 @@ import 'package:george_pick_mate/features/product/models/paginated_products_stat
 import 'package:george_pick_mate/features/product/services/product_services.dart';
 
 const String _uniqidsProviderKeySeparator = '\x1f';
+const String _scanHostKeySeparator = '\x1e';
 
-/// 将 uniqids 列表编码为 provider family 参数。
-String encodeScanUniqidsProviderKey(List<String> uniqids) =>
-    uniqids.join(_uniqidsProviderKeySeparator);
+String encodeScanUniqidsProviderKey(
+  List<String> uniqids, {
+  String? scanHost,
+}) {
+  final host = scanHost?.trim();
+  final uniqidsPart = uniqids.join(_uniqidsProviderKeySeparator);
+  if (host == null || host.isEmpty) return uniqidsPart;
+  return '$host$_scanHostKeySeparator$uniqidsPart';
+}
 
-/// 将 provider family 参数解码为 uniqids 列表。
-List<String> decodeScanUniqidsProviderKey(String key) => key
-    .split(_uniqidsProviderKeySeparator)
-    .map((e) => e.trim())
-    .where((e) => e.isNotEmpty)
-    .toList(growable: false);
+List<String> decodeScanUniqidsProviderKey(String key) {
+  final uniqidsPart = key.contains(_scanHostKeySeparator)
+      ? key.split(_scanHostKeySeparator).skip(1).join(_scanHostKeySeparator)
+      : key;
+  return uniqidsPart
+      .split(_uniqidsProviderKeySeparator)
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList(growable: false);
+}
 
-/// 扫码 uniqids 组合对应的商品分页列表。
+String? decodeScanHostFromProviderKey(String key) {
+  if (!key.contains(_scanHostKeySeparator)) return null;
+  final host = key.split(_scanHostKeySeparator).first.trim();
+  return host.isEmpty ? null : host;
+}
+
 final scanUniqidsProductsProvider = AsyncNotifierProvider.autoDispose
     .family<ScanUniqidsProductsNotifier, PaginatedProductsState, String>(
       ScanUniqidsProductsNotifier.new,
     );
 
 class ScanUniqidsProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
-  ScanUniqidsProductsNotifier(this._uniqidsKey);
+  ScanUniqidsProductsNotifier(this._providerKey);
 
-  final String _uniqidsKey;
+  final String _providerKey;
   static const int _pageSize = 8;
   int _queryVersion = 0;
 
-  List<String> get _uniqids => decodeScanUniqidsProviderKey(_uniqidsKey);
+  List<String> get _uniqids => decodeScanUniqidsProviderKey(_providerKey);
+
+  String? get _scanHost => decodeScanHostFromProviderKey(_providerKey);
 
   @override
   FutureOr<PaginatedProductsState> build() async {
@@ -42,6 +60,7 @@ class ScanUniqidsProductsNotifier extends AsyncNotifier<PaginatedProductsState> 
       page: 1,
       pageSize: _pageSize,
       uniqids: _uniqids,
+      forwardedHost: _scanHost,
     );
     return result.when(
       success: (data) => PaginatedProductsState(
@@ -65,6 +84,7 @@ class ScanUniqidsProductsNotifier extends AsyncNotifier<PaginatedProductsState> 
         page: 1,
         pageSize: _pageSize,
         uniqids: _uniqids,
+        forwardedHost: _scanHost,
       );
       if (version != _queryVersion) {
         throw StateError('Stale scan uniqids refresh response');
@@ -100,6 +120,7 @@ class ScanUniqidsProductsNotifier extends AsyncNotifier<PaginatedProductsState> 
       page: nextPage,
       pageSize: _pageSize,
       uniqids: _uniqids,
+      forwardedHost: _scanHost,
     );
     if (version != _queryVersion) return;
 

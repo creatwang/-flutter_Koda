@@ -18,14 +18,12 @@ void _evictStoreCustomerListCache() {
 /// 拉取客户列表第一页（含筛选参数）。
 Future<ApiResult<PaginatedStoreCustomersState>>
 fetchStoreCustomersFirstPageService({
-  required int companyId,
   String status = '',
   String keyword = '',
   int pageSize = 20,
 }) async {
   try {
     final response = await requestStoreCustomerList(
-      companyId: companyId,
       page: 1,
       pageSize: pageSize,
       status: status,
@@ -57,7 +55,6 @@ fetchStoreCustomersFirstPageService({
 
 /// 拉取指定页客户列表（分页加载更多）。
 Future<ApiResult<PaginatedStoreCustomersState>> fetchStoreCustomersPageService({
-  required int companyId,
   required int page,
   String status = '',
   String keyword = '',
@@ -65,7 +62,6 @@ Future<ApiResult<PaginatedStoreCustomersState>> fetchStoreCustomersPageService({
 }) async {
   try {
     final response = await requestStoreCustomerList(
-      companyId: companyId,
       page: page,
       pageSize: pageSize,
       status: status,

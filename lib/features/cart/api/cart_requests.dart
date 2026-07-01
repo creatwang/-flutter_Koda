@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/network/request_extras.dart';
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
 /// 购物车请求路径定义
@@ -186,11 +187,13 @@ Future<Response<dynamic>> requestCartCreate({
   required int productNum,
   required String space,
   required String subName,
+  String? forwardedHost,
   DioClient? client,
 }) {
   return (client ?? protectedDioClient).post(
     CartRequests.createPath,
     simpleResponse: false,
+    options: mergeRequestOptions(forwardedHost: forwardedHost),
     data: <String, dynamic>{
       'product_id': productId,
       'sub_index': subIndex,

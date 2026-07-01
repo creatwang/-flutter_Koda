@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/auth/controllers/session_providers.dar
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/cart/services/cart_create_flow_services.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_request_key.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/controllers/product_scan_uniqids_providers.dart';
 import 'package:george_pick_mate/features/product/models/paginated_products_state.dart';
@@ -17,9 +18,14 @@ import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 
 class ProductScanUniqidsListPage extends ConsumerStatefulWidget {
-  const ProductScanUniqidsListPage({required this.uniqids, super.key});
+  const ProductScanUniqidsListPage({
+    required this.uniqids,
+    this.scanHost,
+    super.key,
+  });
 
   final List<String> uniqids;
+  final String? scanHost;
 
   @override
   ConsumerState<ProductScanUniqidsListPage> createState() =>
@@ -37,7 +43,10 @@ class _ProductScanUniqidsListPageState
   final Set<int> _addToCartSubmitting = <int>{};
   int _addToCartFlowEpoch = 0;
 
-  String get _providerKey => encodeScanUniqidsProviderKey(widget.uniqids);
+  String get _providerKey => encodeScanUniqidsProviderKey(
+    widget.uniqids,
+    scanHost: widget.scanHost,
+  );
 
   @override
   void initState() {
@@ -135,6 +144,7 @@ class _ProductScanUniqidsListPageState
           onCollectTap: _onCollectTapped,
           onAddToCartTap: _onAddToCartTapped,
           onBeforeNavigateToDetail: _cancelInFlightAddToCartFlow,
+          detailScanHost: widget.scanHost,
           onRetry: _onProductGridRefresh,
           onRefresh: _onProductGridRefresh,
           onEnsureLoadMore: _ensureScrollableAndLoadMoreIfNeeded,
@@ -203,7 +213,14 @@ class _ProductScanUniqidsListPageState
     final epoch = _addToCartFlowEpoch;
     setState(() => _addToCartSubmitting.add(productId));
     try {
-      final detail = await ref.read(productDetailProvider(productId).future);
+      final detail = await ref.read(
+        productDetailProvider(
+          encodeProductDetailProviderKey(
+            productId: productId,
+            scanHost: widget.scanHost,
+          ),
+        ).future,
+      );
       if (!mounted) {
         _addToCartSubmitting.remove(productId);
         return;
@@ -232,6 +249,7 @@ class _ProductScanUniqidsListPageState
                 productNum: payload.productNum,
                 space: space,
                 subName: payload.subName,
+                forwardedHost: widget.scanHost,
               );
           submittedSmId = await resolveCreateCartItemSubmitSuccess(result);
           return submittedSmId != null;

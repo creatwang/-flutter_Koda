@@ -1,48 +1,55 @@
 import 'package:flutter/foundation.dart';
+import 'package:george_pick_mate/core/network/store_host_controller.dart';
 
-/// 扫码解析结果。
 sealed class ProductScanResolveResult {
-  const ProductScanResolveResult();
+  const ProductScanResolveResult({required this.forwardedHost});
+
+  final String forwardedHost;
 }
 
-/// 商品详情 id 扫码结果。
 final class ProductScanResolveProductId extends ProductScanResolveResult {
-  const ProductScanResolveProductId(this.productId);
+  const ProductScanResolveProductId({
+    required this.productId,
+    required super.forwardedHost,
+  });
 
   final int productId;
 }
 
-/// uniqids 组合扫码结果。
 final class ProductScanResolveUniqids extends ProductScanResolveResult {
-  const ProductScanResolveUniqids(this.uniqids);
+  const ProductScanResolveUniqids({
+    required this.uniqids,
+    required super.forwardedHost,
+  });
 
   final List<String> uniqids;
 }
 
-/// 商品扫码解析（仅解析，不做 UI/网络）。
 abstract final class ProductScanServices {
   static const String _prefix = 'url,';
   static const String _searchPathSegment = 'search';
 
-  /// 解析扫码字符串，优先识别 uniqids 组合链接，其次识别商品详情 id。
   static ProductScanResolveResult? resolveFromScan(String rawCode) {
+    final forwardedHost = extractForwardedHostFromScanUrl(rawCode);
+    if (forwardedHost == null || forwardedHost.isEmpty) return null;
+
     final uniqids = resolveUniqidsFromScan(rawCode);
     if (uniqids != null && uniqids.isNotEmpty) {
-      return ProductScanResolveUniqids(uniqids);
+      return ProductScanResolveUniqids(
+        uniqids: uniqids,
+        forwardedHost: forwardedHost,
+      );
     }
     final productId = resolveProductIdFromScan(rawCode);
     if (productId != null) {
-      return ProductScanResolveProductId(productId);
+      return ProductScanResolveProductId(
+        productId: productId,
+        forwardedHost: forwardedHost,
+      );
     }
     return null;
   }
 
-  /// 解析 uniqids 组合链接。
-  ///
-  /// 支持格式示例：
-  /// - `https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01&uniqids=ECO-FSL-197-01`
-  /// - `url,https://ceramics.georgebuilder.com/search?uniqids=ECO-FSL-243-01`
-  /// - `https://www.georgemetalglass.com/m/#/pages/search/search?uniqids=AAW7029`
   static List<String>? resolveUniqidsFromScan(String rawCode) {
     final normalized = rawCode.trim();
     if (normalized.isEmpty) return null;
@@ -96,11 +103,6 @@ abstract final class ProductScanServices {
         .toList(growable: false);
   }
 
-  /// 解析扫码字符串中的商品 id。
-  ///
-  /// 支持格式示例：
-  /// - `url,https://.../goods-detail?id=64522`
-  /// - `https://.../goods-detail?id=64522`（无 `url,` 前缀的裸链接）
   static int? resolveProductIdFromScan(String rawCode) {
     final normalized = rawCode.trim();
     if (normalized.isEmpty) return null;

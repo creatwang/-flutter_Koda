@@ -7,14 +7,40 @@ class AppRoutes {
   static const preOrder = '/pre-order';
   static const secureStorageDebug = '/debug/secure-storage';
 
-  static String productDetail(int id) => '/product/$id';
+  static const String scanHostQueryKey = 'scanHost';
 
-  static String productScanUniqidsList(List<String> uniqids) {
-    if (uniqids.isEmpty) return productScanUniqidsListPath;
-    final query = uniqids
-        .map((id) => 'uniqids=${Uri.encodeQueryComponent(id)}')
-        .join('&');
-    return '$productScanUniqidsListPath?$query';
+  static String productDetail(int id, {String? scanHost}) {
+    if (scanHost == null || scanHost.trim().isEmpty) {
+      return '/product/$id';
+    }
+    return '/product/$id?$scanHostQueryKey=${Uri.encodeQueryComponent(scanHost.trim())}';
+  }
+
+  static String productScanUniqidsList(
+    List<String> uniqids, {
+    String? scanHost,
+  }) {
+    final params = <String>[];
+    if (scanHost != null && scanHost.trim().isNotEmpty) {
+      params.add(
+        '$scanHostQueryKey=${Uri.encodeQueryComponent(scanHost.trim())}',
+      );
+    }
+    if (uniqids.isEmpty) {
+      return params.isEmpty
+          ? productScanUniqidsListPath
+          : '$productScanUniqidsListPath?${params.join('&')}';
+    }
+    params.addAll(
+      uniqids.map((id) => 'uniqids=${Uri.encodeQueryComponent(id)}'),
+    );
+    return '$productScanUniqidsListPath?${params.join('&')}';
+  }
+
+  static String? scanHostFromUri(Uri uri) {
+    final raw = uri.queryParameters[scanHostQueryKey]?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
   }
 
   static String homeWithTab(String tab) => '/?tab=$tab';

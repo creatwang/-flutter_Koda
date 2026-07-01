@@ -163,11 +163,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userName = userInfoState.asData?.value.name ?? '';
     final avatarUrl = userInfoState.asData?.value.avatar ?? '';
     final userId = userInfoState.asData?.value.id?.toInt();
-    final profileSiteId = ref
+    final profileSiteHost = ref
         .watch(sessionControllerProvider)
         .asData
         ?.value
-        .companyId;
+        .storeHost;
     final canViewCustomerOrders =
         userInfoState.asData?.value.isAuthAccount == true;
     final visibleMenus = buildProfileSidebarMenus(
@@ -213,7 +213,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               avatarUrl: avatarUrl,
               profileName: userName,
               profileId: userId,
-              profileSiteId: profileSiteId,
+              profileSiteHost: profileSiteHost,
               favoriteCount: favoriteCount,
               cartBadgeCount: cartBadgeCount,
               currentSection: contentSection,

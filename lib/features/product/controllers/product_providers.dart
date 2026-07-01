@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/product/models/paginated_products_state.dart';
 import 'package:george_pick_mate/features/product/models/product_category_tree_dto.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_request_key.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/services/product_services.dart';
 
@@ -226,10 +227,14 @@ class FavoriteProductsNotifier extends AsyncNotifier<PaginatedProductsState> {
   }
 }
 
-/// 商品详情 DTO（[id] 为商品 id）。
+/// 商品详情 DTO（family key 见 [encodeProductDetailProviderKey]）。
 final productDetailProvider =
-    FutureProvider.autoDispose.family<ProductDetailDto, int>((ref, id) async {
-  final result = await fetchProductDetailService(id);
+    FutureProvider.autoDispose.family<ProductDetailDto, String>((ref, key) async {
+  final decoded = decodeProductDetailProviderKey(key);
+  final result = await fetchProductDetailService(
+    decoded.productId,
+    forwardedHost: decoded.scanHost,
+  );
   return result.getOrThrow();
 });
 

@@ -94,7 +94,10 @@ class MemoryCacheInterceptor extends Interceptor {
   }
 
   String _cacheKey(RequestOptions options) {
-    return '${options.path}?${options.queryParameters}';
+    final forwardedHost = options.headers['x-forwarded-host']?.toString().trim();
+    final hostPrefix =
+        forwardedHost != null && forwardedHost.isNotEmpty ? '$forwardedHost|' : '';
+    return '$hostPrefix${options.baseUrl}${options.path}?${options.queryParameters}';
   }
 
   // 统一日志出口：仅在 Debug 且开启 netTrace 时打印。

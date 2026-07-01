@@ -156,6 +156,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
     required int productNum,
     required String space,
     required String subName,
+    String? forwardedHost,
   }) async {
     if (!_isAuthenticated()) {
       Future<void>.microtask(
@@ -176,6 +177,7 @@ class CartController extends AsyncNotifier<List<CartListDto>> {
       productNum: productNum,
       space: space,
       subName: subName,
+      forwardedHost: forwardedHost,
     );
     switch (result) {
       case ApiSuccess(:final data):

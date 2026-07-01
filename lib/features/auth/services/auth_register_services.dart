@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:george_pick_mate/core/network/store_host_controller.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/core/storage/token_pair.dart';
@@ -8,7 +9,6 @@ import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
 import 'package:george_pick_mate/features/auth/services/auth_session_snapshot_services.dart';
 import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
-/// 注册并落盘会话（与登录成功后的持久化一致）。
 typedef AuthRegisterService =
     Future<ApiResult<TokenPair>> Function({
       required String username,
@@ -39,16 +39,19 @@ Future<ApiResult<TokenPair>> authRegisterService({
       );
     }
     final userInfoBase = UserInfoBase.fromJson(data);
-    final companyId = userInfoBase.companyId?.toInt();
-    if (companyId == null) {
+    final domain = userInfoBase.domain?.trim();
+    if (domain == null || domain.isEmpty) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: appL10n.errorInvalidCompanyIdInRegisterResponse,
+        error: appL10n.errorInvalidDomainInRegisterResponse,
       );
     }
     await persistAuthenticatedUserSnapshot(userInfoBase);
     return ApiSuccess(
-      TokenPair(token: userInfoBase.token.toString(), companyId: companyId),
+      TokenPair(
+        token: userInfoBase.token.toString(),
+        storeHost: normalizeStoreHost(domain),
+      ),
     );
   } on DioException catch (e) {
     return ApiFailure(

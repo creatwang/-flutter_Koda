@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
+import 'package:george_pick_mate/core/network/store_host_controller.dart';
 import 'package:george_pick_mate/features/auth/controllers/session_providers.dart';
 import 'package:george_pick_mate/features/auth/controllers/store_company_providers.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/theme/pro_max_tokens.dart';
 
-/// 底部弹出：可选站点列表并调用 [SessionController.switchShop]。
-///
-/// [parentContext]：发起页的 [BuildContext]，用于成功后 [GoRouter.go] 到首页。
 Future<void> showSwitchSiteBottomSheet({
   required BuildContext parentContext,
   required WidgetRef ref,
@@ -29,7 +27,6 @@ Future<void> showSwitchSiteBottomSheet({
 class _SwitchSiteSheetScaffold extends ConsumerStatefulWidget {
   const _SwitchSiteSheetScaffold({required this.parentContext});
 
-  /// 设置页等外层上下文，用于关闭弹层后导航。
   final BuildContext parentContext;
 
   @override
@@ -39,33 +36,37 @@ class _SwitchSiteSheetScaffold extends ConsumerStatefulWidget {
 
 class _SwitchSiteSheetScaffoldState
     extends ConsumerState<_SwitchSiteSheetScaffold> {
-  /// 正在切换的站点 id；非空时禁用其它行点击。
-  int? _busySiteId;
+  String? _busyDomain;
 
-  static int? _idFromItem(Map<String, dynamic> item) {
-    final dynamic v = item['id'];
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return int.tryParse('$v');
+  static String? _domainFromItem(Map<String, dynamic> item) {
+    final raw = item['domain']?.toString().trim();
+    if (raw == null || raw.isEmpty) return null;
+    return normalizeStoreHost(raw);
+  }
+
+  static String _titleFromItem(Map<String, dynamic> item) {
+    return item['title']?.toString() ??
+        item['name']?.toString() ??
+        '';
   }
 
   static bool _isSelectedSite({
     required Map<String, dynamic> item,
-    required int? currentCompanyId,
+    required String? currentHost,
   }) {
-    if (currentCompanyId == null) return false;
-    final id = _idFromItem(item);
-    if (id != null) return id == currentCompanyId;
+    if (currentHost == null || currentHost.isEmpty) return false;
+    final domain = _domainFromItem(item);
+    if (domain != null) return domain == currentHost;
     final dynamic selectedRaw = item['selected'] ?? item['is_selected'];
     if (selectedRaw is bool) return selectedRaw;
     return '$selectedRaw' == '1' || '$selectedRaw'.toLowerCase() == 'true';
   }
 
-  Future<void> _pickSite(int id) async {
-    setState(() => _busySiteId = id);
+  Future<void> _pickSite(String domain) async {
+    setState(() => _busyDomain = domain);
     final result = await ref
         .read(sessionControllerProvider.notifier)
-        .switchShop(companyId: id, shopId: id);
+        .switchSite(domain: domain);
     if (!mounted) return;
     result.when(
       success: (_) {
@@ -75,7 +76,7 @@ class _SwitchSiteSheetScaffoldState
         }
       },
       failure: (exception) {
-        setState(() => _busySiteId = null);
+        setState(() => _busyDomain = null);
         showGlobalErrorMessage(exception.message);
       },
     );
@@ -85,13 +86,13 @@ class _SwitchSiteSheetScaffoldState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final async = ref.watch(storeCompanyListProvider);
-    final currentCompanyId = ref
+    final currentHost = ref
         .watch(sessionControllerProvider)
         .asData
         ?.value
-        .companyId;
+        .storeHost;
     final bottom = MediaQuery.paddingOf(context).bottom;
-    final busy = _busySiteId != null;
+    final busy = _busyDomain != null;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -149,16 +150,14 @@ class _SwitchSiteSheetScaffoldState
                           const Divider(height: 1, color: Color(0x22FFFFFF)),
                       itemBuilder: (BuildContext _, int index) {
                         final item = items[index];
-                        final title =
-                            item['title']?.toString() ??
-                            item['name']?.toString() ??
-                            '';
-                        final id = _idFromItem(item);
+                        final title = _titleFromItem(item);
+                        final domain = _domainFromItem(item);
                         final isSelected = _isSelectedSite(
                           item: item,
-                          currentCompanyId: currentCompanyId,
+                          currentHost: currentHost,
                         );
-                        final isRowBusy = id != null && _busySiteId == id;
+                        final isRowBusy =
+                            domain != null && _busyDomain == domain;
                         final isDisabled = busy && !isRowBusy;
                         final titleColor = isSelected
                             ? const Color(0xFFF4C77A)
@@ -180,7 +179,7 @@ class _SwitchSiteSheetScaffoldState
                           ),
                           title: Text(
                             title.isEmpty
-                                ? l10n.profileSiteFallbackTitle(id!)
+                                ? (domain ?? l10n.profileSiteFallbackTitle(0))
                                 : title,
                             style: TextStyle(
                               color: titleColor.withValues(
@@ -189,12 +188,12 @@ class _SwitchSiteSheetScaffoldState
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          subtitle: id == null
+                          subtitle: domain == null
                               ? null
                               : Text(
                                   isSelected
-                                      ? l10n.profileSiteCurrent(id)
-                                      : l10n.profileSiteIdLine(id),
+                                      ? l10n.profileSiteCurrentDomain(domain)
+                                      : domain,
                                   style: TextStyle(
                                     color:
                                         (isSelected
@@ -228,9 +227,9 @@ class _SwitchSiteSheetScaffoldState
                                     alpha: isDisabled ? 0.22 : 0.35,
                                   ),
                                 ),
-                          onTap: id == null || busy
+                          onTap: domain == null || busy
                               ? null
-                              : () => _pickSite(id),
+                              : () => _pickSite(domain),
                         );
                       },
                     );

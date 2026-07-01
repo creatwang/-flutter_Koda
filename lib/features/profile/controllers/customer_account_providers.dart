@@ -11,7 +11,6 @@ import 'package:george_pick_mate/features/profile/models/paginated_store_custome
 import 'package:george_pick_mate/features/profile/models/store_customer_item_dto.dart';
 import 'package:george_pick_mate/features/profile/services/customer_account_services.dart';
 
-/// 客户列表（业务员；依赖会话 `companyId` + `token`，且 `is_auth_account`）。
 final storeCustomersProvider =
     AsyncNotifierProvider.autoDispose<
       StoreCustomersNotifier,
@@ -34,8 +33,6 @@ class StoreCustomersNotifier
   String _status = '';
   String _keyword = '';
 
-  /// 「我的客户」仅业务员账号可调 `/store/account/customer`；
-  /// 代客子账号等会话切换后不应再打列表接口。
   Future<bool> _isSalesRepContext() async {
     final user = await secureStorageService.readUserInfoBase();
     return user?.isAuthAccount == true;
@@ -43,22 +40,21 @@ class StoreCustomersNotifier
 
   @override
   FutureOr<PaginatedStoreCustomersState> build() async {
-    // 同时依赖 companyId 与 token，避免仅 token 变化时仍沿用旧列表。
     final session = ref.watch(
       sessionControllerProvider.select(
         (AsyncValue<Session> async) => async.asData?.value,
       ),
     );
-    final companyId = session?.companyId;
     final String? token = session?.token;
-    if (companyId == null || token == null || token.isEmpty) {
+    if (session?.isAuthenticated != true ||
+        token == null ||
+        token.isEmpty) {
       return _emptyFirstPage;
     }
     if (!await _isSalesRepContext()) {
       return _emptyFirstPage;
     }
     final result = await fetchStoreCustomersFirstPageService(
-      companyId: companyId,
       status: _status,
       keyword: _keyword,
       pageSize: _pageSize,
@@ -69,7 +65,6 @@ class StoreCustomersNotifier
     );
   }
 
-  /// 更新筛选并回到第一页。
   Future<void> applyFilters({String? status, String? keyword}) async {
     _status = status ?? _status;
     _keyword = keyword ?? _keyword;
@@ -80,19 +75,14 @@ class StoreCustomersNotifier
     if (!ref.mounted) return;
     state = const AsyncLoading();
     final next = await AsyncValue.guard(() async {
-      final companyId = ref
-          .read(sessionControllerProvider)
-          .asData
-          ?.value
-          .companyId;
-      if (companyId == null) {
+      final session = ref.read(sessionControllerProvider).asData?.value;
+      if (session?.isAuthenticated != true) {
         return _emptyFirstPage;
       }
       if (!await _isSalesRepContext()) {
         return _emptyFirstPage;
       }
       final result = await fetchStoreCustomersFirstPageService(
-        companyId: companyId,
         status: _status,
         keyword: _keyword,
         pageSize: _pageSize,
@@ -109,13 +99,9 @@ class StoreCustomersNotifier
   Future<void> loadMore() async {
     if (!ref.mounted) return;
     final current = state.asData?.value;
-    final companyId = ref
-        .read(sessionControllerProvider)
-        .asData
-        ?.value
-        .companyId;
+    final session = ref.read(sessionControllerProvider).asData?.value;
     if (current == null ||
-        companyId == null ||
+        session?.isAuthenticated != true ||
         !current.hasMore ||
         current.isLoadingMore) {
       return;
@@ -128,7 +114,6 @@ class StoreCustomersNotifier
     state = AsyncData(current.copyWith(isLoadingMore: true));
     final nextPage = current.page + 1;
     final result = await fetchStoreCustomersPageService(
-      companyId: companyId,
       page: nextPage,
       status: _status,
       keyword: _keyword,
@@ -195,7 +180,6 @@ class StoreCustomersNotifier
     return result;
   }
 
-  /// `POST /store/account/customerResetPwd`，与列表状态无耦合。
   Future<ApiResult<void>> resetCommonPassword({required String password}) {
     return resetStoreCustomerCommonPasswordService(password: password);
   }

@@ -19,6 +19,7 @@ class ProductGridSection extends StatelessWidget {
     required this.onCollectTap,
     required this.onAddToCartTap,
     this.onBeforeNavigateToDetail,
+    this.detailScanHost,
     required this.onRetry,
     required this.onRefresh,
     required this.onEnsureLoadMore,
@@ -34,6 +35,7 @@ class ProductGridSection extends StatelessWidget {
   final ValueChanged<ProductItem> onCollectTap;
   final ValueChanged<ProductItem> onAddToCartTap;
   final VoidCallback? onBeforeNavigateToDetail;
+  final String? detailScanHost;
   final VoidCallback onRetry;
   final Future<void> Function() onRefresh;
   final VoidCallback onEnsureLoadMore;
@@ -96,6 +98,7 @@ class ProductGridSection extends StatelessWidget {
                           onCollectTap: () => onCollectTap(product),
                           onAddToCartTap: () => onAddToCartTap(product),
                           onBeforeNavigateToDetail: onBeforeNavigateToDetail,
+                          detailScanHost: detailScanHost,
                         );
                       },
                     );

@@ -40,10 +40,17 @@ Future<void> runProductQrScanFlow({
   final scanned = code.trim();
   final resolved = ProductScanServices.resolveFromScan(scanned);
   switch (resolved) {
-    case ProductScanResolveUniqids(:final uniqids):
-      context.push(AppRoutes.productScanUniqidsList(uniqids));
-    case ProductScanResolveProductId(:final productId):
-      context.push(AppRoutes.productDetail(productId));
+    case ProductScanResolveUniqids(:final uniqids, :final forwardedHost):
+      context.push(
+        AppRoutes.productScanUniqidsList(
+          uniqids,
+          scanHost: forwardedHost,
+        ),
+      );
+    case ProductScanResolveProductId(:final productId, :final forwardedHost):
+      context.push(
+        AppRoutes.productDetail(productId, scanHost: forwardedHost),
+      );
     case null:
       showGlobalWarningMessage(
         context.l10n.productScanInvalidQrWithContent(scanned),

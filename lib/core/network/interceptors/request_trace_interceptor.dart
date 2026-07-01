@@ -28,8 +28,10 @@ class RequestTraceInterceptor extends Interceptor {
     // 生成请求 ID（时间戳 + 随机数），用来串联同一条请求链路。
     final requestId =
         '${DateTime.now().millisecondsSinceEpoch}-${_random.nextInt(99999)}';
-    // 透传到后端，便于后端日志和客户端日志关联。
-    options.headers['X-Request-Id'] = requestId;
+    // Web 跨域预检：自定义头须后端 Allow-Headers 放行；本地仍用 extra 追踪。
+    if (!kIsWeb) {
+      options.headers['X-Request-Id'] = requestId;
+    }
     // 保存到 extra，供 onResponse/onError 读取。
     options.extra[_requestIdKey] = requestId;
     // 记录请求起始时间，用于计算总耗时。

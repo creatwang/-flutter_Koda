@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/core/network/api_business_code.dart';
 import 'package:george_pick_mate/core/network/dio_client.dart';
+import 'package:george_pick_mate/core/network/store_host_controller.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/result/app_exception.dart';
 import 'package:george_pick_mate/core/storage/token_pair.dart';
@@ -14,9 +15,7 @@ import '../models/user_info_bean.dart';
 export 'package:george_pick_mate/core/platform_services/network_clients.dart'
     show
         AuthRefreshService,
-        AuthReadTokenService,
         AuthClearTokenService,
-        authReadTokenServiceProvider,
         authClearTokenServiceProvider,
         authClearTokenService;
 
@@ -27,12 +26,10 @@ typedef AuthLoginService =
       required String password,
     });
 
-/// 暴露给 [Provider] 的默认登录实现。
 final authLoginServiceProvider = Provider<AuthLoginService>(
   (ref) => authLoginService,
 );
 
-/// 调用 `POST /store/user/logout`；成功返回 [ApiSuccess]，否则 [ApiFailure]。
 Future<ApiResult<void>> logoutStoreUserService({DioClient? client}) async {
   try {
     final response = await requestAuthLogout(client: client);
@@ -60,8 +57,6 @@ Future<ApiResult<void>> logoutStoreUserService({DioClient? client}) async {
   }
 }
 
-/// 登出接口约定包：
-/// `{ "code": 0, "message": "ok", "type": "success", "result": true }`
 bool _isLogoutResponseSuccess(dynamic data) {
   if (data == null || data == '') return true;
   if (data == false || data == 'false') return false;
@@ -112,9 +107,7 @@ int? _parseIntLoose(Object? value) {
   return int.tryParse(value.toString());
 }
 
-/// 执行登录并写入 `userInfoBase`、`companyId`、`tokenMap`，同步站点信息。
-///
-/// [username] / [password]：登录凭证。
+/// 执行登录并写入 `userInfoBase`、站点 domain，同步站点信息。
 Future<ApiResult<TokenPair>> authLoginService({
   required String username,
   required String password,
@@ -140,16 +133,19 @@ Future<ApiResult<TokenPair>> authLoginService({
     }
     final payload = data['result'] ?? data;
     final userInfoBase = UserInfoBase.fromJson(payload);
-    final companyId = userInfoBase.companyId?.toInt();
-    if (companyId == null) {
+    final domain = userInfoBase.domain?.trim();
+    if (domain == null || domain.isEmpty) {
       throw DioException(
         requestOptions: response.requestOptions,
-        error: appL10n.errorInvalidCompanyIdInLoginResponse,
+        error: appL10n.errorInvalidDomainInLoginResponse,
       );
     }
     await persistAuthenticatedUserSnapshot(userInfoBase);
     return ApiSuccess(
-      TokenPair(token: userInfoBase.token.toString(), companyId: companyId),
+      TokenPair(
+        token: userInfoBase.token.toString(),
+        storeHost: normalizeStoreHost(domain),
+      ),
     );
   } on DioException catch (e) {
     return ApiFailure(

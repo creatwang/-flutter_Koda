@@ -3,7 +3,6 @@ import 'package:george_pick_mate/core/network/dio_client.dart';
 import 'package:george_pick_mate/core/network/interceptors/response_data_mode_interceptor.dart';
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 
-/// 业务员客户账号相关路径（仅 HTTP）。
 class CustomerAccountRequests {
   CustomerAccountRequests._();
 
@@ -14,13 +13,10 @@ class CustomerAccountRequests {
   static const String customerDeletePath = '/store/account/customerDelete';
   static const String customerResetPwdPath = '/store/account/customerResetPwd';
 
-  /// 平板端与门店切换等接口一致。
   static const int padTerminal = 5;
 }
 
-/// 客户分页列表（需鉴权）。
 Future<Response<dynamic>> requestStoreCustomerList({
-  required int companyId,
   int page = 1,
   int pageSize = 20,
   String status = '',
@@ -34,12 +30,10 @@ Future<Response<dynamic>> requestStoreCustomerList({
       'page': page,
       'page_size': pageSize,
       'keyword': keyword,
-      'company_id': companyId,
     },
   );
 }
 
-/// 修改客户账号（需鉴权）。
 Future<Response<dynamic>> requestStoreCustomerUpdate({
   required int id,
   required String username,
@@ -67,7 +61,6 @@ Future<Response<dynamic>> requestStoreCustomerUpdate({
   );
 }
 
-/// 新增客户账号（需鉴权）。
 Future<Response<dynamic>> requestStoreCustomerCreate({
   required String username,
   required String password,
@@ -94,7 +87,6 @@ Future<Response<dynamic>> requestStoreCustomerCreate({
   );
 }
 
-/// 代客登录（需鉴权，业务员上下文）。
 Future<Response<dynamic>> requestStoreCustomerLogin({
   required int id,
   int terminal = CustomerAccountRequests.padTerminal,
@@ -106,7 +98,6 @@ Future<Response<dynamic>> requestStoreCustomerLogin({
   );
 }
 
-/// 删除客户账号（需鉴权）。
 Future<Response<dynamic>> requestStoreCustomerDelete({
   required int id,
   DioClient? client,
@@ -117,7 +108,6 @@ Future<Response<dynamic>> requestStoreCustomerDelete({
   );
 }
 
-/// 设置客户公共密码（需鉴权）。
 Future<Response<dynamic>> requestStoreCustomerResetPwd({
   required String password,
   DioClient? client,

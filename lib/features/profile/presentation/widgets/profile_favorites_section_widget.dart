@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/auth/controllers/session_providers.dar
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/services/cart_create_flow_services.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_request_key.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/models/product_item.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_card.dart';
@@ -122,7 +123,11 @@ class _ProfileFavoritesSectionWidgetState
     final epoch = _addToCartFlowEpoch;
     setState(() => _addToCartSubmitting.add(productId));
     try {
-      final detail = await ref.read(productDetailProvider(productId).future);
+      final detail = await ref.read(
+        productDetailProvider(
+          encodeProductDetailProviderKey(productId: productId),
+        ).future,
+      );
       if (!mounted) {
         _addToCartSubmitting.remove(productId);
         return;

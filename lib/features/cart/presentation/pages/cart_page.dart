@@ -10,6 +10,7 @@ import 'package:george_pick_mate/shared/services/app_message_service.dart';
 import 'package:george_pick_mate/shared/widgets/dialog/show_george_confirm_dialog.dart';
 import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/services/cart_services.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_request_key.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
@@ -496,7 +497,9 @@ class _CartPageState extends ConsumerState<CartPage> {
     });
     try {
       final detail = await ref.read(
-        productDetailProvider(item.productId).future,
+        productDetailProvider(
+          encodeProductDetailProviderKey(productId: item.productId),
+        ).future,
       );
       if (!mounted) return;
       await presentProductSkuCartSideSheet(

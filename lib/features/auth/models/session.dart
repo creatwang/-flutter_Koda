@@ -1,11 +1,11 @@
 class Session {
   const Session({
-    required this.isAuthenticated,
-    this.companyId,
+    this.isAuthenticated = false,
+    this.storeHost,
     this.token,
   });
 
   final bool isAuthenticated;
-  final int? companyId;
+  final String? storeHost;
   final String? token;
 }

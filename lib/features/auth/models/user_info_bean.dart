@@ -6,6 +6,7 @@ class UserInfoBase {
   String? name;
   String? username;
   num? companyId;
+  String? domain;
   String? avatar;
   String? telephone;
   String? description;
@@ -34,6 +35,7 @@ class UserInfoBase {
     this.name,
     this.username,
     this.companyId,
+    this.domain,
     this.avatar,
     this.telephone,
     this.description,
@@ -66,6 +68,7 @@ class UserInfoBase {
         name: _readStr(map['name']),
         username: _readStr(map['username']),
         companyId: _readNum(map['company_id']),
+        domain: _readStr(map['domain']),
         avatar: _readStr(map['avatar']),
         telephone: _readStr(map['telephone']),
         description: _readStr(map['description']),
@@ -104,6 +107,7 @@ class UserInfoBase {
     data['name'] = name;
     data['username'] = username;
     data['company_id'] = companyId;
+    data['domain'] = domain;
     data['avatar'] = avatar;
     data['telephone'] = telephone;
     data['description'] = description;

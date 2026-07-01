@@ -13,6 +13,7 @@ class ProductCard extends StatelessWidget {
     this.onCollectTap,
     this.onAddToCartTap,
     this.onBeforeNavigateToDetail,
+    this.detailScanHost,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class ProductCard extends StatelessWidget {
 
   /// 进入详情前回调（用于中断列表中的加购加载流程）。
   final VoidCallback? onBeforeNavigateToDetail;
+  final String? detailScanHost;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,12 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: () {
           onBeforeNavigateToDetail?.call();
-          context.push(AppRoutes.productDetail(productItem.id));
+          context.push(
+            AppRoutes.productDetail(
+              productItem.id,
+              scanHost: detailScanHost,
+            ),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(10),

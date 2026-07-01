@@ -632,6 +632,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String profileSiteHost(Object host) {
+    return '站点：$host';
+  }
+
+  @override
   String get profileFavNum => '收藏数';
 
   @override
@@ -770,6 +775,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String profileSiteCurrentDomain(Object host) {
+    return '当前站点 · $host';
+  }
+
+  @override
   String profileSiteCurrent(int id) {
     return '当前站点 · ID：$id';
   }
@@ -790,6 +800,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errorMissingCompanyId => '缺少站点 ID';
+
+  @override
+  String get errorMissingStoreDomain => '缺少站点域名';
+
+  @override
+  String get errorInvalidSiteDomain => '站点域名无效';
 
   @override
   String get errorMissingToken => '缺少 token';
@@ -926,10 +942,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorInvalidCompanyIdInLoginResponse => '登录响应缺少 company_id';
 
   @override
+  String get errorInvalidDomainInLoginResponse => '登录响应缺少 domain';
+
+  @override
   String get errorInvalidRegisterResponseFormat => '注册响应格式无效';
 
   @override
   String get errorInvalidCompanyIdInRegisterResponse => '注册响应缺少 company_id';
+
+  @override
+  String get errorInvalidDomainInRegisterResponse => '注册响应缺少 domain';
 
   @override
   String get errorRequestFailed => '请求失败';

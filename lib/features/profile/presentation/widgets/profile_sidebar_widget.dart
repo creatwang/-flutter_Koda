@@ -13,7 +13,7 @@ class ProfileSidebarWidget extends StatelessWidget {
     required this.avatarUrl,
     required this.profileName,
     required this.profileId,
-    required this.profileSiteId,
+    required this.profileSiteHost,
     required this.favoriteCount,
     required this.cartBadgeCount,
     required this.currentSection,
@@ -24,7 +24,7 @@ class ProfileSidebarWidget extends StatelessWidget {
   final String avatarUrl;
   final String profileName;
   final int? profileId;
-  final int? profileSiteId;
+  final String? profileSiteHost;
   final int favoriteCount;
   final int cartBadgeCount;
   final ProfileContentSection currentSection;
@@ -156,7 +156,7 @@ class ProfileSidebarWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          l10n.profileSiteId(profileSiteId ?? '--'),
+                          l10n.profileSiteHost(profileSiteHost ?? '--'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             letterSpacing: 1.2,

@@ -406,6 +406,7 @@ Future<ApiResult<int>> createCartItemService({
   required int productNum,
   required String space,
   required String subName,
+  String? forwardedHost,
 }) async {
   try {
     final response = await requestCartCreate(
@@ -415,6 +416,7 @@ Future<ApiResult<int>> createCartItemService({
       productNum: productNum,
       space: space,
       subName: subName,
+      forwardedHost: forwardedHost,
     );
     final payload = response.data;
     if (payload is! Map) {

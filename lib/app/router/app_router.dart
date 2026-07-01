@@ -30,6 +30,7 @@ GoRouter buildAppRouter({
         path: AppRoutes.productDetailPattern,
         builder: (_, state) => ProductDetailPage(
           productId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+          scanHost: AppRoutes.scanHostFromUri(state.uri),
         ),
       ),
       GoRoute(
@@ -38,7 +39,10 @@ GoRouter buildAppRouter({
           final uniqids =
               state.uri.queryParametersAll['uniqids'] ??
               const <String>[];
-          return ProductScanUniqidsListPage(uniqids: uniqids);
+          return ProductScanUniqidsListPage(
+            uniqids: uniqids,
+            scanHost: AppRoutes.scanHostFromUri(state.uri),
+          );
         },
       ),
       GoRoute(

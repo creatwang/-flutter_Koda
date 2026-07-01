@@ -1,13 +1,13 @@
 class TokenPair {
   const TokenPair({
-    this.companyId,
+    this.storeHost,
     this.token,
     this.accessToken,
     this.refreshToken,
   }) : resolvedAccessToken = accessToken ?? token ?? '',
        resolvedRefreshToken = refreshToken ?? '';
 
-  final int? companyId;
+  final String? storeHost;
   final String? token;
   final String? accessToken;
   final String? refreshToken;

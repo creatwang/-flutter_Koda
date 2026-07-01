@@ -314,6 +314,12 @@
       "id": {}
     }
   },
+  "profileSiteHost": "站点：{host}",
+  "@profileSiteHost": {
+    "placeholders": {
+      "host": {}
+    }
+  },
   "profileFavNum": "收藏数",
   "profileCartNum": "购物车数",
   "profileAccountPreferences": "账号与偏好",
@@ -376,6 +382,12 @@
       }
     }
   },
+  "profileSiteCurrentDomain": "当前站点 · {host}",
+  "@profileSiteCurrentDomain": {
+    "placeholders": {
+      "host": {}
+    }
+  },
   "profileSiteCurrent": "当前站点 · ID：{id}",
   "@profileSiteCurrent": {
     "placeholders": {
@@ -396,6 +408,8 @@
   "sessionEndedMessage": "请重新登录以继续购物。",
   "sessionEndedSignIn": "重新登录",
   "errorMissingCompanyId": "缺少站点 ID",
+  "errorMissingStoreDomain": "缺少站点域名",
+  "errorInvalidSiteDomain": "站点域名无效",
   "errorMissingToken": "缺少 token",
   "errorInvalidProductResponseFormat": "商品响应格式无效",
   "errorInvalidProductsListFormat": "商品列表格式无效",
@@ -445,8 +459,10 @@
   "errorLogoutRequestFailed": "退出登录请求失败",
   "errorInvalidLoginResponseFormat": "登录响应格式无效",
   "errorInvalidCompanyIdInLoginResponse": "登录响应缺少 company_id",
+  "errorInvalidDomainInLoginResponse": "登录响应缺少 domain",
   "errorInvalidRegisterResponseFormat": "注册响应格式无效",
   "errorInvalidCompanyIdInRegisterResponse": "注册响应缺少 company_id",
+  "errorInvalidDomainInRegisterResponse": "注册响应缺少 domain",
   "errorRequestFailed": "请求失败",
   "errorNetworkError": "网络错误",
   "errorSessionExpiredDefault": "您的登录已过期，请重新登录。",

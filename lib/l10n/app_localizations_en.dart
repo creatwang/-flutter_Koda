@@ -645,6 +645,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String profileSiteHost(Object host) {
+    return 'SITE: $host';
+  }
+
+  @override
   String get profileFavNum => 'FAV NUM';
 
   @override
@@ -788,6 +793,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String profileSiteCurrentDomain(Object host) {
+    return 'Current site · $host';
+  }
+
+  @override
   String profileSiteCurrent(int id) {
     return 'Current site · ID: $id';
   }
@@ -809,6 +819,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorMissingCompanyId => 'Missing company id';
+
+  @override
+  String get errorMissingStoreDomain => 'Missing store domain';
+
+  @override
+  String get errorInvalidSiteDomain => 'Invalid site domain';
 
   @override
   String get errorMissingToken => 'Missing token';
@@ -961,12 +977,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Invalid company_id in login response';
 
   @override
+  String get errorInvalidDomainInLoginResponse =>
+      'Invalid domain in login response';
+
+  @override
   String get errorInvalidRegisterResponseFormat =>
       'Invalid register response format';
 
   @override
   String get errorInvalidCompanyIdInRegisterResponse =>
       'Invalid company_id in register response';
+
+  @override
+  String get errorInvalidDomainInRegisterResponse =>
+      'Invalid domain in register response';
 
   @override
   String get errorRequestFailed => 'Request failed';

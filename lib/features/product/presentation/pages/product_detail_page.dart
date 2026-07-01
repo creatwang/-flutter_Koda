@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/cart/controllers/cart_providers.dart';
 import 'package:george_pick_mate/features/cart/models/create_cart_item_result.dart';
 import 'package:george_pick_mate/features/cart/presentation/widgets/cart_space_input_dialog.dart';
 import 'package:george_pick_mate/features/cart/services/cart_create_flow_services.dart';
+import 'package:george_pick_mate/features/product/controllers/product_detail_request_key.dart';
 import 'package:george_pick_mate/features/product/controllers/product_detail_controller.dart';
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
@@ -23,9 +24,14 @@ import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
 enum _DetailCartSubmitKind { buyNow, addToCart }
 
 class ProductDetailPage extends ConsumerStatefulWidget {
-  const ProductDetailPage({required this.productId, super.key});
+  const ProductDetailPage({
+    required this.productId,
+    this.scanHost,
+    super.key,
+  });
 
   final int productId;
+  final String? scanHost;
 
   @override
   ConsumerState<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -71,13 +77,18 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
     super.dispose();
   }
 
+  String get _detailProviderKey => encodeProductDetailProviderKey(
+    productId: widget.productId,
+    scanHost: widget.scanHost,
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final detailState = ref.watch(productDetailProvider(widget.productId));
+    final detailState = ref.watch(productDetailProvider(_detailProviderKey));
 
     ref.listen<AsyncValue<ProductDetailDto>>(
-      productDetailProvider(widget.productId),
+      productDetailProvider(_detailProviderKey),
       (previous, next) {
         next.whenData((detail) {
           final variants = detail.product ?? const <Product>[];
@@ -115,7 +126,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
               error: (error, _) => AppErrorView(
                 message: l10n.productDetailLoadFailed(error.toString()),
                 onRetry: () =>
-                    ref.invalidate(productDetailProvider(widget.productId)),
+                    ref.invalidate(productDetailProvider(_detailProviderKey)),
               ),
               data: (detail) => _buildDetailContent(context, detail),
             ),
@@ -351,6 +362,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
           productNum: qty,
           space: space,
           subName: subName,
+          forwardedHost: widget.scanHost,
         );
   }
 

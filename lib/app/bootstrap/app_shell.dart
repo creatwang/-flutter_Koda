@@ -26,7 +26,8 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   final _routerSessionState = _RouterSessionState();
   late final GoRouter _router;
   late final ProviderSubscription<AsyncValue<Session>> _sessionSubscription;
@@ -34,6 +35,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _syncRouterSessionState(ref.read(sessionControllerProvider));
     _router = buildAppRouter(
       isLoading: () => _routerSessionState.isLoading,
@@ -49,9 +51,17 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sessionSubscription.close();
     _routerSessionState.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(sessionSyncProvider.notifier).refreshOnResume();
+    }
   }
 
   void _syncRouterSessionState(AsyncValue<Session> sessionState) {

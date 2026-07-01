@@ -53,6 +53,6 @@ Future<void> persistAuthenticatedUserSnapshot(UserInfoBase user) async {
     fallbackDomain: normalized,
     fallbackToken: token,
   );
-  await storeHostController.applyDomain(normalized, persist: false);
+  await storeHostController.applyDomain(normalized);
   await syncSiteInfoToLocal();
 }

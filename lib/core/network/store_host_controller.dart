@@ -20,6 +20,13 @@ class StoreHostController {
       _applyInMemory(domain);
       return;
     }
+    final user = await _storage.readUserInfoBase();
+    final fromUser = normalizeStoreHost(user?.domain ?? '');
+    if (fromUser.isNotEmpty) {
+      await _storage.saveStoreDomain(fromUser);
+      _applyInMemory(fromUser);
+      return;
+    }
     _resetInMemory();
   }
 

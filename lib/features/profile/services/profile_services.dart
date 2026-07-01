@@ -10,7 +10,7 @@ import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 Future<ApiResult<UserInfoBase>> fetchUserInfoService() async {
   try {
     final response = await requestUserInfo();
-    final payload = _resolveResultMap(response.data);
+    final payload = resolveUserInfoPayload(response.data);
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,
@@ -138,13 +138,6 @@ bool _isUpdateSuccess(dynamic data) {
         result?.toString().toLowerCase() == 'true';
   }
   return false;
-}
-
-Map<String, dynamic>? _resolveResultMap(dynamic data) {
-  if (data is! Map<String, dynamic>) return null;
-  final result = data['result'];
-  if (result is Map<String, dynamic>) return result;
-  return data;
 }
 
 Map<String, dynamic>? _resolveOrderListPayload(dynamic data) {

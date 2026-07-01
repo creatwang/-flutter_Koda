@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/auth/models/user_info_bean.dart';
+import 'package:george_pick_mate/core/network/store_host_controller.dart';
 import 'package:george_pick_mate/core/result/api_result.dart';
 import 'package:george_pick_mate/core/platform_services/network_clients.dart';
 import 'package:george_pick_mate/features/profile/services/profile_services.dart';
@@ -16,16 +17,21 @@ final profileUserInfoProvider =
 class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
   @override
   FutureOr<UserInfoBase> build() async {
-    final storeHost = await secureStorageService.getStoreDomain();
-    if (storeHost == null) return UserInfoBase();
-
     final cached = await _readCachedProfile();
-    if (cached != null) return cached;
+    await _ensureStoreHostContext(cached);
+
+    if (cached != null && cached.hasProfileIdentity) {
+      return cached;
+    }
+
+    final storeHost = await _resolveStoreHost(cached);
+    if (storeHost == null) return UserInfoBase();
 
     final result = await fetchUserInfoService();
     if (result is ApiSuccess<UserInfoBase>) {
       return _cacheProfile(result.data);
     }
+    if (cached != null) return cached;
     throw (result as ApiFailure<UserInfoBase>).exception;
   }
 
@@ -34,7 +40,9 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
   }
 
   Future<void> refresh() async {
-    final storeHost = await secureStorageService.getStoreDomain();
+    final cached = await _readCachedProfile();
+    await _ensureStoreHostContext(cached);
+    final storeHost = await _resolveStoreHost(cached);
     if (storeHost == null) {
       state = AsyncData(UserInfoBase());
       return;
@@ -67,6 +75,36 @@ class ProfileUserInfoNotifier extends AsyncNotifier<UserInfoBase> {
 
   Future<UserInfoBase?> _readCachedProfile() async {
     return secureStorageService.readUserInfoBase();
+  }
+
+  Future<String?> _resolveStoreHost(UserInfoBase? cached) async {
+    final stored = await secureStorageService.getStoreDomain();
+    if (stored != null && stored.trim().isNotEmpty) {
+      return stored.trim();
+    }
+    final memoryHost = storeHostController.host?.trim();
+    if (memoryHost != null && memoryHost.isNotEmpty) return memoryHost;
+    final fromCache = cached?.domain?.trim();
+    if (fromCache != null && fromCache.isNotEmpty) {
+      return normalizeStoreHost(fromCache);
+    }
+    final user = await secureStorageService.readUserInfoBase();
+    final fromUser = user?.domain?.trim();
+    if (fromUser == null || fromUser.isEmpty) return null;
+    return normalizeStoreHost(fromUser);
+  }
+
+  Future<void> _ensureStoreHostContext(UserInfoBase? cached) async {
+    final stored = await secureStorageService.getStoreDomain();
+    if (stored != null && stored.trim().isNotEmpty) {
+      if (storeHostController.host == null) {
+        await storeHostController.applyDomain(stored, persist: false);
+      }
+      return;
+    }
+    final resolved = await _resolveStoreHost(cached);
+    if (resolved == null || resolved.isEmpty) return;
+    await storeHostController.applyDomain(resolved);
   }
 
   Future<UserInfoBase> _cacheProfile(UserInfoBase profile) async {

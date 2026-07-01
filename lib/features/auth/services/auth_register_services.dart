@@ -38,7 +38,7 @@ Future<ApiResult<TokenPair>> authRegisterService({
         error: appL10n.errorInvalidRegisterResponseFormat,
       );
     }
-    final userInfoBase = UserInfoBase.fromJson(data);
+    final userInfoBase = UserInfoBase.fromApiEnvelope(data);
     final domain = userInfoBase.domain?.trim();
     if (domain == null || domain.isEmpty) {
       throw DioException(

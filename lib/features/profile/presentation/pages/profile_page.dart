@@ -102,8 +102,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _settingsErrorMessage = null;
     await ProfilePageController.refreshProfile(ref);
     if (!mounted) return;
-    final latestName = ref.read(profileUserInfoProvider).asData?.value.name;
-    if (latestName != null && latestName.trim().isNotEmpty) {
+    final latestName =
+        ref.read(profileUserInfoProvider).asData?.value.name?.trim() ?? '';
+    if (latestName.isNotEmpty) {
       _fullNameController.text = latestName;
       _hasHydratedName = true;
     }
@@ -160,9 +161,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final listCartBadge = ref.watch(cartListBadgeCountProvider);
     final profileServerCartNum = ref.watch(profileCartServerNumProvider);
     final cartBadgeCount = profileServerCartNum ?? listCartBadge;
-    final userName = userInfoState.asData?.value.name ?? '';
-    final avatarUrl = userInfoState.asData?.value.avatar ?? '';
-    final userId = userInfoState.asData?.value.id?.toInt();
+    final profile = userInfoState.asData?.value;
+    final formName = profile?.name?.trim() ?? '';
+    final userName = profile?.displayName ?? '';
+    final avatarUrl = profile?.avatar ?? '';
+    final userId = profile?.profileUserId;
     final profileSiteHost = ref
         .watch(sessionControllerProvider)
         .asData
@@ -199,8 +202,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       data: (u) => u != null,
       orElse: () => false,
     );
-    if (!_hasHydratedName && userName.trim().isNotEmpty) {
-      _fullNameController.text = userName;
+    if (!_hasHydratedName && formName.isNotEmpty) {
+      _fullNameController.text = formName;
       _hasHydratedName = true;
     }
     return HomeMainContentSlot(

@@ -217,7 +217,7 @@ Future<ApiResult<UserInfoBase>> loginStoreCustomerService({
 }) async {
   try {
     final response = await requestStoreCustomerLogin(id: id);
-    final payload = _resolveResultMap(response.data);
+    final payload = resolveUserInfoPayload(response.data);
     if (payload == null) {
       throw DioException(
         requestOptions: response.requestOptions,

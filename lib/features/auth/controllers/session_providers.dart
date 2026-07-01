@@ -279,6 +279,11 @@ class SessionController extends AsyncNotifier<Session> {
 }
 
 class SessionSyncController extends AsyncNotifier<void> {
+  static const Duration _throttleWindow = Duration(seconds: 60);
+
+  DateTime? _lastSyncedAt;
+  Future<void>? _inFlightSync;
+
   @override
   FutureOr<void> build() {}
 
@@ -286,10 +291,30 @@ class SessionSyncController extends AsyncNotifier<void> {
     final session = ref.read(sessionControllerProvider).asData?.value;
     if (session?.isAuthenticated != true) return;
 
+    final now = DateTime.now();
+    if (_lastSyncedAt != null &&
+        now.difference(_lastSyncedAt!) < _throttleWindow) {
+      return;
+    }
+    if (_inFlightSync != null) {
+      await _inFlightSync;
+      return;
+    }
+
+    _inFlightSync = _runResumeSync(fallbackToken: session?.token);
+    try {
+      await _inFlightSync;
+    } finally {
+      _inFlightSync = null;
+    }
+  }
+
+  Future<void> _runResumeSync({String? fallbackToken}) async {
     await Future.wait<void>([
-      _refreshUserInfoCache(fallbackToken: session?.token),
+      _refreshUserInfoCache(fallbackToken: fallbackToken),
       syncSiteInfoToLocal(),
     ]);
+    _lastSyncedAt = DateTime.now();
     ref.invalidate(canExportQuotationProvider);
     ref.invalidate(profileUserInfoProvider);
   }

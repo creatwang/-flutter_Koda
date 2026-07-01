@@ -29,6 +29,31 @@ class UserInfoBase {
   // 是否是业务员
   bool? isAuthAccount;
 
+  /// 是否具备可展示的身份字段（id / name / username 任一有效）。
+  bool get hasProfileIdentity =>
+      (id != null && id != 0) ||
+      (accountId != null && accountId != 0) ||
+      (name?.trim().isNotEmpty == true) ||
+      (username?.trim().isNotEmpty == true);
+
+  /// 侧栏与表单优先展示的称呼。
+  String get displayName {
+    for (final candidate in <String?>[name, username, nickname, email]) {
+      final trimmed = candidate?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+    }
+    return '';
+  }
+
+  /// 侧栏 UID；优先 [id]，否则回退 [accountId]。
+  int? get profileUserId {
+    final primary = id?.toInt();
+    if (primary != null && primary != 0) return primary;
+    final fallback = accountId?.toInt();
+    if (fallback != null && fallback != 0) return fallback;
+    return null;
+  }
+
   UserInfoBase({
     this.id,
     this.accountId,
@@ -57,6 +82,13 @@ class UserInfoBase {
     this.token,
     this.isAuthAccount,
   });
+
+  /// 从接口外层 envelope（`code/result/data/user`）解析用户资料。
+  factory UserInfoBase.fromApiEnvelope(dynamic data) {
+    final payload = resolveUserInfoPayload(data);
+    if (payload == null) return UserInfoBase();
+    return UserInfoBase.fromJson(payload);
+  }
 
   /// 兼容字段类型波动（数字变字符串、Map 非强类型等），避免解析崩溃。
   factory UserInfoBase.fromJson(dynamic json) {
@@ -130,6 +162,33 @@ class UserInfoBase {
     data['is_auth_account'] = isAuthAccount;
     return data;
   }
+}
+
+Map<String, dynamic>? resolveUserInfoPayload(dynamic data) {
+  final root = _coerceJsonMap(data);
+  if (root.isEmpty) return null;
+
+  final candidates = <Map<String, dynamic>>[
+    _coerceJsonMap(root['result']),
+    _coerceJsonMap(root['data']),
+    root,
+  ];
+
+  for (final candidate in candidates) {
+    if (candidate.isEmpty) continue;
+    final nestedUser = _coerceJsonMap(candidate['user']);
+    if (nestedUser.isNotEmpty) return nestedUser;
+    if (candidate.containsKey('id') ||
+        candidate.containsKey('account_id') ||
+        candidate.containsKey('name') ||
+        candidate.containsKey('username') ||
+        candidate.containsKey('token')) {
+      return candidate;
+    }
+  }
+
+  final result = _coerceJsonMap(root['result']);
+  return result.isNotEmpty ? result : root;
 }
 
 Map<String, dynamic> _coerceJsonMap(dynamic raw) {

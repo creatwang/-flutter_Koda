@@ -131,8 +131,7 @@ Future<ApiResult<TokenPair>> authLoginService({
           : appL10n.errorLoginRequestFailed;
       return ApiFailure(AppException(message));
     }
-    final payload = data['result'] ?? data;
-    final userInfoBase = UserInfoBase.fromJson(payload);
+    final userInfoBase = UserInfoBase.fromApiEnvelope(data);
     final domain = userInfoBase.domain?.trim();
     if (domain == null || domain.isEmpty) {
       throw DioException(

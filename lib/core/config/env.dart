@@ -8,7 +8,7 @@ class Env {
   /// `https://{store_domain}{apiPathPrefix}`。
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://store.gbuilderchina.com/testapi',
+    defaultValue: 'https://store.gbuilderchina.com/api',
   );
 
   /// 测试：`flutter run`

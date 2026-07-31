@@ -29,6 +29,18 @@ void main() {
       expect(path, contains('uniqids=ECO-2'));
     });
 
+    test('productScanUniqidsList includes scanHost and qrcode_key', () {
+      final path = AppRoutes.productScanUniqidsList(
+        const [],
+        scanHost: 'xxx.com',
+        qrcodeKey: 'LsuXEMUzahqh',
+      );
+
+      expect(path, contains('scanHost='));
+      expect(path, contains('qrcode_key=LsuXEMUzahqh'));
+      expect(path, isNot(contains('uniqids=')));
+    });
+
     test('scanHostFromUri reads scanHost query param', () {
       final uri = Uri.parse(
         '/product/1?scanHost=${Uri.encodeQueryComponent('shop.example.com')}',

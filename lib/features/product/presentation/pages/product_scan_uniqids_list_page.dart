@@ -21,11 +21,13 @@ class ProductScanUniqidsListPage extends ConsumerStatefulWidget {
   const ProductScanUniqidsListPage({
     required this.uniqids,
     this.scanHost,
+    this.qrcodeKey,
     super.key,
   });
 
   final List<String> uniqids;
   final String? scanHost;
+  final String? qrcodeKey;
 
   @override
   ConsumerState<ProductScanUniqidsListPage> createState() =>
@@ -46,6 +48,7 @@ class _ProductScanUniqidsListPageState
   String get _providerKey => encodeScanUniqidsProviderKey(
     widget.uniqids,
     scanHost: widget.scanHost,
+    qrcodeKey: widget.qrcodeKey,
   );
 
   @override

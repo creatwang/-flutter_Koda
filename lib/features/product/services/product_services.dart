@@ -28,6 +28,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
   bool onlyShowroomSample = false,
   String? keyword,
   List<String>? uniqids,
+  String? qrcodeKey,
   String? forwardedHost,
 }) async {
   try {
@@ -40,6 +41,7 @@ Future<ApiResult<List<ProductItem>>> fetchProductsPageService({
       onlyShowroomSample: onlyShowroomSample,
       keyword: keyword,
       uniqids: uniqids,
+      qrcodeKey: qrcodeKey,
       forwardedHost: forwardedHost,
     );
     return _parseProductsPageResponse(response);

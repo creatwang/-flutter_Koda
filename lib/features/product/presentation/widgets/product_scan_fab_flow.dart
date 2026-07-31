@@ -47,6 +47,14 @@ Future<void> runProductQrScanFlow({
           scanHost: forwardedHost,
         ),
       );
+    case ProductScanResolveQrcodeKey(:final qrcodeKey, :final forwardedHost):
+      context.push(
+        AppRoutes.productScanUniqidsList(
+          const [],
+          scanHost: forwardedHost,
+          qrcodeKey: qrcodeKey,
+        ),
+      );
     case ProductScanResolveProductId(:final productId, :final forwardedHost):
       context.push(
         AppRoutes.productDetail(productId, scanHost: forwardedHost),

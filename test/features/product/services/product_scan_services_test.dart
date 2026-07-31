@@ -190,6 +190,62 @@ void main() {
 
 
 
+  group('ProductScanServices.resolveQrcodeKeyFromScan', () {
+
+    test('parses qrcode_key from hash-route search page', () {
+
+      const code =
+
+          'https://xxx.com/m/#/pages/search/search?qrcode_key=LsuXEMUzahqh';
+
+
+
+      final qrcodeKey = ProductScanServices.resolveQrcodeKeyFromScan(code);
+
+
+
+      expect(qrcodeKey, 'LsuXEMUzahqh');
+
+    });
+
+
+
+    test('parses qrcode_key from path search query', () {
+
+      const code =
+
+          'https://ceramics.georgebuilder.com/search?qrcode_key=abc123';
+
+
+
+      final qrcodeKey = ProductScanServices.resolveQrcodeKeyFromScan(code);
+
+
+
+      expect(qrcodeKey, 'abc123');
+
+    });
+
+
+
+    test('returns null when search page has no qrcode_key', () {
+
+      const code = 'https://ceramics.georgebuilder.com/search?keyword=foo';
+
+
+
+      final qrcodeKey = ProductScanServices.resolveQrcodeKeyFromScan(code);
+
+
+
+      expect(qrcodeKey, isNull);
+
+    });
+
+  });
+
+
+
   group('ProductScanServices.resolveFromScan', () {
 
     test('prefers uniqids over goods-detail id', () {
@@ -265,6 +321,52 @@ void main() {
       expect(uniqidsResult.uniqids, ['AAW7029', 'AAW7028']);
 
       expect(uniqidsResult.forwardedHost, 'www.georgemetalglass.com');
+
+    });
+
+
+
+    test('resolves hash-route search qrcode_key url', () {
+
+      const code =
+
+          'https://xxx.com/m/#/pages/search/search?qrcode_key=LsuXEMUzahqh';
+
+
+
+      final resolved = ProductScanServices.resolveFromScan(code);
+
+
+
+      expect(resolved, isA<ProductScanResolveQrcodeKey>());
+
+      final qrcodeResult = resolved! as ProductScanResolveQrcodeKey;
+
+      expect(qrcodeResult.qrcodeKey, 'LsuXEMUzahqh');
+
+      expect(qrcodeResult.forwardedHost, 'xxx.com');
+
+    });
+
+
+
+    test('prefers uniqids over qrcode_key', () {
+
+      const code =
+
+          'https://xxx.com/search?uniqids=AAW7029&qrcode_key=LsuXEMUzahqh';
+
+
+
+      final resolved = ProductScanServices.resolveFromScan(code);
+
+
+
+      expect(resolved, isA<ProductScanResolveUniqids>());
+
+      final uniqidsResult = resolved! as ProductScanResolveUniqids;
+
+      expect(uniqidsResult.uniqids, ['AAW7029']);
 
     });
 

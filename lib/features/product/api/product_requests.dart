@@ -45,9 +45,11 @@ Future<Response<dynamic>> requestProductsPage({
   bool onlyShowroomSample = false,
   String? keyword,
   List<String>? uniqids,
+  String? qrcodeKey,
   String? forwardedHost,
   DioClient? client,
 }) {
+  final normalizedQrcodeKey = qrcodeKey?.trim();
   final queryParameters = <String, dynamic>{
     'shop_category_id': shopCateGoryId,
     'order_by': orderBy,
@@ -58,6 +60,8 @@ Future<Response<dynamic>> requestProductsPage({
       ProductRequests.showroomSampleFilterQueryKey: '是',
     if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
     if (uniqids != null && uniqids.isNotEmpty) 'uniqids': uniqids,
+    if (normalizedQrcodeKey != null && normalizedQrcodeKey.isNotEmpty)
+      'qrcode_key': normalizedQrcodeKey,
   };
 
   return (client ?? protectedDioClient).get(

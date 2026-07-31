@@ -39,9 +39,14 @@ GoRouter buildAppRouter({
           final uniqids =
               state.uri.queryParametersAll['uniqids'] ??
               const <String>[];
+          final qrcodeKey =
+              state.uri.queryParameters[AppRoutes.qrcodeKeyQueryKey]?.trim();
           return ProductScanUniqidsListPage(
             uniqids: uniqids,
             scanHost: AppRoutes.scanHostFromUri(state.uri),
+            qrcodeKey: (qrcodeKey == null || qrcodeKey.isEmpty)
+                ? null
+                : qrcodeKey,
           );
         },
       ),

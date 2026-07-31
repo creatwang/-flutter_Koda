@@ -8,6 +8,7 @@ class AppRoutes {
   static const secureStorageDebug = '/debug/secure-storage';
 
   static const String scanHostQueryKey = 'scanHost';
+  static const String qrcodeKeyQueryKey = 'qrcode_key';
 
   static String productDetail(int id, {String? scanHost}) {
     if (scanHost == null || scanHost.trim().isEmpty) {
@@ -19,11 +20,18 @@ class AppRoutes {
   static String productScanUniqidsList(
     List<String> uniqids, {
     String? scanHost,
+    String? qrcodeKey,
   }) {
     final params = <String>[];
     if (scanHost != null && scanHost.trim().isNotEmpty) {
       params.add(
         '$scanHostQueryKey=${Uri.encodeQueryComponent(scanHost.trim())}',
+      );
+    }
+    final normalizedQrcodeKey = qrcodeKey?.trim();
+    if (normalizedQrcodeKey != null && normalizedQrcodeKey.isNotEmpty) {
+      params.add(
+        '$qrcodeKeyQueryKey=${Uri.encodeQueryComponent(normalizedQrcodeKey)}',
       );
     }
     if (uniqids.isEmpty) {

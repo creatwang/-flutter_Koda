@@ -25,9 +25,19 @@ final class ProductScanResolveUniqids extends ProductScanResolveResult {
   final List<String> uniqids;
 }
 
+final class ProductScanResolveQrcodeKey extends ProductScanResolveResult {
+  const ProductScanResolveQrcodeKey({
+    required this.qrcodeKey,
+    required super.forwardedHost,
+  });
+
+  final String qrcodeKey;
+}
+
 abstract final class ProductScanServices {
   static const String _prefix = 'url,';
   static const String _searchPathSegment = 'search';
+  static const String _qrcodeKeyQueryKey = 'qrcode_key';
 
   static ProductScanResolveResult? resolveFromScan(String rawCode) {
     final forwardedHost = extractForwardedHostFromScanUrl(rawCode);
@@ -40,6 +50,13 @@ abstract final class ProductScanServices {
         forwardedHost: forwardedHost,
       );
     }
+    final qrcodeKey = resolveQrcodeKeyFromScan(rawCode);
+    if (qrcodeKey != null && qrcodeKey.isNotEmpty) {
+      return ProductScanResolveQrcodeKey(
+        qrcodeKey: qrcodeKey,
+        forwardedHost: forwardedHost,
+      );
+    }
     final productId = resolveProductIdFromScan(rawCode);
     if (productId != null) {
       return ProductScanResolveProductId(
@@ -48,6 +65,25 @@ abstract final class ProductScanServices {
       );
     }
     return null;
+  }
+
+  static String? resolveQrcodeKeyFromScan(String rawCode) {
+    final normalized = rawCode.trim();
+    if (normalized.isEmpty) return null;
+
+    final payload = _extractUrlPayload(normalized);
+    if (payload == null) return null;
+
+    final uri = Uri.tryParse(payload);
+    if (uri == null) return null;
+
+    final isHttp = uri.scheme == 'http' || uri.scheme == 'https';
+    if (!isHttp) return null;
+
+    if (!_looksLikeSearch(uri)) return null;
+
+    final qrcodeKey = _extractQrcodeKeyFromUri(uri);
+    return qrcodeKey == null || qrcodeKey.isEmpty ? null : qrcodeKey;
   }
 
   static List<String>? resolveUniqidsFromScan(String rawCode) {
@@ -82,6 +118,31 @@ abstract final class ProductScanServices {
     if (fromFragment.isNotEmpty) return fromFragment;
 
     return const <String>[];
+  }
+
+  static String? _extractQrcodeKeyFromUri(Uri uri) {
+    final fromQuery = uri.queryParameters[_qrcodeKeyQueryKey]?.trim();
+    if (fromQuery != null && fromQuery.isNotEmpty) return fromQuery;
+
+    return _qrcodeKeyFromFragmentQuery(uri.fragment);
+  }
+
+  static String? _qrcodeKeyFromFragmentQuery(String fragment) {
+    final normalized = fragment.trim();
+    if (normalized.isEmpty) return null;
+
+    final queryStart = normalized.indexOf('?');
+    if (queryStart == -1 || queryStart >= normalized.length - 1) {
+      return null;
+    }
+
+    final queryText = normalized.substring(queryStart + 1);
+    final synthetic = Uri.tryParse('https://local.invalid/?$queryText');
+    if (synthetic == null) return null;
+
+    final value = synthetic.queryParameters[_qrcodeKeyQueryKey]?.trim();
+    if (value == null || value.isEmpty) return null;
+    return value;
   }
 
   static List<String> _uniqidsFromFragmentQuery(String fragment) {

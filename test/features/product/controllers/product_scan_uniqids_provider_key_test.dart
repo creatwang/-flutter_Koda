@@ -16,6 +16,20 @@ void main() {
 
       expect(decodeScanHostFromProviderKey(key), host);
       expect(decodeScanUniqidsProviderKey(key), ['A']);
+      expect(decodeScanQrcodeKeyFromProviderKey(key), isNull);
+    });
+
+    test('encode with qrcodeKey keeps host and key', () {
+      const host = 'xxx.com';
+      final key = encodeScanUniqidsProviderKey(
+        const [],
+        scanHost: host,
+        qrcodeKey: 'LsuXEMUzahqh',
+      );
+
+      expect(decodeScanHostFromProviderKey(key), host);
+      expect(decodeScanUniqidsProviderKey(key), isEmpty);
+      expect(decodeScanQrcodeKeyFromProviderKey(key), 'LsuXEMUzahqh');
     });
   });
 }

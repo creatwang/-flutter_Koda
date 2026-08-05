@@ -226,7 +226,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cartTotal(Object amount) {
-    return '合计: \$ $amount';
+    return '合计: $amount';
   }
 
   @override

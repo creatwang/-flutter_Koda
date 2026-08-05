@@ -524,8 +524,16 @@ class Options {
   String? nameCn;
   String? attrIndex;
   String? spec;
+  String? optionsImage;
 
-  Options({this.pid, this.name, this.nameCn, this.attrIndex, this.spec});
+  Options({
+    this.pid,
+    this.name,
+    this.nameCn,
+    this.attrIndex,
+    this.spec,
+    this.optionsImage,
+  });
 
   Options.fromJson(Map<String, dynamic> json) {
     if (json['pid'] is List) {
@@ -538,6 +546,7 @@ class Options {
     nameCn = _asString(json['name_cn']);
     attrIndex = _asString(json['attr_index']);
     spec = _asString(json['spec']);
+    optionsImage = _asString(json['options_image']);
   }
 
   Map<String, dynamic> toJson() {
@@ -547,6 +556,7 @@ class Options {
     data['name_cn'] = nameCn;
     data['attr_index'] = attrIndex;
     data['spec'] = spec;
+    data['options_image'] = optionsImage;
     return data;
   }
 }

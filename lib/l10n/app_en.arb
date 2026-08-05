@@ -113,7 +113,7 @@
     }
   },
   "cartEmpty": "Your cart is empty",
-  "cartTotal": "Total: $ {amount}",
+  "cartTotal": "Total: {amount}",
   "@cartTotal": {
     "placeholders": {
       "amount": {}

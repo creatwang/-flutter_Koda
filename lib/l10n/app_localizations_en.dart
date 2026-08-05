@@ -228,7 +228,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cartTotal(Object amount) {
-    return 'Total: \$ $amount';
+    return 'Total: $amount';
   }
 
   @override

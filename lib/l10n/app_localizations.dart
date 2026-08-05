@@ -497,7 +497,7 @@ abstract class AppLocalizations {
   /// No description provided for @cartTotal.
   ///
   /// In en, this message translates to:
-  /// **'Total: \$ {amount}'**
+  /// **'Total: {amount}'**
   String cartTotal(Object amount);
 
   /// No description provided for @webMessageFromHtml.

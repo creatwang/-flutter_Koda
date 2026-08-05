@@ -24,6 +24,7 @@ class SiteInfoDto {
     this.pluginUniqid,
     this.heatmapList,
     this.checkCode,
+    this.currency,
   });
 
   factory SiteInfoDto.fromDio(dynamic data) {
@@ -71,6 +72,7 @@ class SiteInfoDto {
       ).map(_asString).whereType<String>().toList(growable: false),
       heatmapList: _asRawList(json['heatmapList']),
       checkCode: _asString(json['check_code']),
+      currency: _asString(json['currency']),
     );
   }
 
@@ -98,6 +100,7 @@ class SiteInfoDto {
   List<String>? pluginUniqid;
   List<dynamic>? heatmapList;
   String? checkCode;
+  String? currency;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -127,6 +130,7 @@ class SiteInfoDto {
       'plugin_uniqid': pluginUniqid,
       'heatmapList': heatmapList,
       'check_code': checkCode,
+      'currency': currency,
     };
   }
 }

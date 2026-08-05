@@ -5,6 +5,7 @@ import 'package:george_pick_mate/features/product/models/product_detail_dto.dart
 import 'package:george_pick_mate/features/product/services/product_sku_cart_helpers.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 const Color _kSkuDrawerChipIdle = Color(0xFF2E2E2E);
@@ -448,8 +449,8 @@ class _ProductSkuCartSideSheetBodyState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '\$${unitPrice.toString()}',
+                          SitePriceText(
+                            amountText: unitPrice.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,

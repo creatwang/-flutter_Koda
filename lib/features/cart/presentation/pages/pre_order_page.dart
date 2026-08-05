@@ -22,6 +22,7 @@ import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button
 import 'package:george_pick_mate/shared/base_widget/buttons/george_outlined_button.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
 import 'package:george_pick_mate/l10n/app_localizations.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/adaptive_scaffold.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
@@ -1401,8 +1402,8 @@ class _CartProductTileState extends State<_CartProductTile> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(
-                        '\$${widget.item.price.toStringAsFixed(0)}',
+                      SitePriceText(
+                        amountText: widget.item.price.toStringAsFixed(0),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,

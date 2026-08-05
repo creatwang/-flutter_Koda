@@ -56,6 +56,7 @@ Future<Response<dynamic>> requestProductsPage({
     if (sort != null) 'sort': sort,
     'page_size': pageSize,
     'page': page,
+    'with_child': 1,
     if (onlyShowroomSample)
       ProductRequests.showroomSampleFilterQueryKey: '是',
     if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,

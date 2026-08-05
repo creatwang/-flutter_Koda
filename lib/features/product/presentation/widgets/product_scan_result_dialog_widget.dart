@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:george_pick_mate/features/auth/controllers/site_info_providers.dart';
 import 'package:george_pick_mate/features/product/models/product_detail_dto.dart';
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
+import 'package:george_pick_mate/shared/currency/price_format.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 typedef ProductScanResultAddToCartCallback =
@@ -81,7 +84,7 @@ Future<bool> showProductScanResultDialog({
   return result == true;
 }
 
-class ProductScanResultDialogWidget extends StatefulWidget {
+class ProductScanResultDialogWidget extends ConsumerStatefulWidget {
   const ProductScanResultDialogWidget({
     required this.detail,
     required this.selected,
@@ -98,12 +101,12 @@ class ProductScanResultDialogWidget extends StatefulWidget {
   final ProductScanResultAddToCartCallback onAddToCart;
 
   @override
-  State<ProductScanResultDialogWidget> createState() =>
+  ConsumerState<ProductScanResultDialogWidget> createState() =>
       _ProductScanResultDialogWidgetState();
 }
 
 class _ProductScanResultDialogWidgetState
-    extends State<ProductScanResultDialogWidget> {
+    extends ConsumerState<ProductScanResultDialogWidget> {
   bool _isSubmitting = false;
 
   Future<void> _onAddToCartPressed() async {
@@ -138,12 +141,18 @@ class _ProductScanResultDialogWidgetState
       selectedSub: selectedSub,
       skuRowSelection: widget.skuRowSelection,
     );
+    final currencySymbol =
+        ref.watch(siteCurrencySymbolProvider).asData?.value ?? '';
 
     final detailRows = <({String label, String value})>[...skuRows];
     if (unitPrice > 0) {
       detailRows.add((
         label: context.l10n.commonPrice,
-        value: '\$${unitPrice.toStringAsFixed(2)}',
+        value: formatPrice(
+          amount: unitPrice,
+          symbol: currencySymbol,
+          fractionDigits: 2,
+        ),
       ));
     }
     if (unit.isNotEmpty) {

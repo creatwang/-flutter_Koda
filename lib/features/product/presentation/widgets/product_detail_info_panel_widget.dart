@@ -6,6 +6,7 @@ import 'package:george_pick_mate/features/product/models/product_detail_dto.dart
 import 'package:george_pick_mate/features/product/services/product_sku_resolver.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_filled_button.dart';
 import 'package:george_pick_mate/shared/base_widget/buttons/george_quantity_control.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductDetailInfoPanel extends StatelessWidget {
@@ -90,8 +91,10 @@ class ProductDetailInfoPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (hasMatchedSku)
-              Text(
-                '\$${double.parse(totalPrice.toStringAsFixed(2)).toString()}',
+              SitePriceText(
+                amountText: double.parse(
+                  totalPrice.toStringAsFixed(2),
+                ).toString(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 25,
@@ -130,51 +133,17 @@ class ProductDetailInfoPanel extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: variants
-                            .map((product) {
-                              final pid = product.id;
-                              final isSelected =
-                                  pid != null && pid == selectedId;
-                              final display =
-                                  product.name ?? product.nameCn ?? '--';
-                              return InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: pid == null
-                                    ? null
-                                    : () => onSelectVariant(pid),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: isSelected
-                                        ? Colors.white.withValues(alpha: 0.25)
-                                        : Colors.white.withValues(alpha: 0.1),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.white.withValues(
-                                              alpha: 0.25,
-                                            ),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    display,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            })
-                            .toList(growable: false),
+                      _DetailOptionChipWrap(
+                        children: variants.map((product) {
+                          final pid = product.id;
+                          return _DetailOptionChip(
+                            label: product.name ?? product.nameCn ?? '--',
+                            isSelected: pid != null && pid == selectedId,
+                            onTap: pid == null
+                                ? null
+                                : () => onSelectVariant(pid),
+                          );
+                        }).toList(growable: false),
                       ),
                     ],
                   ),
@@ -200,69 +169,36 @@ class ProductDetailInfoPanel extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: options
-                              .map((option) {
-                                final spec = option.spec ?? '';
-                                final isSelected =
-                                    rowIndex < skuRowSelection.length &&
-                                    (skuRowSelection[rowIndex].spec ?? '') ==
-                                        spec;
-                                final isUnavailable =
-                                    ProductSkuResolver.isSpecUnavailable(
-                                      currentProduct: selected,
-                                      currentProductId: selectedId,
-                                      specKey: spec,
-                                    );
-                                final isDisabled = isUnavailable && !isSelected;
-                                final display =
-                                    option.name ?? option.nameCn ?? '--';
-                                return InkWell(
-                                  borderRadius: BorderRadius.circular(8),
-                                  onTap: isDisabled
-                                      ? null
-                                      : () =>
-                                            onApplySpecOption(rowIndex, option),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      color: isSelected
-                                          ? Colors.white.withValues(alpha: 0.25)
-                                          : isDisabled
-                                          ? Colors.white.withValues(alpha: 0.05)
-                                          : Colors.white.withValues(alpha: 0.1),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? Colors.white
-                                            : isDisabled
-                                            ? Colors.white.withValues(
-                                                alpha: 0.12,
-                                              )
-                                            : Colors.white.withValues(
-                                                alpha: 0.25,
-                                              ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      display,
-                                      style: TextStyle(
-                                        color: isDisabled
-                                            ? Colors.white54
-                                            : Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
+                        _DetailOptionChipWrap(
+                          children: options.map((option) {
+                            final spec = option.spec ?? '';
+                            final isSelected =
+                                rowIndex < skuRowSelection.length &&
+                                (skuRowSelection[rowIndex].spec ?? '') ==
+                                    spec;
+                            final isUnavailable =
+                                ProductSkuResolver.isSpecUnavailable(
+                                  currentProduct: selected,
+                                  currentProductId: selectedId,
+                                  specKey: spec,
                                 );
-                              })
-                              .toList(growable: false),
+                            final isDisabled =
+                                isUnavailable && !isSelected;
+                            return _DetailOptionChip(
+                              label:
+                                  option.name ?? option.nameCn ?? '--',
+                              imageUrl:
+                                  (option.optionsImage ?? '').trim(),
+                              isSelected: isSelected,
+                              isDisabled: isDisabled,
+                              onTap: isDisabled
+                                  ? null
+                                  : () => onApplySpecOption(
+                                        rowIndex,
+                                        option,
+                                      ),
+                            );
+                          }).toList(growable: false),
                         ),
                       ],
                     ),
@@ -316,6 +252,109 @@ class ProductDetailInfoPanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 选项芯片自动换行；单芯片宽度不超过可用宽度，避免横向越界。
+class _DetailOptionChipWrap extends StatelessWidget {
+  const _DetailOptionChipWrap({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: children
+              .map(
+                (child) => ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  child: child,
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _DetailOptionChip extends StatelessWidget {
+  const _DetailOptionChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.isDisabled = false,
+    this.imageUrl = '',
+  });
+
+  final String label;
+  final bool isSelected;
+  final bool isDisabled;
+  final String imageUrl;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imageUrl.isNotEmpty;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.25)
+              : isDisabled
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.white.withValues(alpha: 0.1),
+          border: Border.all(
+            color: isSelected
+                ? Colors.white
+                : isDisabled
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.white.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasImage) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: 30,
+                  height: 30,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                softWrap: true,
+                style: TextStyle(
+                  color: isDisabled ? Colors.white54 : Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

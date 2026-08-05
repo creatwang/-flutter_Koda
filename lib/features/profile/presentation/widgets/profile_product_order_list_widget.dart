@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:george_pick_mate/features/profile/controllers/profile_order_providers.dart';
 import 'package:george_pick_mate/features/profile/models/product_order_list_dto.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
 import 'package:george_pick_mate/shared/widgets/app_loading_view.dart';
@@ -338,7 +339,7 @@ class _ProductLineTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final quantityText = '${line.quantity ?? 0}${line.unit ?? ''}';
-    final priceText = '\$${line.totalPrice ?? line.price ?? '--'}';
+    final priceAmountText = line.totalPrice ?? line.price ?? '--';
     return Container(
       margin: const EdgeInsets.fromLTRB(10, 0, 10, 12),
       padding: const EdgeInsets.all(8),
@@ -420,8 +421,8 @@ class _ProductLineTile extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              priceText,
+            child: SitePriceText(
+              amountText: priceAmountText,
               textAlign: TextAlign.right,
               style: const TextStyle(
                 color: ProMaxTokens.textPrimary,

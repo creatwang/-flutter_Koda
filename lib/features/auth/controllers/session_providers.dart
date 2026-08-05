@@ -21,6 +21,7 @@ import 'package:george_pick_mate/features/profile/services/profile_services.dart
 import 'package:george_pick_mate/shared/l10n/app_localizations_accessor.dart';
 
 import 'login_remember_providers.dart';
+import 'site_info_providers.dart';
 import 'store_company_providers.dart';
 
 final sessionControllerProvider =
@@ -261,6 +262,7 @@ class SessionController extends AsyncNotifier<Session> {
 
   void _invalidateAfterStoreContextChanged() {
     ref.invalidate(canExportQuotationProvider);
+    ref.invalidate(siteCurrencySymbolProvider);
     ref.invalidate(profileUserInfoProvider);
     ref.invalidate(productsProvider);
     ref.invalidate(favoriteProductsProvider);
@@ -334,6 +336,7 @@ class SessionSyncController extends AsyncNotifier<void> {
     ]);
     _lastSyncedAt = DateTime.now();
     ref.invalidate(canExportQuotationProvider);
+    ref.invalidate(siteCurrencySymbolProvider);
     ref.invalidate(profileUserInfoProvider);
   }
 

@@ -14,6 +14,7 @@ import 'package:george_pick_mate/features/product/controllers/product_detail_req
 import 'package:george_pick_mate/features/product/controllers/product_providers.dart';
 import 'package:george_pick_mate/features/product/presentation/widgets/product_sku_cart_side_sheet_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 import 'package:george_pick_mate/shared/widgets/home_main_content_slot_widget.dart';
 import 'package:george_pick_mate/shared/widgets/app_empty_view.dart';
@@ -331,8 +332,8 @@ class _CartPageState extends ConsumerState<CartPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                '\$${_amountFormatter.format(selectedAmount)}',
+              SitePriceText(
+                amountText: _amountFormatter.format(selectedAmount),
                 style: const TextStyle(
                   color: ProMaxTokens.textPrimary,
                   fontSize: 36,
@@ -1370,8 +1371,8 @@ class _CartProductTileState extends State<_CartProductTile> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(
-                        '\$${widget.item.price.toStringAsFixed(0)}',
+                      SitePriceText(
+                        amountText: widget.item.price.toStringAsFixed(0),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,

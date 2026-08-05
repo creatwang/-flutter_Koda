@@ -113,7 +113,7 @@
     }
   },
   "cartEmpty": "购物车为空",
-  "cartTotal": "合计: $ {amount}",
+  "cartTotal": "合计: {amount}",
   "@cartTotal": {
     "placeholders": {
       "amount": {}

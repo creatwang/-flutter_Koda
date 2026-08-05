@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:george_pick_mate/app/router/app_routes.dart';
 import 'package:george_pick_mate/features/product/models/product_item.dart';
+import 'package:george_pick_mate/shared/currency/site_price_text.dart';
 import 'package:george_pick_mate/shared/extensions/build_context_x.dart';
 
 class ProductCard extends StatelessWidget {
@@ -162,8 +163,8 @@ class ProductCard extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        '\$${productItem.price.toStringAsFixed(1)}',
+                      child: SitePriceText(
+                        amountText: productItem.price.toStringAsFixed(1),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(

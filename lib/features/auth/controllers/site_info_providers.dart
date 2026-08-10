@@ -7,3 +7,9 @@ final siteCurrencySymbolProvider = FutureProvider<String>((ref) async {
   final siteInfo = await readSiteInfoFromLocal();
   return currencySymbolOf(siteInfo?.currency);
 });
+
+/// 是否展示商品价格与货币符号；`show_product_price` 为 0 时为 false。
+final showProductPriceProvider = FutureProvider<bool>((ref) async {
+  final siteInfo = await readSiteInfoFromLocal();
+  return siteInfo?.showProductPrice != 0;
+});

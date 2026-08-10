@@ -143,16 +143,20 @@ class _ProductScanResultDialogWidgetState
     );
     final currencySymbol =
         ref.watch(siteCurrencySymbolProvider).asData?.value ?? '';
+    final shouldShowPrice =
+        ref.watch(showProductPriceProvider).asData?.value ?? true;
 
     final detailRows = <({String label, String value})>[...skuRows];
-    if (unitPrice > 0) {
+    if (shouldShowPrice ? unitPrice > 0 : true) {
       detailRows.add((
         label: context.l10n.commonPrice,
-        value: formatPrice(
-          amount: unitPrice,
-          symbol: currencySymbol,
-          fractionDigits: 2,
-        ),
+        value: shouldShowPrice
+            ? formatPrice(
+                amount: unitPrice,
+                symbol: currencySymbol,
+                fractionDigits: 2,
+              )
+            : context.l10n.productCustomMadeInquiry,
       ));
     }
     if (unit.isNotEmpty) {

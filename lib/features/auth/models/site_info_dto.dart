@@ -25,6 +25,7 @@ class SiteInfoDto {
     this.heatmapList,
     this.checkCode,
     this.currency,
+    this.showProductPrice,
   });
 
   factory SiteInfoDto.fromDio(dynamic data) {
@@ -73,6 +74,7 @@ class SiteInfoDto {
       heatmapList: _asRawList(json['heatmapList']),
       checkCode: _asString(json['check_code']),
       currency: _asString(json['currency']),
+      showProductPrice: _asInt(json['show_product_price']),
     );
   }
 
@@ -101,6 +103,7 @@ class SiteInfoDto {
   List<dynamic>? heatmapList;
   String? checkCode;
   String? currency;
+  int? showProductPrice;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -131,6 +134,7 @@ class SiteInfoDto {
       'heatmapList': heatmapList,
       'check_code': checkCode,
       'currency': currency,
+      'show_product_price': showProductPrice,
     };
   }
 }

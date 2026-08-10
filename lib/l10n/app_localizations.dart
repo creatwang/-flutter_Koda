@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Price'**
   String get commonPrice;
 
+  /// No description provided for @productCustomMadeInquiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom-made Inquiry'**
+  String get productCustomMadeInquiry;
+
   /// No description provided for @commonUnit.
   ///
   /// In en, this message translates to:

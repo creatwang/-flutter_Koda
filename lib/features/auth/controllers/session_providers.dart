@@ -263,6 +263,7 @@ class SessionController extends AsyncNotifier<Session> {
   void _invalidateAfterStoreContextChanged() {
     ref.invalidate(canExportQuotationProvider);
     ref.invalidate(siteCurrencySymbolProvider);
+    ref.invalidate(showProductPriceProvider);
     ref.invalidate(profileUserInfoProvider);
     ref.invalidate(productsProvider);
     ref.invalidate(favoriteProductsProvider);
@@ -337,6 +338,7 @@ class SessionSyncController extends AsyncNotifier<void> {
     _lastSyncedAt = DateTime.now();
     ref.invalidate(canExportQuotationProvider);
     ref.invalidate(siteCurrencySymbolProvider);
+    ref.invalidate(showProductPriceProvider);
     ref.invalidate(profileUserInfoProvider);
   }
 

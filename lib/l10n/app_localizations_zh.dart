@@ -330,6 +330,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonPrice => '价格';
 
   @override
+  String get productCustomMadeInquiry => '定制询价';
+
+  @override
   String get commonUnit => '单位';
 
   @override

@@ -334,6 +334,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonPrice => 'Price';
 
   @override
+  String get productCustomMadeInquiry => 'Custom-made Inquiry';
+
+  @override
   String get commonUnit => 'Unit';
 
   @override
